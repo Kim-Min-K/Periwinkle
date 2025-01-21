@@ -2,5 +2,5 @@
 
 
 ### Team Composition
-Ryan Rom
-Abinand Nanthananthan
+- Ryan Rom
+- Abinand Nanthananthan
