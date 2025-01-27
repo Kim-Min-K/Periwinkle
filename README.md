@@ -7,3 +7,4 @@
 - Kushal Patel
 - Jiahao Yu
 - Min Kim
+- Bern Aran
