@@ -10,7 +10,7 @@ def loginView(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('TODO') 
+            return redirect('accounts:profile') 
         else:
             messages.error(request, 'Invalid username or password.')
     return render(request, 'login.html')
@@ -24,3 +24,12 @@ def registerView(request):
     else:
         form = AuthorCreation()
     return render(request, 'register.html', {'form': form})
+    # TODO: add not matching password and existing user and existing github handling 
+    
+def profileView(request):
+    user = request.user  
+    context = {
+        "username": user.username,
+        "github_username": user.github_username, 
+    }
+    return render(request, "profile.html", context)
