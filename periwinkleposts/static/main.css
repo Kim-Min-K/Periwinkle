@@ -4,3 +4,10 @@
 @theme {  
     --font-inter: "Inter", sans-serif; 
 }
+
+@layer components {
+    .headerbtn{
+        @apply text-white font-[Baskervville] text-xl hover:bg-[#8585e6] transition-colors duration-300 px-3 py-2 rounded-xl; 
+    }
+}
+

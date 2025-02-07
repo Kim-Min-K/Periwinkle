@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from .forms import AuthorCreation
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
+from .models import Authors
+from .serializers import authorSerializer
 
 def loginView(request):
     if request.method == 'POST':
@@ -33,3 +35,21 @@ def profileView(request):
         "github_username": user.github_username, 
     }
     return render(request, "profile.html", context)
+
+# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff 
+
+from rest_framework import viewsets, permissions
+from rest_framework.response import Response
+from rest_framework.decorators import action
+
+class authorAPI(viewsets.ModelViewSet):
+    queryset = Authors.objects.all()
+    serializer_class = authorSerializer
+    permission_classes = [permissions.IsAuthenticated] 
+
+    # some extra code to add a custom route for get requests. this provides the logged in users profile, and serves mostly as an example!
+    @action(detail=False, methods=['get'])
+    def profile(self, request):
+        user = request.user
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)

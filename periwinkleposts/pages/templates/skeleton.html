@@ -1,0 +1,24 @@
+{% extends "base.html" %} 
+<! -- This is the new "base.html" for all the pages views -->
+{% block title %}periwinkle{% endblock %}
+
+{% block content %}
+
+    <body class="bg-[#F5F5F5]">
+        <nav class="p-2 bg-[#A2A2E6]">
+            <div class="container mx-auto flex items-center">
+                <a href="#" class="text-white font-[Baskervville] text-4xl px-3 py-2 rounded">periwinkle</a>
+                <! -- headerbtn is styled in the main.css file -->
+                <div class="ml-auto flex space-x-4">
+                    <a href="#" class="headerbtn">home</a>
+                    <a href="#" class="headerbtn">profile</a>
+                    <a href="#" class="headerbtn">settings</a> 
+                </div>
+            </div>
+        </nav>
+        <! -- use this to put stuff in pages -->
+        <div class="container">
+            {% block page_content %}{% endblock %}
+        </div>
+    </body>
+{% endblock %}

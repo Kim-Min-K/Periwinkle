@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'accounts',
     'pages',
     'inbox',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
