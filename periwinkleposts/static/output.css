@@ -1,5 +1,6 @@
 /*! tailwindcss v4.0.4 | MIT License | https://tailwindcss.com */
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baskervville:ital@0;1&display=swap');
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
@@ -379,6 +380,7 @@
       --font-mono--font-variation-settings
     );
     --font-inter: "Inter", sans-serif;
+    --font-baskervville: "Baskervville", sans-serif;
   }
 }
 @layer base {
@@ -614,9 +616,6 @@
   }
   .p-2 {
     padding: calc(var(--spacing) * 2);
-  }
-  .p-4 {
-    padding: calc(var(--spacing) * 4);
   }
   .px-3 {
     padding-inline: calc(var(--spacing) * 3);
