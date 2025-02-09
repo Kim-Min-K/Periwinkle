@@ -8,7 +8,7 @@ app_name = 'accounts'
 urlpatterns = [
     path('register/', views.registerView, name='register'),
     path('login/', views.loginView, name='login'),
-    path("profile/", views.profileView, name="profile"),
+    path('profile/<str:username>/', views.profileView, name='profile'),
 ]
 
 router = DefaultRouter()

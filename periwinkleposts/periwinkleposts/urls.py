@@ -23,5 +23,6 @@ urlpatterns = [
     path('inbox/', include('inbox.urls')),
     path('pages/', include('pages.urls')),
     path('accounts/', include('accounts.urls')),
-    path('', RedirectView.as_view(url='/accounts/login/', permanent=False)),
+    path('', RedirectView.as_view(url='/accounts/login/', permanent=False)), 
+    path('avatar/', include('avatar.urls')),
 ]

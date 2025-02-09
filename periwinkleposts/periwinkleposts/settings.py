@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'pages',
     'inbox',
     'rest_framework',
+    'avatar',
 ]
 
 MIDDLEWARE = [

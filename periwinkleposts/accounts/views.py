@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .forms import AuthorCreation
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
@@ -28,13 +28,15 @@ def registerView(request):
     return render(request, 'register.html', {'form': form})
     # TODO: add not matching password and existing user and existing github handling 
     
-def profileView(request):
-    user = request.user  
+def profileView(request, username):
+    author = get_object_or_404(Authors, username=username)
+    ownProfile = request.user.is_authenticated and (request.user == author)
+
     context = {
-        "username": user.username,
-        "github_username": user.github_username, 
+        'author': author,
+        'ownProfile': ownProfile,
     }
-    return render(request, "profile.html", context)
+    return render(request, 'profile.html', context)
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff 
 
