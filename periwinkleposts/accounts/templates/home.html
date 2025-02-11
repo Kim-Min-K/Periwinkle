@@ -10,7 +10,8 @@
         <h1 class="text-4xl">Perwinkle.</h1>
         <nav class="flex gap-x-4 ml-auto space-x-1">
             <a href="#" class="text-white hover:underline px-2.5">Inbox</a>
-            <a href="{% url 'accounts:profile' %}" class="text-white hover:underline px-3">Profile</a>
+            <a href="{% url 'accounts:profile' username=request.user.username %}"
+                class="text-white hover:underline px-3">Profile</a>
             <!--Inbox for like notifications, will implement later on..-->
         </nav>
     </header>
