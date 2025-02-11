@@ -6,16 +6,10 @@ from .views import authorAPI
 app_name = "accounts"
 
 urlpatterns = [
-<<<<<<< HEAD
-    path('register/', views.registerView, name='register'),
-    path('login/', views.loginView, name='login'),
-    path('profile/<str:username>/', views.profileView, name='profile'),
-=======
     path("register/", views.registerView, name="register"),
     path("login/", views.loginView, name="login"),
-    path("profile/", views.profileView, name="profile"),
+    path("profile/<str:username>", views.profileView, name="profile"),
     path("home/", views.homePageView, name="home"),
->>>>>>> af77fa1 (home page for all posts)
 ]
 
 router = DefaultRouter()

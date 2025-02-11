@@ -27,30 +27,19 @@ def registerView(request):
             return redirect("accounts:login")
     else:
         form = AuthorCreation()
-<<<<<<< HEAD
-    return render(request, 'register.html', {'form': form})
-    # TODO: add not matching password and existing user and existing github handling 
-    
+    return render(request, "register.html", {"form": form})
+    # TODO: add not matching password and existing user and existing github handling
+
+
 def profileView(request, username):
     author = get_object_or_404(Authors, username=username)
     ownProfile = request.user.is_authenticated and (request.user == author)
 
     context = {
-        'author': author,
-        'ownProfile': ownProfile,
-=======
-    return render(request, "register.html", {"form": form})
-    # TODO: add not matching password and existing user and existing github handling
-
-
-def profileView(request):
-    user = request.user
-    context = {
-        "username": user.username,
-        "github_username": user.github_username,
->>>>>>> af77fa1 (home page for all posts)
+        "author": author,
+        "ownProfile": ownProfile,
     }
-    return render(request, 'profile.html', context)
+    return render(request, "profile.html", context)
 
 
 def homePageView(request):
