@@ -3,6 +3,7 @@
 {% block title %}Periwinkle Register{% endblock %}
 
 {% block content %}
+
 <body class="m-0 h-screen flex justify-center bg-[#F5F5F5] font-['Inter']">
     <div class="text-center pt-[10vh] w-full max-w-md">
         <h2 class="text-5xl font-[Baskervville] font-light text-[#A2A2E6] mb-8">periwinkle.</h2>
@@ -11,58 +12,33 @@
             {% csrf_token %}
 
             <div class="w-full flex flex-col gap-2 pt-[3vh]">
-                <input
-                    type="text"
-                    name="username"
-                    id="username"
-                    required
-                    placeholder="Username"
-                    class="w-full px-4 py-3 bg-white rounded-lg border-2 border-[#d9d9d9] text-m font-normal placeholder:text-black placeholder:opacity-50 focus:outline-none focus:border-[#8A8AFF]"
-                />
+                <input type="text" name="username" id="username" required placeholder="Username"
+                    class="w-full px-4 py-3 bg-white rounded-lg border-2 border-[#d9d9d9] text-m font-normal placeholder:text-black placeholder:opacity-50 focus:outline-none focus:border-[#8A8AFF]" />
             </div>
 
             <div class="w-full flex flex-col gap-2 pt-[3vh]">
-                <input
-                    type="text"
-                    name="github_username"
-                    id="github_username"
-                    required
-                    placeholder="GitHub Username"
-                    class="w-full px-4 py-3 bg-white rounded-lg border-2 border-[#d9d9d9] text-m font-normal placeholder:text-black placeholder:opacity-50 focus:outline-none focus:border-[#8A8AFF]"
-                />
+                <input type="text" name="github_username" id="github_username" required placeholder="GitHub Username"
+                    class="w-full px-4 py-3 bg-white rounded-lg border-2 border-[#d9d9d9] text-m font-normal placeholder:text-black placeholder:opacity-50 focus:outline-none focus:border-[#8A8AFF]" />
             </div>
 
             <div class="w-full flex flex-col gap-2 pt-[3vh]">
-                <input
-                    type="password"
-                    name="password1"
-                    id="password1"
-                    required
-                    placeholder="Password"
-                    class="w-full px-4 py-3 bg-white rounded-lg border-2 border-[#d9d9d9] text-m font-normal placeholder:text-black placeholder:opacity-50 focus:outline-none focus:border-[#8A8AFF]"
-                />
+                <input type="password" name="password1" id="password1" required placeholder="Password"
+                    class="w-full px-4 py-3 bg-white rounded-lg border-2 border-[#d9d9d9] text-m font-normal placeholder:text-black placeholder:opacity-50 focus:outline-none focus:border-[#8A8AFF]" />
             </div>
 
             <div class="w-full flex flex-col gap-2 pt-[3vh] pb-[3vh]">
-                <input
-                    type="password"
-                    name="password2"
-                    id="password2"
-                    required
-                    placeholder="Confirm Password"
-                    class="w-full px-4 py-3 bg-white rounded-lg border-2 border-[#d9d9d9] text-m font-normal placeholder:text-black placeholder:opacity-50 focus:outline-none focus:border-[#8A8AFF]"
-                />
+                <input type="password" name="password2" id="password2" required placeholder="Confirm Password"
+                    class="w-full px-4 py-3 bg-white rounded-lg border-2 border-[#d9d9d9] text-m font-normal placeholder:text-black placeholder:opacity-50 focus:outline-none focus:border-[#8A8AFF]" />
             </div>
 
-            <button
-                type="submit"
-                class="w-full px-6 py-3 bg-[#A2A2E6] text-white text-m font-normal rounded-lg hover:bg-[#9A9AE9] transition-colors"
-            >
+            <button type="submit"
+                class="w-full px-6 py-3 bg-[#A2A2E6] text-white text-m font-normal rounded-lg hover:bg-[#9A9AE9] transition-colors">
                 Submit registration
             </button>
 
             <div class="text-center pt-[5vh] font-[Baskervville] font-regular text-xl">
-                Already have an account? <a href="{% url 'accounts:login' %}" class="text-[#A2A2E6] hover:text-[#8C8CEC]">Login here.</a>
+                Already have an account? <a href="{% url 'accounts:login' %}"
+                    class="text-[#A2A2E6] hover:text-[#8C8CEC]">Login here.</a>
             </div>
         </form>
     </div>

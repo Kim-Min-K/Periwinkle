@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}perwinkle Home{% endblock %}
+
+{% block content %}
+
+<body class="m-0 h-screen flex flex-col bg-[#F5F5F5] font-['Inter']">
+    <header
+        class="w-full p-4 bg-[#A2A2E6] text-white text-center text-2xl font-[Baskervville] flex justify-between items-center px-6">
+        <h1 class="text-4xl">Perwinkle.</h1>
+        <nav class="flex gap-x-4 ml-auto space-x-1">
+            <a href="#" class="text-white hover:underline px-2.5">Inbox</a>
+            <a href="{% url 'accounts:profile' %}" class="text-white hover:underline px-3">Profile</a>
+            <!--Inbox for like notifications, will implement later on..-->
+        </nav>
+    </header>
+
+    <main class="flex justify-center">
+        <!-- Main Content -->
+        <section class="flex-1 p-6">
+            <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                <textarea class="w-full p-2 border border-gray-600 rounded-lg"
+                    placeholder="What's on your mind?"></textarea>
+                <button class="mt-2 px-4 py-2 ml-5 bg-[#A2A2E6] text-white rounded-lg">Post</button>
+            </div>
+        </section>
+    </main>
+</body>
+{% endblock %}
+
+<!-- <main class="flex justify-center items-center h-screen">
+    <!-- Main Content -->
+<section class="w-[50%] bg-white p-6 rounded-lg shadow-md">
+    <textarea class="w-full p-2 border border-gray-300 rounded-lg resize-none block" placeholder="What's on your mind?"
+        rows="4"></textarea>
+    <button class="mt-2 px-4 py-2 bg-[#A2A2E6] text-white rounded-lg block self-start">Post</button>
+</section>
+</main> -->

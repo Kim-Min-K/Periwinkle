@@ -5,26 +5,29 @@ from django.contrib import messages
 from .models import Authors
 from .serializers import authorSerializer
 
+
 def loginView(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('accounts:profile') 
+            return redirect("accounts:home")
         else:
-            messages.error(request, 'Invalid username or password.')
-    return render(request, 'login.html')
+            messages.error(request, "Invalid username or password.")
+    return render(request, "login.html")
+
 
 def registerView(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AuthorCreation(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('accounts:login') 
+            return redirect("accounts:login")
     else:
         form = AuthorCreation()
+<<<<<<< HEAD
     return render(request, 'register.html', {'form': form})
     # TODO: add not matching password and existing user and existing github handling 
     
@@ -35,22 +38,44 @@ def profileView(request, username):
     context = {
         'author': author,
         'ownProfile': ownProfile,
+=======
+    return render(request, "register.html", {"form": form})
+    # TODO: add not matching password and existing user and existing github handling
+
+
+def profileView(request):
+    user = request.user
+    context = {
+        "username": user.username,
+        "github_username": user.github_username,
+>>>>>>> af77fa1 (home page for all posts)
     }
     return render(request, 'profile.html', context)
 
-# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff 
+
+def homePageView(request):
+    user = request.user
+    context = {
+        "username": user.username,
+        "github_username": user.github_username,
+    }
+    return render(request, "home.html", context)
+
+
+# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
+
 class authorAPI(viewsets.ModelViewSet):
     queryset = Authors.objects.all()
     serializer_class = authorSerializer
-    permission_classes = [permissions.IsAuthenticated] 
+    permission_classes = [permissions.IsAuthenticated]
 
     # some extra code to add a custom route for get requests. this provides the logged in users profile, and serves mostly as an example!
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def profile(self, request):
         user = request.user
         serializer = self.get_serializer(user)
