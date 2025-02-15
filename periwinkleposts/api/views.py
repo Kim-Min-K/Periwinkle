@@ -30,7 +30,9 @@ def followRequest(request, author_serial):
             if not follow_request_serializer.is_valid():
                 raise ValueError(follow_request_serializer.errors)
             follow_request_serializer.save()
+
     except ValueError as e:
         # Return the validation error message
         return Response({"error": str(e)}, status=400)
-    return Response(status=200)
+        
+    return Response({"message":"Follow Request Successfuly Sent."}, status=200)

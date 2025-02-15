@@ -26,20 +26,9 @@ class FollowSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-class FollowRequestSerializer(serializers.Serializer):
-    requestee = serializers.PrimaryKeyRelatedField(queryset=Authors.objects.all())
-    requester = serializers.PrimaryKeyRelatedField(queryset=Authors.objects.all())
-    requested_since = serializers.DateTimeField()
-
-    def create(self, validated_data):
-        """
-        Create and return a new `FollowRequest` instance, given the validated data
-        """
-        return FollowRequest.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        """
-        Update and return an existing `FollowRequest` instance, given the validated data
-        """
-        instance.save()
-        return instance
+class FollowRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FollowRequest
+        fields = ['requestee', 'requester', 'requested_since']
+        # This example assumes you have a unique constraint at the model level, e.g.:
+        # unique_together = ('requester', 'requestee')
