@@ -21,7 +21,7 @@ def followRequest(request, author_serial):
             try:
                 requester = Authors.objects.get(id=requester_json["id"])
             except Authors.DoesNotExist:
-                requester_serializer = authorSerializer(data=requester_json, partial=True)
+                requester_serializer = authorSerializer(data=requester_json)
                 if not requester_serializer.is_valid():
                     raise ValueError(requester_serializer.errors)
                 requester = requester_serializer.save()
@@ -34,5 +34,5 @@ def followRequest(request, author_serial):
     except ValueError as e:
         # Return the validation error message
         return Response({"error": str(e)}, status=400)
-        
+
     return Response({"message":"Follow Request Successfuly Sent."}, status=200)
