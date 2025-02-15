@@ -25,4 +25,5 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)), 
     path('avatar/', include('avatar.urls')),
+    path('api/', include('api.urls'))
 ]
