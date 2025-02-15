@@ -13,6 +13,7 @@ import uuid
 def followRequest(request, author_serial):
     try:
         with transaction.atomic():
+            print(request.build_absolute_uri("/"))
             followee_author = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
             follower = request.data.get("actor")
             del follower["id"]

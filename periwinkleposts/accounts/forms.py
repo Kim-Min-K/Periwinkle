@@ -4,7 +4,7 @@ from .models import Authors
 
 class AuthorCreation(UserCreationForm):
     github_username = forms.CharField(max_length=100, required=False)
-
+    host = forms.CharField(max_length=200, required=True)
     class Meta:
         model = Authors
-        fields = ("username", "github_username", "password1", "password2")
+        fields = ("username", "host", "github_username", "password1", "password2")

@@ -4,10 +4,18 @@ import uuid
 
 class Authors(AbstractUser):
     row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    host = models.CharField(max_length=200, blank=False, null=False, unique=True)
+    id = models.CharField(max_length=200, default=None)
     github_username = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    
     def __str__(self):
         return self.username
-    
+
+    def save(self, *args, **kwargs):
+        if self.id is None:
+            self.id = str(self.host)+"api/authors/"+str(self.row_id)
+        super().save(*args, **kwargs)
+
 class Follow(models.Model):
     follower = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name="following") 
     followee = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name="followers") 

@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Authors
 from .serializers import authorSerializer
-
+from django.http import QueryDict
 
 def loginView(request):
     if request.method == "POST":
@@ -21,10 +21,20 @@ def loginView(request):
 
 def registerView(request):
     if request.method == "POST":
-        form = AuthorCreation(request.POST)
+
+        # Add a "host" field in the post request and set it to our server's / proxy's host name
+        print(" RegisterView/request.POST : "+str(request.POST))
+        ordinary_dict = dict(request.POST.dict())
+        ordinary_dict["host"]=request.build_absolute_uri("/api/")
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(ordinary_dict)
+        print(" RegisterView/QueryDict : " + str(query_dict))
+
+        form = AuthorCreation(query_dict)
         if form.is_valid():
             form.save()
             return redirect("accounts:login")
+        print(f"Error: {form.errors}")
     else:
         form = AuthorCreation()
     return render(request, "register.html", {"form": form})
