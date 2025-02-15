@@ -13,15 +13,20 @@ import uuid
 def followRequest(request, author_serial):
     try:
         with transaction.atomic():
-            print(request.build_absolute_uri("/"))
-            followee_author = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
-            follower = request.data.get("actor")
-            del follower["id"]
-            follower_serializer = authorSerializer(data=follower, partial=True)
-            if not follower_serializer.is_valid():
-                raise ValueError(follower_serializer.errors)
-            follower_author = follower_serializer.save()
-            follow_request_serializer = FollowRequestSerializer(data={"requestee":followee_author.id, "requester":follower_author.id}, partial=True)
+
+            requestee = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
+            requester_json = request.data.get("actor")
+
+            # Use requester object in database if it exists otherwise create it
+            try:
+                requester = Authors.objects.get(id=requester_json["id"])
+            except Authors.DoesNotExist:
+                requester_serializer = authorSerializer(data=requester_json, partial=True)
+                if not requester_serializer.is_valid():
+                    raise ValueError(requester_serializer.errors)
+                requester = requester_serializer.save()
+                
+            follow_request_serializer = FollowRequestSerializer(data={"requestee":requestee.row_id, "requester":requester.row_id}, partial=True)
             if not follow_request_serializer.is_valid():
                 raise ValueError(follow_request_serializer.errors)
             follow_request_serializer.save()
