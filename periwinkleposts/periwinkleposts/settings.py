@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "inbox",
     "rest_framework",
     "avatar",
+    "api"
 ]
 
 MIDDLEWARE = [

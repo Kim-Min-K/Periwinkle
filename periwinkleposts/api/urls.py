@@ -4,5 +4,5 @@ from . import views
 app_name = 'pages'  
 
 urlpatterns = [
-    path('authors/<int:author_serial>/inbox', views.followRequest, name='followRequest'),
+    path('authors/<str:author_serial>/inbox', views.followRequest, name='followRequest'),
 ]
