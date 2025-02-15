@@ -6,7 +6,7 @@ from .models import Authors, Follow, FollowRequest
 class authorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Authors
-        fields = ['row_id', 'username', 'email', 'github_username']
+        fields = ['id', 'username', 'email', 'github_username']
 
 class FollowSerializer(serializers.Serializer):
     follower = serializers.PrimaryKeyRelatedField(queryset=Authors.objects.all())  # ForeignKey to question
