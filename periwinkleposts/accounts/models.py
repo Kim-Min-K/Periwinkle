@@ -3,7 +3,7 @@ from django.db import models
 import uuid
 
 class Authors(AbstractUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     github_username = models.CharField(max_length=100, blank=True, null=True, unique=True)
     def __str__(self):
         return self.username
