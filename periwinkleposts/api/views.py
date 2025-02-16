@@ -114,3 +114,24 @@ def getFriends(request, author_serial):
         "type":"friends",
         "friends": serializer.data
     })
+
+@api_view(['GET'])
+def getFollowRequests(request, author_serial):
+    try:
+        author_uuid = uuid.UUID(author_serial)
+    except ValueError:
+        return Response({'error': 'Invalid UUID format.'}, status=400)
+
+    author = get_object_or_404(Authors, pk=author_uuid)
+
+    requesters_ids = FollowRequest.objects.filter(requestee=author).values_list('requester_id', flat=True)
+
+    requesters = Authors.objects.filter(row_id__in=requesters_ids)
+
+    # Serialize the friend objects
+    serializer = authorSerializer(requesters, many=True)
+
+    return Response({
+        "type":"requesters",
+        "requesters": serializer.data
+    })

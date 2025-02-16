@@ -17,7 +17,7 @@ class authorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Authors
-        fields = ['row_id', 'id', 'host', 'username', 'email', 'github_username']
+        fields = ['row_id', 'id', 'host', 'displayName', 'username', 'email', 'github_username']
         extra_kwargs = {
             'host': {'required': True, 'allow_blank': False}
         }

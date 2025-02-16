@@ -5,6 +5,7 @@ from django.contrib import messages
 from .models import Authors
 from .serializers import authorSerializer
 from django.http import QueryDict
+from api.views import getFriends, getFollowers, getFollowRequests
 
 def loginView(request):
     if request.method == "POST":
@@ -45,9 +46,16 @@ def profileView(request, username):
     author = get_object_or_404(Authors, username=username)
     ownProfile = request.user.is_authenticated and (request.user == author)
 
+    friends = getFriends(request, author.row_id.hex).data["friends"]
+    followers = getFollowers(request, author.row_id.hex).data["followers"]
+    requesters = getFollowRequests(request, author.row_id.hex).data["requesters"]
+    
     context = {
         "author": author,
         "ownProfile": ownProfile,
+        "friends": friends,
+        "followers":followers,
+        "requesters": requesters
     }
     return render(request, "profile.html", context)
 

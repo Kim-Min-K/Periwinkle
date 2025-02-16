@@ -7,6 +7,7 @@ class Authors(AbstractUser):
     row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     host = models.CharField(max_length=200, blank=False, null=False)
     id = models.CharField(max_length=200, default=None, unique=True)
+    displayName = models.CharField(max_length=200, default="John Doe")
     github_username = models.CharField(max_length=100, blank=True, null=True, unique=True)
     
     def __str__(self):

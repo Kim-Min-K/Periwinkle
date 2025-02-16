@@ -4,33 +4,103 @@
 {% block title %}periwinkle Profile - {{ author.username }}{% endblock %}
 
 {% block page_content %}
-<div class="max-w-2xl mx-auto p-6 font-[Inter] text-[#4b4e4d]">
-    <div class="flex items-center justify-center space-x-6">
-        <div class="w-24 h-24 rounded-full overflow-hidden border-2 mr-10 border-[#A2A2E6]">
+<div class="max-w-6xl mx-auto p-6 font-[Inter] text-[#4b4e4d]">
+    <!-- Main container split into two columns on md+ screens -->
+    <div class="flex flex-col md:flex-row">
+        <!-- Left Column: Profile Header & Content -->
+        <div class="md:w-2/3">
+            <!-- Profile Header -->
+            <div class="flex items-center space-x-6">
+                <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#A2A2E6]">
+                    <!-- Using django-avatar, whoever needs to add custom profile pics -->
+                    <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                         alt="Profile Picture" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-2xl font-semibold">{{ author.username }}</h2>
+                        {% if not ownProfile %}
+                            <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90">
+                                Follow
+                            </button>
+                        {% endif %}
+                    </div>
+                    <div class="flex space-x-6 mt-2">
+                        <div><span class="font-bold">69</span> posts</div>
+                        <div><span class="font-bold">69</span> followers</div>
+                        <div><span class="font-bold">69</span> following</div>
+                    </div>
+                    <p class="text-gray-600 mt-2">
+                        GitHub: 
+                        <a href="https://github.com/{{ author.github_username }}" class="text-[#A2A2E6]">
+                            @{{ author.github_username }}
+                        </a>
+                    </p>
+                </div>
+            </div>
             
-             <!-- using django-avatar, whoever needs to add custom profile pics -->
-            <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'default.jpg' %}{% endif %}" 
-                 alt="Profile Picture" class="w-full h-full object-cover">
+            <!-- Main Content (e.g., posts) -->
+            <div class="mt-8">
+                <!-- posts go here -->
+            </div>
         </div>
-
-        <div class="flex-1">
-            <div class="flex items-center space-x-4">
-                <h2 class="text-2xl font-semibold">{{ author.username }}</h2>
-                {% if not ownProfile %}
-                    <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90">Follow</button>
-                {% endif %}
+        
+        <!-- Right Column: Connections Sidebar -->
+        <div class="md:w-1/3 md:pl-6 mt-6 md:mt-0">
+            <div class="bg-white shadow rounded p-4">
+                <h3 class="text-xl font-bold mb-4 border-b pb-2">Connections</h3>
+                
+                <!-- Follow Requests -->
+                <div class="mb-4">
+                    <h4 class="font-semibold text-lg mb-2">Follow Requests</h4>
+                    <ul class="space-y-2">
+                        {% for requester in requesters %}
+                            <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
+                                <span>{{ requester.displayName }}</span>
+                                <div class="space-x-2">
+                                    <button class="px-3 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">
+                                        Accept
+                                    </button>
+                                    <button class="px-3 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600">
+                                        Decline
+                                    </button>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">No follow requests</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <!-- Friends -->
+                <div class="mb-4">
+                    <h4 class="font-semibold text-lg mb-2">Friends</h4>
+                    <ul class="space-y-2">
+                        {% for friend in friends %}
+                            <li class="bg-gray-100 p-2 rounded">
+                                {{ friend.displayName }}
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">No friends</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <!-- Followers -->
+                <div>
+                    <h4 class="font-semibold text-lg mb-2">Followers</h4>
+                    <ul class="space-y-2">
+                        {% for follower in followers %}
+                            <li class="bg-gray-100 p-2 rounded">
+                                {{ follower.displayName }}
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">No followers</li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
-            <div class="flex space-x-6 mt-2">
-                <div><span class="font-bold">69</span> posts</div>
-                <div><span class="font-bold">69</span> followers</div>
-                <div><span class="font-bold">69</span> following</div>
-            </div>
-            <p class="text-gray-600 mt-2">
-                GitHub: <a href="https://github.com/{{ author.github_username }}" class="text-[#A2A2E6]">@{{ author.github_username }}</a>
-            </p>
         </div>
     </div>
-    
-    <!-- posts go here -->
 </div>
 {% endblock %}
