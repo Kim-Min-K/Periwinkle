@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from accounts.models import FollowRequest, Authors
 from django.shortcuts import get_object_or_404
-from accounts.serializers import authorSerializer, FollowRequestSerializer
+from accounts.serializers import authorSerializer, FollowRequestSerializer, FollowSerializer
 from django.db import transaction
 import uuid
 
@@ -35,4 +35,19 @@ def followRequest(request, author_serial):
         # Return the validation error message
         return Response({"error": str(e)}, status=400)
 
-    return Response({"message":"Follow Request Successfuly Sent."}, status=200)
+    return Response({"message":"Follow request successfuly sent."}, status=200)
+
+@api_view(['PUT'])
+def acceptFollowRequest(request, request_id):
+    try:
+        with transaction.atomic():
+            request = get_object_or_404(FollowRequest, pk=request_id)
+            follow_serializer = FollowSerializer(data={"followee": request.requestee.row_id, "follower": request.requester.row_id})
+            if not follow_serializer.is_valid():
+                raise ValueError(follow_serializer.errors)
+            follow_serializer.save()
+            request.delete()
+    except ValueError as e:
+        # Return the validation error message
+        return Response({"error": str(e)}, status=400)
+    return Response({"message": "Follow request successfully accepted."}, status=200)

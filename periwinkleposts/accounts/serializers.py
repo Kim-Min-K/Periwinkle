@@ -23,23 +23,10 @@ class authorSerializer(serializers.ModelSerializer):
             'host': {'required': True, 'allow_blank': False}
         }
 
-class FollowSerializer(serializers.Serializer):
-    follower = serializers.PrimaryKeyRelatedField(queryset=Authors.objects.all())  # ForeignKey to question
-    followee = serializers.PrimaryKeyRelatedField(queryset=Authors.objects.all())
-    followed_since = serializers.DateTimeField()  # Timestamp of follow action
-
-    def create(self, validated_data):
-        """
-        Create and return a new `Follow` instance, given the validated data
-        """
-        return Follow.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        """
-        Update and return an existing `Follow` instance, given the validated data
-        """
-        instance.save()
-        return instance
+class FollowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields = ['followee', 'follower', 'followed_since']
 
 class FollowRequestSerializer(serializers.ModelSerializer):
     class Meta:
