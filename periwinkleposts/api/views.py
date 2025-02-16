@@ -82,3 +82,35 @@ def getFollowers(request, author_serial):
         "type": "followers",
         "followers": follower_serializer.data  # Include followers' data
     }, status=200)
+
+@api_view(['GET'])
+def getFriends(request, author_serial):
+
+    try:
+        # Convert the serial string to a UUID object if your IDs are UUIDs
+        author_uuid = uuid.UUID(author_serial)
+    except ValueError:
+        return Response({'error': 'Invalid UUID format.'}, status=400)
+
+    # Retrieve the author for whom we want to get friends
+    author = get_object_or_404(Authors, pk=author_uuid)
+
+    # Get all authors that this author follows (i.e., followees)
+    following_ids = Follow.objects.filter(follower=author).values_list('followee_id', flat=True)
+    
+    # Get all authors that follow this author (i.e., followers)
+    followers_ids = Follow.objects.filter(followee=author).values_list('follower_id', flat=True)
+
+    # The friends are the intersection of the two sets
+    friend_ids = list(set(following_ids).intersection(set(followers_ids)))
+
+    # Retrieve the friend Author objects
+    friends = Authors.objects.filter(row_id__in=friend_ids)
+
+    # Serialize the friend objects
+    serializer = authorSerializer(friends, many=True)
+
+    return Response({
+        "type":"friends",
+        "friends": serializer.data
+    })

@@ -7,5 +7,6 @@ urlpatterns = [
     path('authors/<str:author_serial>/inbox', views.followRequest, name='followRequest'),
     path('follow-requests/<int:request_id>/accept', views.acceptFollowRequest, name="acceptFollowRequest"),
     path('follow-requests/<int:request_id>/decline', views.declineFollowRequest, name="declineFollowRequest"),
-    path('authors/<str:author_serial>/followers', views.getFollowers, name='getFollowers')
+    path('authors/<str:author_serial>/followers', views.getFollowers, name='getFollowers'),
+    path('authors/<str:author_serial>/friends', views.getFriends, name='getFriends')
 ]

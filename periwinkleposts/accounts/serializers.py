@@ -11,8 +11,7 @@ def required(value):
 class authorSerializer(serializers.ModelSerializer):
 
     host = serializers.CharField(
-        required=True, 
-        min_length=23,
+        required=True,
         validators=[required]
     )
 
