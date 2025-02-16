@@ -22,12 +22,28 @@ class authorSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'host': {'required': True, 'allow_blank': False}
         }
+    
+    def to_representation(self, instance):
+        # Get the default representation from the superclass
+        representation = super().to_representation(instance)
+
+        del representation["row_id"]
+        del representation["username"]
+        del representation["email"]
+        
+        return representation
 
 class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = ['followee', 'follower', 'followed_since']
 
+    def to_representation(self, instance):
+        # Get the default representation from the superclass
+        representation = super().to_representation(instance)
+        
+        return representation
+        
 class FollowRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FollowRequest
