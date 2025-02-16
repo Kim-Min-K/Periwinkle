@@ -99,6 +99,23 @@
                         {% endfor %}
                     </ul>
                 </div>
+
+                <!-- People You May Know -->
+                <div class="mb-4">
+                    <h4 class="font-semibold text-lg mb-2">People You May Know</h4>
+                    <ul class="space-y-2">
+                        {% for person in suggestions %}
+                            <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
+                                <span>{{ person.displayName }}</span>
+                                <button class="px-3 py-1 text-xs text-white bg-blue-500 rounded hover:bg-blue-600">
+                                    Follow
+                                </button>
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">No suggestions</li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

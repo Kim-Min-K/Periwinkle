@@ -134,4 +134,34 @@ def getFollowRequests(request, author_serial):
     return Response({
         "type":"requesters",
         "requesters": serializer.data
-    })
+    }, status=200)
+
+@api_view(['GET'])
+def getSuggestions(request, author_serial):
+    try:
+        # Convert the provided author_serial (assumed to be a UUID string) into a UUID object
+        author_uuid = uuid.UUID(author_serial)
+    except ValueError:
+        return Response({'error': 'Invalid UUID format.'}, status=400)
+
+    # Retrieve the current author
+    current_author = get_object_or_404(Authors, row_id=author_uuid)
+    
+    # Get a list of row_ids for authors that the current author is already following
+    followed_ids = Follow.objects.filter(follower=current_author)\
+                                  .values_list('followee__row_id', flat=True)
+    
+    # Get 5 authors that the current author is NOT following
+    # Also, exclude the current author from the suggestions
+    suggestions = Authors.objects.exclude(row_id__in=followed_ids)\
+                                 .exclude(row_id=current_author.row_id)\
+                                 .order_by('?')[:5]
+    
+    # Serialize the suggestions using the authorSerializer
+    serializer = authorSerializer(suggestions, many=True)
+
+    return Response({
+        "type":"suggestions",
+        "suggestions": serializer.data
+    }, status=200)
+
