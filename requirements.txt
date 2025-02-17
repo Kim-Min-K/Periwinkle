@@ -2,3 +2,4 @@ Django==5.1.5
 djangorestframework==3.15.2
 sqlparse==0.5.3
 django-avatar==8.0.1
+drf_yasg
