@@ -53,13 +53,13 @@
                 <h3 class="text-xl font-bold mb-4 border-b pb-2">Connections</h3>
                 
                 {% if ownProfile %}
-                <!-- Follow Requests -->
+                <!-- Received Requests -->
                 <div class="mb-4">
                     <h4 class="font-semibold text-lg mb-2">Received Requests</h4>
                     <ul class="space-y-2">
                         {% for requester in requesters %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <span><a href="{% url 'accounts:profile' username=requester.username %}">{{ requester.username }}</a>{{ requester.username }}</span>
+                                <span><a href="{% url 'accounts:profile' username=requester.username %}">{{ requester.username }}</a></span>
                                 <div class="space-x-2">
                                     <button class="px-3 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">
                                         <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id.hex fqid=requester.id %}">Accept</a>
