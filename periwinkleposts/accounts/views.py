@@ -67,7 +67,9 @@ def profileView(request, username):
         "requesters": requesters,
         "suggestions": suggestions,
         "followees": followees,
-        "sent_requests": sent_requests
+        "sent_requests": sent_requests,
+        "follower_count":len(followers),
+        "followee_count": len(followees)
     }
 
     return render(request, "profile.html", context)
