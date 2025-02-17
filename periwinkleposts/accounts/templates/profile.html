@@ -70,7 +70,44 @@
                                 </div>
                             </li>
                         {% empty %}
-                            <li class="text-gray-500">No follow requests</li>
+                            <li class="text-gray-500">No received requests</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if ownProfile %}
+                <!-- Sent Requests -->
+                <div>
+                    <h4 class="font-semibold text-lg mb-2">Sent Requests</h4>
+                    <ul class="space-y-2">
+                        {% for request in sent_requests %}
+                            <li class="bg-gray-100 p-2 rounded">
+                                {{ request.username }}
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">No sent requests</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if ownProfile %}
+                <!-- People You May Know -->
+                <div class="mb-4">
+                    <h4 class="font-semibold text-lg mb-2">People You May Know</h4>
+                    <ul class="space-y-2">
+                        {% for person in suggestions %}
+                            <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
+                                <span><a href="{% url 'accounts:profile' username=person.username %}">{{ person.username }}</a></span>
+                                <form action="{% url 'accounts:sendFollowRequest' fqid=person.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" name="your_field" placeholder="Enter something" hidden>
+                                    <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
+                                </form>
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">No suggestions</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -118,43 +155,6 @@
                     </ul>
                 </div>
 
-
-                {% if ownProfile %}
-                <!-- Sent Requests -->
-                <div>
-                    <h4 class="font-semibold text-lg mb-2">Sent Requests</h4>
-                    <ul class="space-y-2">
-                        {% for request in sent_requests %}
-                            <li class="bg-gray-100 p-2 rounded">
-                                {{ request.username }}
-                            </li>
-                        {% empty %}
-                            <li class="text-gray-500">No sent requests</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-
-                {% if ownProfile %}
-                <!-- People You May Know -->
-                <div class="mb-4">
-                    <h4 class="font-semibold text-lg mb-2">People You May Know</h4>
-                    <ul class="space-y-2">
-                        {% for person in suggestions %}
-                            <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <span><a href="{% url 'accounts:profile' username=person.username %}">{{ person.username }}</a></span>
-                                <form action="{% url 'accounts:sendFollowRequest' fqid=person.id %}" method="POST">
-                                    {% csrf_token %}
-                                    <input type="text" name="your_field" placeholder="Enter something" hidden>
-                                    <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
-                                </form>
-                            </li>
-                        {% empty %}
-                            <li class="text-gray-500">No suggestions</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
 
             </div>
         </div>
