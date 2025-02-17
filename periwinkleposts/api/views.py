@@ -37,7 +37,6 @@ def followRequest(request, author_serial):
 
     return Response({"message":"Follow request successfuly sent."}, status=200)
 
-@api_view(['PUT'])
 def acceptFollowRequest(request, request_id):
     try:
         with transaction.atomic():
@@ -52,7 +51,6 @@ def acceptFollowRequest(request, request_id):
         return Response({"error": str(e)}, status=400)
     return Response({"message": "Follow request successfully accepted."}, status=200)
 
-@api_view(['DELETE'])
 def declineFollowRequest(request, request_id):
     try:
         with transaction.atomic():
@@ -130,7 +128,7 @@ def getFollowRequests(request, author_serial):
 
     # Serialize the friend objects
     serializer = authorSerializer(requesters, many=True)
-
+    
     return Response({
         "type":"requesters",
         "requesters": serializer.data

@@ -10,6 +10,8 @@ urlpatterns = [
     path("login/", views.loginView, name="login"),
     path("profile/<str:username>", views.profileView, name="profile"),
     path("home/", views.homePageView, name="home"),
+    path("authors/<str:author_serial>/followers/<path:fqid>/accept", views.acceptRequest, name="acceptRequest"),
+    path("authors/<str:author_serial>/followers/<path:fqid>/decline", views.declineRequest, name="declineRequest")
 ]
 
 router = DefaultRouter()

@@ -15,7 +15,7 @@ class Authors(AbstractUser):
 
     def save(self, *args, **kwargs):
         if self.id is None:
-            self.id = str(self.host)+"api/authors/"+str(self.row_id.hex)
+            self.id = str(self.host)+"authors/"+str(self.row_id.hex)
         super().save(*args, **kwargs)
 
 class Follow(models.Model):
@@ -25,7 +25,11 @@ class Follow(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['follower', 'followee'], name='unique_follow')
+            models.UniqueConstraint(fields=['follower', 'followee'], name='unique_follow'),
+            models.CheckConstraint(
+                check=~models.Q(follower=models.F('followee')),
+                name='prevent_self_follow'
+            ),
         ]
 
     def __str__(self):
@@ -38,7 +42,11 @@ class FollowRequest(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['requestee', 'requester'], name='unique_request')
+            models.UniqueConstraint(fields=['requestee', 'requester'], name='unique_request'),
+            models.CheckConstraint(
+                check=~models.Q(follower=models.F('followee')),
+                name='prevent_self_follow_request'
+            ),
         ]
     
     def __str__(self):

@@ -2,10 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .forms import AuthorCreation
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from .models import Authors
+from .models import Authors, FollowRequest
 from .serializers import authorSerializer
 from django.http import QueryDict
-from api.views import getFriends, getFollowers, getFollowRequests, getSuggestions
+from api.views import getFriends, getFollowers, getFollowRequests, getSuggestions, acceptFollowRequest, declineFollowRequest
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+import uuid
 
 def loginView(request):
     if request.method == "POST":
@@ -70,6 +73,29 @@ def homePageView(request):
         "github_username": user.github_username,
     }
     return render(request, "home.html", context)
+
+def acceptRequest(request, author_serial, fqid):
+    requester = Authors.objects.get(id=fqid)
+    requestee = Authors.objects.get(row_id=uuid.UUID(hex=author_serial))
+    follow_request = get_object_or_404(
+        FollowRequest,
+        requester=requester,
+        requestee=requestee
+    )
+    response = acceptFollowRequest(request, follow_request.id)
+    return redirect("accounts:profile", username=requestee.username)
+
+def declineRequest(request, author_serial, fqid):
+    requester = Authors.objects.get(id=fqid)
+    requestee = Authors.objects.get(row_id=uuid.UUID(hex=author_serial))
+    follow_request = get_object_or_404(
+        FollowRequest,
+        requester=requester,
+        requestee=requestee
+    )
+    response = declineFollowRequest(request, follow_request.id)
+    print(response)
+    return redirect("accounts:profile", username=requestee.username)
 
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff

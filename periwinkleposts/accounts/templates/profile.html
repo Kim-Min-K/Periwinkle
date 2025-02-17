@@ -59,10 +59,10 @@
                                 <span>{{ requester.displayName }}</span>
                                 <div class="space-x-2">
                                     <button class="px-3 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">
-                                        Accept
+                                        <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id.hex fqid=requester.id %}">Accept</a>
                                     </button>
                                     <button class="px-3 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600">
-                                        Decline
+                                        <a href="{% url 'accounts:declineRequest' author_serial=author.row_id.hex fqid=requester.id %}">Decline</a>
                                     </button>
                                 </div>
                             </li>
