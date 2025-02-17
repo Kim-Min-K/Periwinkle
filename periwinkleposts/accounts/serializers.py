@@ -27,8 +27,6 @@ class authorSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         del representation["row_id"]
-        del representation["username"]
-        del representation["email"]
         
         return representation
 

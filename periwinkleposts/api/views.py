@@ -37,6 +37,24 @@ def followRequest(request, author_serial):
 
     return Response({"message":"Follow request successfuly sent."}, status=200)
 
+def getFollowees(request, author_serial):
+    try:
+        author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+    except ValueError:
+        return Response({'error': 'Invalid UUID format'}, status=400)
+
+    followees = Follow.objects.filter(follower=author_uuid)  # Get all followers
+
+    # Get the list of followers by extracting the `follower` field from each Follow object
+    followee_ids = [connection.followee for connection in followees]
+
+    followee_serializer = authorSerializer(followee_ids, many=True)  # Serialize multiple followers
+
+    return Response({
+        "type": "followees",
+        "followees": followee_serializer.data  # Include followers' data
+    }, status=200)
+
 def acceptFollowRequest(request, request_id):
     try:
         with transaction.atomic():
@@ -148,11 +166,14 @@ def getSuggestions(request, author_serial):
     # Get a list of row_ids for authors that the current author is already following
     followed_ids = Follow.objects.filter(follower=current_author)\
                                   .values_list('followee__row_id', flat=True)
+
+    request_ids = FollowRequest.objects.filter(requester=current_author).values_list("requestee__row_id", flat=True)
     
     # Get 5 authors that the current author is NOT following
     # Also, exclude the current author from the suggestions
     suggestions = Authors.objects.exclude(row_id__in=followed_ids)\
                                  .exclude(row_id=current_author.row_id)\
+                                 .exclude(row_id__in=request_ids)\
                                  .order_by('?')[:5]
     
     # Serialize the suggestions using the authorSerializer
@@ -163,3 +184,19 @@ def getSuggestions(request, author_serial):
         "suggestions": serializer.data
     }, status=200)
 
+def getSentRequests(request, author_serial):
+    try:
+        author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+    except ValueError:
+        return Response({'error': 'Invalid UUID format'}, status=400)
+
+    requestees = FollowRequest.objects.filter(requester=author_uuid)
+
+    requestee_ids = [connection.requestee for connection in requestees]
+
+    requestee_serializer = authorSerializer(requestee_ids, many=True)
+
+    return Response({
+        "type": "sent_requests",
+        "sent_requests": requestee_serializer.data  # Include followers' data
+    }, status=200)

@@ -11,7 +11,8 @@ urlpatterns = [
     path("profile/<str:username>", views.profileView, name="profile"),
     path("home/", views.homePageView, name="home"),
     path("authors/<str:author_serial>/followers/<path:fqid>/accept", views.acceptRequest, name="acceptRequest"),
-    path("authors/<str:author_serial>/followers/<path:fqid>/decline", views.declineRequest, name="declineRequest")
+    path("authors/<str:author_serial>/followers/<path:fqid>/decline", views.declineRequest, name="declineRequest"),
+    path("authors/<path:fqid>/inbox", views.sendFollowRequest, name="sendFollowRequest")
 ]
 
 router = DefaultRouter()

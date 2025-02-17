@@ -20,9 +20,11 @@
                     <div class="flex items-center space-x-4">
                         <h2 class="text-2xl font-semibold">{{ author.username }}</h2>
                         {% if not ownProfile %}
-                            <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90">
-                                Follow
-                            </button>
+                            <form action="{% url 'accounts:sendFollowRequest' fqid=author.id %}" method="POST">
+                                {% csrf_token %}
+                                <input type="text" name="your_field" placeholder="Enter something" hidden>
+                                <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
+                            </form>
                         {% endif %}
                     </div>
                     <div class="flex space-x-6 mt-2">
@@ -50,13 +52,14 @@
             <div class="bg-white shadow rounded p-4">
                 <h3 class="text-xl font-bold mb-4 border-b pb-2">Connections</h3>
                 
+                {% if ownProfile %}
                 <!-- Follow Requests -->
                 <div class="mb-4">
-                    <h4 class="font-semibold text-lg mb-2">Follow Requests</h4>
+                    <h4 class="font-semibold text-lg mb-2">Received Requests</h4>
                     <ul class="space-y-2">
                         {% for requester in requesters %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <span>{{ requester.displayName }}</span>
+                                <span>{{ requester.username }}</span>
                                 <div class="space-x-2">
                                     <button class="px-3 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">
                                         <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id.hex fqid=requester.id %}">Accept</a>
@@ -71,14 +74,15 @@
                         {% endfor %}
                     </ul>
                 </div>
-                
+                {% endif %}
+
                 <!-- Friends -->
                 <div class="mb-4">
                     <h4 class="font-semibold text-lg mb-2">Friends</h4>
                     <ul class="space-y-2">
                         {% for friend in friends %}
                             <li class="bg-gray-100 p-2 rounded">
-                                {{ friend.displayName }}
+                                {{ friend.username }}
                             </li>
                         {% empty %}
                             <li class="text-gray-500">No friends</li>
@@ -92,7 +96,7 @@
                     <ul class="space-y-2">
                         {% for follower in followers %}
                             <li class="bg-gray-100 p-2 rounded">
-                                {{ follower.displayName }}
+                                {{ follower.username }}
                             </li>
                         {% empty %}
                             <li class="text-gray-500">No followers</li>
@@ -100,22 +104,58 @@
                     </ul>
                 </div>
 
+                <!-- Followees -->
+                <div>
+                    <h4 class="font-semibold text-lg mb-2">Followees</h4>
+                    <ul class="space-y-2">
+                        {% for followee in followees %}
+                            <li class="bg-gray-100 p-2 rounded">
+                                {{ followee.username }}
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">No followees</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+
+                {% if ownProfile %}
+                <!-- Sent Requests -->
+                <div>
+                    <h4 class="font-semibold text-lg mb-2">Sent Requests</h4>
+                    <ul class="space-y-2">
+                        {% for request in sent_requests %}
+                            <li class="bg-gray-100 p-2 rounded">
+                                {{ request.username }}
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">No sent requests</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if ownProfile %}
                 <!-- People You May Know -->
                 <div class="mb-4">
                     <h4 class="font-semibold text-lg mb-2">People You May Know</h4>
                     <ul class="space-y-2">
                         {% for person in suggestions %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <span>{{ person.displayName }}</span>
-                                <button class="px-3 py-1 text-xs text-white bg-blue-500 rounded hover:bg-blue-600">
-                                    Follow
-                                </button>
+                                <span><a href="{% url 'accounts:profile' username=person.username %}">{{ person.username }}</a></span>
+                                <form action="{% url 'accounts:sendFollowRequest' fqid=person.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" name="your_field" placeholder="Enter something" hidden>
+                                    <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
+                                </form>
                             </li>
                         {% empty %}
                             <li class="text-gray-500">No suggestions</li>
                         {% endfor %}
                     </ul>
                 </div>
+                {% endif %}
+
             </div>
         </div>
     </div>

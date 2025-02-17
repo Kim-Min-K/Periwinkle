@@ -44,7 +44,7 @@ class FollowRequest(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['requestee', 'requester'], name='unique_request'),
             models.CheckConstraint(
-                check=~models.Q(follower=models.F('followee')),
+                check=~models.Q(requester=models.F('requestee')),
                 name='prevent_self_follow_request'
             ),
         ]

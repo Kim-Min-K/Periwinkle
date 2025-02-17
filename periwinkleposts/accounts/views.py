@@ -5,10 +5,12 @@ from django.contrib import messages
 from .models import Authors, FollowRequest
 from .serializers import authorSerializer
 from django.http import QueryDict
-from api.views import getFriends, getFollowers, getFollowRequests, getSuggestions, acceptFollowRequest, declineFollowRequest
+from api.views import getFriends, getFollowers, getFollowRequests\
+ ,getSuggestions, acceptFollowRequest, declineFollowRequest, followRequest, getFollowees, getSentRequests
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 import uuid
+import requests
 
 def loginView(request):
     if request.method == "POST":
@@ -54,6 +56,8 @@ def profileView(request, username):
     followers = getFollowers(request, author.row_id.hex).data["followers"]
     requesters = getFollowRequests(request, author.row_id.hex).data["requesters"]
     suggestions = getSuggestions(request, author.row_id.hex).data["suggestions"]
+    followees = getFollowees(request, author.row_id.hex).data["followees"]
+    sent_requests = getSentRequests(request, author.row_id.hex).data["sent_requests"]
 
     context = {
         "author": author,
@@ -61,8 +65,11 @@ def profileView(request, username):
         "friends": friends,
         "followers":followers,
         "requesters": requesters,
-        "suggestions": suggestions
+        "suggestions": suggestions,
+        "followees": followees,
+        "sent_requests": sent_requests
     }
+
     return render(request, "profile.html", context)
 
 
@@ -97,6 +104,13 @@ def declineRequest(request, author_serial, fqid):
     print(response)
     return redirect("accounts:profile", username=requestee.username)
 
+def sendFollowRequest(request, fqid):
+    requestee = Authors.objects.get(id=fqid)
+    requester = Authors.objects.get(id=request.user.id)
+    requestee_serializer = authorSerializer(requestee)
+    serializer = authorSerializer(requester)
+    response = requests.post(request.build_absolute_uri(f"/api/authors/{requestee.row_id.hex}/inbox"), headers={"Content-Type": "application/json"}, json={"actor": serializer.data})
+    return redirect("accounts:profile", username=request.user.username)
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 
