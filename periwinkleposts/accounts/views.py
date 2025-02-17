@@ -5,7 +5,7 @@ from django.contrib import messages
 from .models import Authors, FollowRequest
 from .serializers import authorSerializer
 from django.http import QueryDict
-from api.views import getFriends, getFollowers, getFollowRequests\
+from api.follow_views import getFriends, getFollowers, getFollowRequests\
  ,getSuggestions, acceptFollowRequest, declineFollowRequest, followRequest, getFollowees, getSentRequests
 from django.http import HttpResponseRedirect
 from django.urls import reverse
