@@ -9,8 +9,8 @@ class Authors(AbstractUser):
     id = models.CharField(max_length=200, default=None, unique=True)
     displayName = models.CharField(max_length=200, default="John Doe")
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar_url = models.URLField(blank=True, null=True)  # For image links
     github_username = models.CharField(max_length=100, blank=True, null=True, unique=True)
-    
     
     def __str__(self):
         return self.username
@@ -19,6 +19,14 @@ class Authors(AbstractUser):
         if self.id is None:
             self.id = str(self.host)+"authors/"+str(self.row_id.hex)
         super().save(*args, **kwargs)
+    
+    def avatar_display(self):
+        if self.avatar_url:
+            return self.avatar_url
+        elif self.avatar:
+            return self.avatar.url
+        else:
+            return None
 
 class Follow(models.Model):
     follower = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name="following") 

@@ -6,7 +6,7 @@ __pycache__/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-
+media/avatars/
 .env
 .venv/
 env/
@@ -16,7 +16,6 @@ build/
 dist/
 *.egg-info/
 .eggs/
-
 pip-log.txt
 pip-delete-this-directory.txt
 
@@ -26,5 +25,6 @@ pip-delete-this-directory.txt
 .DS_Store
 Thumbs.db
 
+periwinkleposts/media/avatars/
 
 

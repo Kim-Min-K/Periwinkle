@@ -12,7 +12,7 @@
             <div class="flex items-center space-x-6">
                 <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#A2A2E6]">
                     <!-- Using django-avatar, whoever needs to add custom profile pics -->
-                    <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                    <img src="{% if user.avatar_display %}{{ user.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}" 
                          alt="Profile Picture" class="w-full h-full object-cover">
                 </div>
                 <div>
