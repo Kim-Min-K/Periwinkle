@@ -8,3 +8,10 @@ class AuthorCreation(UserCreationForm):
     class Meta:
         model = Authors
         fields = ("username", "host", "github_username", "password1", "password2")
+        
+# simple form that defines what model to alter and what field
+class AvatarUpload(forms.ModelForm):
+    class Meta:
+        model = Authors
+        fields = ['avatar']
+        
