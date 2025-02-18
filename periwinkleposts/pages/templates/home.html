@@ -1,2 +1,16 @@
 {% extends "skeleton.html" %} 
 
+{% block page_content %}
+<main class="flex justify-center">
+    <!-- Main Content -->
+    <section class="flex-1 p-6">
+        <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+            <textarea class="w-full p-2 border border-gray-600 rounded-lg"
+                placeholder="What's on your mind?"></textarea>
+            <button class="mt-2 px-4 py-2 ml-5 bg-[#A2A2E6] text-white rounded-lg">Post</button>
+        </div>
+    </section>
+</main>
+</body>
+
+{% endblock %}

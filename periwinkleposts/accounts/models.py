@@ -8,7 +8,9 @@ class Authors(AbstractUser):
     host = models.CharField(max_length=200, blank=False, null=False)
     id = models.CharField(max_length=200, default=None, unique=True)
     displayName = models.CharField(max_length=200, default="John Doe")
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     github_username = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    
     
     def __str__(self):
         return self.username

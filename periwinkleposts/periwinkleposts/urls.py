@@ -15,11 +15,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.views.generic import RedirectView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view as swagger_get_schema_view
-
+from django.conf import settings
+import django.views.static
 
 schema_view = swagger_get_schema_view(
     openapi.Info(
@@ -33,10 +34,17 @@ schema_view = swagger_get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('inbox/', include('inbox.urls')),
-    path('pages/', include('pages.urls')),
+    path('pages/', include('pages.urls', namespace ='pages')),
     path('accounts/', include('accounts.urls')),
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)), 
-    path('avatar/', include('avatar.urls')),
     path('api/', include('api.urls')),
     path('api/docs', schema_view.with_ui('swagger', cache_timeout=0), name="docs")
 ]
+
+#thank god stackexchange had a fix for this -- DO NOT USE THIS IN PRODUCTION!! Caddy and Docker will serve in production. We should be testing production weeks before the due date.
+if settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', django.views.static.serve, {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+    ]

@@ -1,7 +1,9 @@
 from django.shortcuts import render
 
 def homeView(request):
+    user = request.user
     context = {
-        'username': 'JohnDoe',  
+        "username": user.username,
+        "github_username": user.github_username,
     }
-    return render(request, 'home.html', context)
+    return render(request, "home.html", context)

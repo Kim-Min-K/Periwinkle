@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import AuthorCreation
+from .forms import AuthorCreation, AvatarUpload
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Authors, FollowRequest
@@ -19,11 +19,19 @@ def loginView(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect("accounts:home")
+            return redirect("pages:home")
         else:
             messages.error(request, "Invalid username or password.")
     return render(request, "login.html")
 
+def uploadAvatar(request):
+    if request.method == 'POST':
+        form = AvatarUpload(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+    else:
+        form = AvatarUpload()
+    return render(request, 'avatar.html', {'form': form})
 
 def registerView(request):
     if request.method == "POST":
@@ -44,8 +52,6 @@ def registerView(request):
     else:
         form = AuthorCreation()
     return render(request, "register.html", {"form": form})
-    # TODO: add not matching password and existing user and existing github handling
-
 
 def profileView(request, username):
     author = get_object_or_404(Authors, username=username)
@@ -73,15 +79,6 @@ def profileView(request, username):
     }
 
     return render(request, "profile.html", context)
-
-
-def homePageView(request):
-    user = request.user
-    context = {
-        "username": user.username,
-        "github_username": user.github_username,
-    }
-    return render(request, "home.html", context)
 
 def acceptRequest(request, author_serial, fqid):
     requester = Authors.objects.get(id=fqid)
@@ -132,3 +129,5 @@ class authorAPI(viewsets.ModelViewSet):
         user = request.user
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+    
+
