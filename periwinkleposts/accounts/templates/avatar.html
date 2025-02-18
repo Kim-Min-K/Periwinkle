@@ -1,15 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Upload Avatar</title>
-</head>
-<body>
-    <h1>Upload Your Avatar</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Upload Avatar</button>
-    </form>
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}avatar upload - {{ author.username }}{% endblock %}
+
+{% block content %}
+<body class="m-0 h-screen flex justify-center bg-[#F5F5F5] font-['Inter']">
+    <div class="text-center pt-[10vh] w-full max-w-md">
+        <h1 class="text-5xl font-[Baskervville] font-light text-[#000000] mb-8">Upload Your Avatar</h1>
+        
+        <form method="post" enctype="multipart/form-data" class="flex flex-col items-center w-full">
+            {% csrf_token %}
+            
+            <input type="file" name="avatar" id="avatarInput" class="hidden" accept="image/*">
+            
+            <button type="button" id="avatarButton" 
+                    class="w-full px-6 py-3 bg-[#A2A2E6] text-white text-[15px] font-normal rounded-lg hover:bg-[#9A9AE9] transition-colors">
+                Choose Avatar
+            </button>
+
+            <div class="text-xl font-[Baskervville] font-light text-[#000000] mt-6 mb-6">OR</div>
+
+            <div class="w-full flex flex-col gap-2 pb-[3vh]">
+                {{ form.avatar_url }}
+              </div>
+            
+            <div id="imagePreview" class="mt-4 hidden">
+                <div class="text-xl font-[Baskervville] font-light text-[#000000] mb-6">Avatar Preview:</div>
+                <img id="previewImage" 
+                    class="w-32 h-32 rounded-full object-cover border-2 border-gray-200 mb-6">
+            </div>
+            
+            <div class="text-red-500 text-sm mt-2">
+                {{ form.avatar.errors }}
+            </div>
+            
+            <button type="submit" 
+                    class="w-full px-6 py-3 bg-[#A2A2E6] text-white text-[15px] font-normal rounded-lg hover:bg-[#9A9AE9] transition-colors">
+                Upload Avatar
+            </button>
+
+            {% if form.errors %}
+            <div class="mb-4 text-red-500">
+              <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const avatarInput = document.getElementById('avatarInput');
+            const avatarButton = document.getElementById('avatarButton');
+            const previewImage = document.getElementById('previewImage');
+            const imagePreview = document.getElementById('imagePreview');
+
+            avatarButton.addEventListener('click', () => avatarInput.click());
+            avatarInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewImage.src = e.target.result;
+                        imagePreview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
 </body>
-</html>
+{% endblock %}

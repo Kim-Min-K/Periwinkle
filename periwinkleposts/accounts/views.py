@@ -25,10 +25,29 @@ def loginView(request):
     return render(request, "login.html")
 
 def uploadAvatar(request):
+    user = request.user
+    print("\n--- Upload Avatar View Started ---")
     if request.method == 'POST':
-        form = AvatarUpload(request.POST, request.FILES, instance=request.user)
+        print("POST request received")
+        print("POST data:", request.POST)
+        print("FILES data:", request.FILES)
+        form = AvatarUpload(request.POST, request.FILES, instance=user)
+        print("Form instance:", user.avatar, user.avatar_url)
         if form.is_valid():
+            if 'avatar' in request.FILES:
+                user.avatar = request.FILES['avatar']
+                user.avatar_url = None  
+            elif form.cleaned_data.get('avatar_url'):
+                user.avatar_url = form.cleaned_data['avatar_url']
+                user.avatar = None  
             form.save()
+            return redirect("accounts:profile", username = user.username)  
+        else:
+            print("\nFORM ERRORS:")
+            print("Non-field errors:", form.non_field_errors())
+            for field in form:
+                print(f"Field {field.name}: {field.errors}")
+            print("\nCleaned data:", form.cleaned_data)
     else:
         form = AvatarUpload()
     return render(request, 'avatar.html', {'form': form})

@@ -8,12 +8,11 @@ from django.utils.html import mark_safe
 class AuthorsAdmin(UserAdmin):
     list_display = ("username", "email", "is_staff", "is_active", "github_username")
     fieldsets = UserAdmin.fieldsets + (
-        (
-            "Additional Info",
-            {
-                "fields": ("github_username", "avatar_preview"),
-            },
-        ),
+
+        ('Additional Info', {
+            'fields': ('github_username', 'avatar_preview', 'avatar_url', 'avatar'),
+        }),
+
     )
     readonly_fields = ("avatar_preview",)
 
