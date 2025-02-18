@@ -12,8 +12,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from dotenv import load_dotenv
+
 load_dotenv()
 import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,8 +34,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 # Application definition
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -47,7 +49,7 @@ INSTALLED_APPS = [
     "inbox",
     "rest_framework",
     "api",
-    "drf_yasg"
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -85,6 +87,7 @@ WSGI_APPLICATION = "periwinkleposts.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
+
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
@@ -100,6 +103,7 @@ DATABASES = {
         'PASSWORD': 'a',
         'HOST': 'localhost',
         'PORT': '5432',
+
     }
 }
 '''
