@@ -7,6 +7,7 @@ from .serializers import authorSerializer
 from django.http import QueryDict
 from api.follow_views import getFriends, getFollowers, getFollowRequests\
  ,getSuggestions, acceptFollowRequest, declineFollowRequest, followRequest, getFollowees, getSentRequests
+from api.viewsets import FollowersViewSet
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 import uuid
@@ -53,7 +54,7 @@ def profileView(request, username):
 
     # Connections field 
     friends = getFriends(request, author.row_id.hex).data["friends"]
-    followers = getFollowers(request, author.row_id.hex).data["followers"]
+    followers = (FollowersViewSet.as_view({'get': 'list'}))(request, author.row_id.hex).data["followers"]
     requesters = getFollowRequests(request, author.row_id.hex).data["requesters"]
     suggestions = getSuggestions(request, author.row_id.hex).data["suggestions"]
     followees = getFollowees(request, author.row_id.hex).data["followees"]
