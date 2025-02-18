@@ -5,10 +5,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from drf_yasg.utils import swagger_auto_schema
 import uuid
+from rest_framework.decorators import action
 
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer
 
+    @action(detail=False, methods=["get"])
     @swagger_auto_schema(
         operation_description="Get the followers of an author",
         responses={200: serializer_class()}
@@ -19,8 +21,54 @@ class FollowersViewSet(GenericViewSet):
         except ValueError:
             return Response({'error': 'Invalid UUID format'}, status=400)
 
-        author = get_object_or_404(Authors, pk=author_uuid)
+        followers = Follow.objects.filter(followee=author_uuid)  # Get all followers
 
-        serializer = self.get_serializer(instance=author)
+        # Get the list of followers by extracting the `follower` field from each Follow object
+        follower_ids = [connection.follower for connection in followers]
 
-        return Response(serializer.data)
+        follower_serializer = authorSerializer(follower_ids, many=True)  # Serialize multiple followers
+
+        res = {
+            "type":"followers",
+            "followers":follower_serializer.data
+        }
+
+        return Response(res)
+
+class FollowRequestViewSet(GenericViewSet):
+    serializer_class=FollowRequestSerializerRaw
+
+    @action(detail=False, methods=["post"])
+    @swagger_auto_schema(
+        operation_description="Send a follow request to an author.",
+        responses={
+            201: "Follow request successfully sent.",
+            400: "Serializer errors. "
+        }
+    )
+    def makeRequest(self, request, author_serial):
+        try:
+            with transaction.atomic():
+
+                requestee = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
+                requester_json = request.data.get("actor")
+
+                # Use requester object in database if it exists otherwise create it
+                try:
+                    requester = Authors.objects.get(id=requester_json["id"])
+                except Authors.DoesNotExist:
+                    requester_serializer = authorSerializer(data=requester_json)
+                    if not requester_serializer.is_valid():
+                        raise ValueError(requester_serializer.errors)
+                    requester = requester_serializer.save()
+                    
+                follow_request_serializer = FollowRequestSerializer(data={"requestee":requestee.row_id, "requester":requester.row_id}, partial=True)
+                if not follow_request_serializer.is_valid():
+                    raise ValueError(follow_request_serializer.errors)
+                follow_request_serializer.save()
+
+        except ValueError as e:
+            # Return the validation error message
+            return Response({"error": str(e)}, status=400)
+
+        return Response({"message":"Follow request successfuly sent."}, status=200)

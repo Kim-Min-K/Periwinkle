@@ -79,26 +79,6 @@ def declineFollowRequest(request, request_id):
         return Response({"error": str(e)}, status=400)
     return Response({"message": "Follow request successfully accepted."}, status=200)
 
-
-@api_view(['GET'])
-def getFollowers(request, author_serial):
-    try:
-        author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
-    except ValueError:
-        return Response({'error': 'Invalid UUID format'}, status=400)
-
-    followers = Follow.objects.filter(followee=author_uuid)  # Get all followers
-
-    # Get the list of followers by extracting the `follower` field from each Follow object
-    follower_ids = [connection.follower for connection in followers]
-
-    follower_serializer = authorSerializer(follower_ids, many=True)  # Serialize multiple followers
-
-    return Response({
-        "type": "followers",
-        "followers": follower_serializer.data  # Include followers' data
-    }, status=200)
-
 @api_view(['GET'])
 def getFriends(request, author_serial):
 

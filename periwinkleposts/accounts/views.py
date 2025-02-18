@@ -3,11 +3,10 @@ from .forms import AuthorCreation
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Authors, FollowRequest
-from .serializers import authorSerializer
+from .serializers import authorSerializer, FollowRequestSerializerRaw
 from django.http import QueryDict
-from api.follow_views import getFriends, getFollowers, getFollowRequests\
- ,getSuggestions, acceptFollowRequest, declineFollowRequest, followRequest, getFollowees, getSentRequests
-from api.viewsets import FollowersViewSet
+from api.follow_views import *
+from api.viewsets import FollowersViewSet, FollowRequestViewSet
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 import uuid
@@ -111,8 +110,20 @@ def sendFollowRequest(request, fqid):
     requestee = Authors.objects.get(id=fqid)
     requester = Authors.objects.get(id=request.user.id)
     requestee_serializer = authorSerializer(requestee)
-    serializer = authorSerializer(requester)
-    response = requests.post(request.build_absolute_uri(f"/api/authors/{requestee.row_id.hex}/inbox"), headers={"Content-Type": "application/json"}, json={"actor": serializer.data})
+    requester_serializer = authorSerializer(requester)
+    
+    follow_request = {
+        "type": "follow",
+        "summary": f'{requester.username} wants to follow {requestee.username}',
+        "actor": requester_serializer.data,
+        "object": requestee_serializer.data
+    }
+
+    response = requests.post(f"{requestee.host}authors/{requestee.row_id.hex}/inbox", headers={"Content-Type": "application/json"}, json=follow_request)
+    
+    if not response.ok:
+        raise Exception(response.json().get("message"))
+
     return redirect("accounts:profile", username=request.user.username)
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
