@@ -3,7 +3,7 @@ from .forms import AuthorCreation
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Authors, FollowRequest
-from .serializers import authorSerializer, FollowRequestSerializerRaw
+from .serializers import authorSerializer
 from django.http import QueryDict
 from api.follow_views import *
 from api.viewsets import FollowersViewSet, FollowRequestViewSet

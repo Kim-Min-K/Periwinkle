@@ -7,6 +7,16 @@ from drf_yasg.utils import swagger_auto_schema
 import uuid
 from rest_framework.decorators import action
 
+class FollowersSerializer(serializers.Serializer):
+    type = serializers.CharField(default="followers")
+    followers = authorSerializer(many=True)
+    
+class FollowRequestSerializerRaw(serializers.Serializer):
+    type = serializers.CharField(default="follow")
+    summary = serializers.CharField(default=None)
+    actor = authorSerializer()
+    object = authorSerializer()
+
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer
 

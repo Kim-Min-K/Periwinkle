@@ -47,13 +47,3 @@ class FollowRequestSerializer(serializers.ModelSerializer):
         fields = ['requestee', 'requester', 'requested_since']
         # This example assumes you have a unique constraint at the model level, e.g.:
         # unique_together = ('requester', 'requestee')
-
-class FollowersSerializer(serializers.Serializer):
-    type = serializers.CharField(default="followers")
-    followers = authorSerializer(many=True)
-    
-class FollowRequestSerializerRaw(serializers.Serializer):
-    type = serializers.CharField(default="follow")
-    summary = serializers.CharField(default=None)
-    actor = authorSerializer()
-    object = authorSerializer()
