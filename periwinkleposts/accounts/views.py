@@ -201,3 +201,13 @@ def create_post(request):
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
     return render(request, "home.html", {"error": "Only POST method is allowed."})
+
+
+def delete_post(request, post_id):
+    if request.method == "POST":
+        post = get_object_or_404(Post, id=post_id, author=request.user)
+        post.is_deleted = True
+        post.save()
+        return redirect("pages:home")
+
+    return render(request, "home.html", {"error": "Only POST method is allowed."})

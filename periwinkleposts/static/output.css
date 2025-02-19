@@ -522,9 +522,6 @@
   }
 }
 @layer utilities {
-  .fixed {
-    position: fixed;
-  }
   .static {
     position: static;
   }
@@ -590,6 +587,9 @@
   }
   .hidden {
     display: none;
+  }
+  .inline {
+    display: inline;
   }
   .inline-flex {
     display: inline-flex;
@@ -870,6 +870,9 @@
   .text-\[\#A2A2E6\] {
     color: #A2A2E6;
   }
+  .text-black {
+    color: var(--color-black);
+  }
   .text-gray-500 {
     color: var(--color-gray-500);
   }
@@ -878,6 +881,9 @@
   }
   .text-gray-700 {
     color: var(--color-gray-700);
+  }
+  .text-gray-800 {
+    color: var(--color-gray-800);
   }
   .text-red-500 {
     color: var(--color-red-500);
@@ -988,6 +994,13 @@
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-red-600);
+      }
+    }
+  }
+  .hover\:bg-red-700 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-red-700);
       }
     }
   }

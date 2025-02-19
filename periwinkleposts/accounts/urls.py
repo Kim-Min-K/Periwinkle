@@ -1,7 +1,7 @@
-from django.urls import path, include
+from django.urls import path, include, re_path
 from . import views
 from rest_framework.routers import DefaultRouter
-from .views import authorAPI, create_post
+from .views import authorAPI, create_post, delete_post
 
 app_name = "accounts"
 
@@ -24,6 +24,7 @@ urlpatterns = [
     ),
     path("avatar/", views.uploadAvatar, name="avatar"),
     path("create-post/", create_post, name="create_post"),
+    path("post/delete/<uuid:post_id>/", delete_post, name="delete_post"),
 ]
 router = DefaultRouter()
 router.register(r"users", authorAPI)
