@@ -522,9 +522,6 @@
   }
 }
 @layer utilities {
-  .fixed {
-    position: fixed;
-  }
   .static {
     position: static;
   }
@@ -878,6 +875,9 @@
   }
   .text-gray-700 {
     color: var(--color-gray-700);
+  }
+  .text-gray-800 {
+    color: var(--color-gray-800);
   }
   .text-red-500 {
     color: var(--color-red-500);

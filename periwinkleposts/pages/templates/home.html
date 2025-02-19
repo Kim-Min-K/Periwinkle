@@ -46,6 +46,24 @@
                 </div>
             </form>
         </div>
+
+        <!-- display for posts -->
+        <div class="mt-8">
+            <h2 class="text-lg font-semibold text-gray-800">Recent Posts</h2>
+            {% for post in posts %}
+            <div class="mt-4 bg-gray-100 p-4 rounded-lg shadow">
+                <h3 class="font-semibold">{{ post.title }}</h3>
+                <p class="text-sm text-gray-600">{{ post.published|date:"N d, Y H:i" }}</p>
+                <p>{{ post.description }}</p>
+                <div>{{post.content}}</div>
+                {% if post.image %}
+                <img src="{{ post.image.url }}" alt="Post Image" style="max-width: 100%; height: auto;">
+                {% endif %}
+            </div>
+            {% empty %}
+            <p>No posts to show.</p>
+            {% endfor %}
+        </div>
     </section>
 </main>
 {% endblock %}
