@@ -4,7 +4,9 @@
 <main class="flex justify-center">
     <section class="flex-1 p-6">
         <div class="bg-white p-4 rounded-lg shadow-md mb-4">
-            <form method="POST" action="{% url 'accounts:create_post' %}" class="space-y-4">
+            <!-- Add enctype attribute to handle file uploads -->
+            <form method="POST" action="{% url 'accounts:create_post' %}" class="space-y-4"
+                enctype="multipart/form-data">
                 {% csrf_token %}
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
@@ -30,10 +32,13 @@
                         class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                         <option value="text/markdown">Markdown</option>
                         <option value="text/plain">Plain Text</option>
-                        <option value="application/base64">Base64 Image</option>
-                        <option value="image/png;base64">PNG Image</option>
-                        <option value="image/jpeg;base64">JPEG Image</option>
                     </select>
+                </div>
+                <div>
+                    <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+                    <input type="file" name="image" id="image"
+                        class="mt-1 block w-full px-3 py-2 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        accept="image/*">
                 </div>
                 <div class="flex justify-end">
                     <button type="submit"

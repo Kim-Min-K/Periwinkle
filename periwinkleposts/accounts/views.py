@@ -181,6 +181,7 @@ def create_post(request):
         description = request.POST.get("description")
         content = request.POST.get("content")
         content_type = request.POST.get("contentType")
+        image = request.FILES.get("image")
 
         if not all([title, description, content, content_type]):
             return HttpResponse("All fields are required.", status=400)
@@ -191,13 +192,12 @@ def create_post(request):
                 description=description,
                 content=content,
                 contentType=content_type,
-                author=request.user,  # This uses the logged-in user
+                author=request.user,
+                image=image,
             )
             post.save()
-            return redirect("pages:home")  # Redirect after post
+            return redirect("pages:home")
         except Exception as e:
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
-    return render(
-        request, "home.html", {"error": "Only POST method is allowed."}
-    )  # Return to home with an error message
+    return render(request, "home.html", {"error": "Only POST method is allowed."})

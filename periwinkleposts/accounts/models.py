@@ -23,7 +23,7 @@ class Authors(AbstractUser):
         if self.id is None:
             self.id = str(self.host) + "authors/" + str(self.row_id.hex)
         super().save(*args, **kwargs)
-    
+
     def avatar_display(self):
         if self.avatar_url:
             return self.avatar_url
@@ -92,13 +92,11 @@ class Post(models.Model):
     contentType = models.CharField(
         max_length=50,
         choices=[
-            ("text/markdown", "Markdown"),
             ("text/plain", "Plain Text"),
-            ("application/base64", "Base64 Image"),
-            ("image/png;base64", "PNG Image"),
-            ("image/jpeg;base64", "JPEG Image"),
+            ("text/markdown", "Markdown"),
         ],
     )
+    image = models.ImageField(default="images/fallback.png", blank=True)
     published = models.DateTimeField(auto_now_add=True)
     id = models.CharField(max_length=200, unique=True, default=None)
     page = models.CharField(max_length=200, blank=True, null=True)
