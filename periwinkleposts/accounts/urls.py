@@ -25,7 +25,6 @@ urlpatterns = [
     path("avatar/", views.uploadAvatar, name="avatar"),
     path("create-post/", create_post, name="create_post"),
 ]
-
 router = DefaultRouter()
 router.register(r"users", authorAPI)
 
