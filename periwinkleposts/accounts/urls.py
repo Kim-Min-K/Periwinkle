@@ -1,7 +1,7 @@
 from django.urls import path, include
 from . import views
 from rest_framework.routers import DefaultRouter
-from .views import authorAPI
+from .views import authorAPI, create_post
 
 app_name = "accounts"
 
@@ -9,10 +9,21 @@ urlpatterns = [
     path("register/", views.registerView, name="register"),
     path("login/", views.loginView, name="login"),
     path("profile/<str:username>", views.profileView, name="profile"),
-    path("authors/<str:author_serial>/followers/<path:fqid>/accept", views.acceptRequest, name="acceptRequest"),
-    path("authors/<str:author_serial>/followers/<path:fqid>/decline", views.declineRequest, name="declineRequest"),
-    path("authors/<path:fqid>/inbox", views.sendFollowRequest, name="sendFollowRequest"),
-    path("avatar/", views.uploadAvatar, name="avatar")
+    path(
+        "authors/<str:author_serial>/followers/<path:fqid>/accept",
+        views.acceptRequest,
+        name="acceptRequest",
+    ),
+    path(
+        "authors/<str:author_serial>/followers/<path:fqid>/decline",
+        views.declineRequest,
+        name="declineRequest",
+    ),
+    path(
+        "authors/<path:fqid>/inbox", views.sendFollowRequest, name="sendFollowRequest"
+    ),
+    path("avatar/", views.uploadAvatar, name="avatar"),
+    path("create-post/", create_post, name="create_post"),
 ]
 
 router = DefaultRouter()
