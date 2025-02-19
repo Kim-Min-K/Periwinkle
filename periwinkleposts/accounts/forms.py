@@ -44,3 +44,8 @@ class AvatarUpload(forms.ModelForm):
             raise forms.ValidationError("No changes detected")
 
         return cleaned_data
+    
+class EditProfile(forms.ModelForm):
+    class Meta:
+        model = Authors
+        fields = ['username', 'email', 'displayName', 'github_username']

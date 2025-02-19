@@ -24,6 +24,11 @@
                                 <input type="text" name="your_field" placeholder="Enter something" hidden>
                                 <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
                             </form>
+                        {% else %}
+                            <!-- edit profile button, only visible on your own account?-->
+                            <a href="{% url 'accounts:edit_profile' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90">Edit Profile</a>
+                            <!-- edit avatar button, only visible on your own account, might need some more work done? could be integrated into edit profile? -->
+                            <a href="{% url 'accounts:avatar' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90">Edit Avatar</a>
                         {% endif %}
                     </div>
                     <div class="flex space-x-6 mt-2">

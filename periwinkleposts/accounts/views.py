@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import AuthorCreation, AvatarUpload
+from .forms import AuthorCreation, AvatarUpload, EditProfile
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Authors, FollowRequest
@@ -154,6 +155,19 @@ def sendFollowRequest(request, fqid):
 
     return redirect("accounts:profile", username=request.user.username)
 
+@login_required #ensures that this only works if user is logged in/authenticated, not sure if really needed???
+def edit_profile(request):
+    user = request.user
+    
+    if request.method == 'POST':
+        form = EditProfile(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:profile', username=user.username)
+    else:
+        form = EditProfile(instance=user) #prefill with current/existing data
+    
+    return render(request, 'edit_profile.html', {'form': form})
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 

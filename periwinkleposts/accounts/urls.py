@@ -25,6 +25,7 @@ urlpatterns = [
     path("avatar/", views.uploadAvatar, name="avatar"),
     path("create-post/", create_post, name="create_post"),
     path("post/delete/<uuid:post_id>/", delete_post, name="delete_post"),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
 ]
 router = DefaultRouter()
 router.register(r"users", authorAPI)
