@@ -84,7 +84,7 @@ class FollowRequest(models.Model):
 
 
 class Post(models.Model):
-    row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     author = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name="posts")
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -98,19 +98,7 @@ class Post(models.Model):
     )
     image = models.ImageField(default="images/fallback.png", blank=True)
     published = models.DateTimeField(auto_now_add=True)
-    id = models.CharField(max_length=200, unique=True, default=None)
     page = models.CharField(max_length=200, blank=True, null=True)
-
-    def save(self, *args, **kwargs):
-        if not self.id:
-            self.id = (
-                str(self.author.host)
-                + "authors/"
-                + (self.author.row_id.hex)
-                + "/posts/"
-                + (self.row_id.hex)
-            )
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
