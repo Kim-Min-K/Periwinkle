@@ -522,17 +522,8 @@
   }
 }
 @layer utilities {
-  .absolute {
-    position: absolute;
-  }
   .static {
     position: static;
-  }
-  .top-2 {
-    top: calc(var(--spacing) * 2);
-  }
-  .right-2 {
-    right: calc(var(--spacing) * 2);
   }
   .container {
     width: 100%;

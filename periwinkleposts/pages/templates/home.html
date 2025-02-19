@@ -4,10 +4,11 @@
 <main class="flex justify-center">
     <section class="flex-1 p-6">
         <div class="bg-white p-4 rounded-lg shadow-md mb-4">
-            <!-- Add enctype attribute to handle file uploads -->
+            <!-- Form for creating posts -->
             <form method="POST" action="{% url 'accounts:create_post' %}" class="space-y-4"
                 enctype="multipart/form-data">
                 {% csrf_token %}
+                <!-- Input fields and button -->
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
                     <input type="text" name="title" id="title" placeholder="Enter title"
@@ -47,16 +48,17 @@
             </form>
         </div>
 
-        <!-- display for posts -->
+        <!-- Display for posts -->
         <div class="mt-8">
             <h2 class="text-lg font-semibold text-gray-800">Recent Posts</h2>
             {% for post in posts %}
+            {% if not post.is_deleted %}
             <div class="mt-4 bg-gray-100 p-4 rounded-lg shadow">
                 <h2 class="font-medium text-black">{{ post.author }}</h2>
                 <h3 class="font-semibold">{{ post.title }}</h3>
                 <p class="text-sm text-gray-600">{{ post.published|date:"N d, Y H:i" }}</p>
                 <p>{{ post.description }}</p>
-                <div>{{post.content}}</div>
+                <div>{{ post.content }}</div>
                 {% if post.image %}
                 <img src="{{ post.image.url }}" alt="Post Image" style="max-width: 100%; height: auto;">
                 {% endif %}
@@ -64,16 +66,10 @@
                 <form action="{% url 'accounts:delete_post' post.id %}" method="POST" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                        onclick="return confirm('Confirm delete post?');">
-                        Delete
-                    </button>
-
-                </form>
-                {% csrf_token %}
-
+                        onclick="return confirm('Confirm delete post?');">Delete</button>
                 </form>
             </div>
-
+            {% endif %}
             {% empty %}
             <p>No posts to show.</p>
             {% endfor %}
