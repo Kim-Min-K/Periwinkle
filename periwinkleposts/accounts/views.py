@@ -3,8 +3,8 @@ from .forms import AuthorCreation, AvatarUpload, EditProfile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from .models import Authors, FollowRequest
-from .serializers import authorSerializer
+from .models import Authors, FollowRequest, Comment, Like
+from .serializers import authorSerializer, CommentSerialier, LikeSerializer
 from django.http import QueryDict
 from api.follow_views import *
 from api.viewsets import FollowersViewSet, FollowRequestViewSet
@@ -225,3 +225,44 @@ def delete_post(request, post_id):
         return redirect("pages:home")
 
     return render(request, "home.html", {"error": "Only POST method is allowed."})
+
+
+#--------------Comment----------------
+class CommentView(viewsets.ModelViewSet):
+    serializer_class = CommentSerialier
+    queryset = Comment.objects.all().order_by('published') 
+    
+    # detail = True meant for a specific object
+    @action(detail = True, methods = ['get'])
+    def post_comments(self, request, author_serial, post_serial):
+        post = get_object_or_404(Post, id = post_serial)
+        comments = Comment.objects.filter(post = post).order_by('published')
+        serialier = self.get_serializer(comments, many = True)
+        return Response(serialier.data)
+    
+    def create(self, request, author_serial, post_serial):
+        post = get_object_or_404(Post, id = post_serial)
+        serializer = self.get_serializer(data = request.data)
+        if serializer.is_valid():
+            serializer.save(author=author_serial, post = post)
+            return redirect("pages:home")
+        return render(request, "home.html", {"error": "Something wents wrong"})
+    
+class LikeView(viewsets.ModelViewSet):
+    serializer_class = LikeSerializer
+    queryset = Like.objects.all().order_by('published')
+
+    
+    @action(detail=True, methods=["get"])
+    def post_likes(self, request, author_serial, post_serial):
+        post = get_object_or_404(Post, id=post_serial)
+        likes = Like.objects.filter(post=post).order_by("published")
+        serializer = self.get_serializer(likes, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=["post"])
+    def like_post(self, request, author_serial, post_serial):
+        post = get_object_or_404(Post, id=post_serial)
+        like, created = Like.objects.get_or_create(author=request.user, post=post)
+        serializer = self.get_serializer(like)
+        return redirect("pages:home")
