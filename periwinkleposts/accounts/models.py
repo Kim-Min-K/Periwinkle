@@ -98,7 +98,8 @@ class Post(models.Model):
             ("text/markdown", "Markdown"),
         ],
     )
-    image = models.ImageField(default="images/fallback.png", blank=True)
+    image = models.ImageField(default="media/fallback.png", blank=True)
+    video = models.FileField(upload_to="media/", null=True, blank=True)
     published = models.DateTimeField(auto_now_add=True)
     page = models.CharField(max_length=200, blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
@@ -106,39 +107,50 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
+
 class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    author = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name='comments')
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(
+        Authors, on_delete=models.CASCADE, related_name="comments"
+    )
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     comment = models.TextField()
     published = models.DateTimeField(auto_now_add=True)
     content_type = models.CharField(
-        max_length = 50,
+        max_length=50,
         choices=[
             ("text/plain", "Plain Text"),
             ("text/markdown", "Markdown"),
         ],
-        default= "text/plain"
+        default="text/plain",
     )
 
     def __str__(self):
         return f"{self.author.displayName} commented on {self.published}"
 
+
 class Like(models.Model):
-     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-     author = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name='likes')
-     # https://stackoverflow.com/questions/8609192/what-is-the-difference-between-null-true-and-blank-true-in-django
-     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes', null = True, blank = True)
-     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes', null = True, blank = True)
-     published = models.DateTimeField(auto_now_add=True)
-     class Meta:
-         constraints = [
-            models.UniqueConstraint(fields=['author', 'post'], name='unique_like_post'),
-            models.UniqueConstraint(fields=['author', 'comment'], name='unique_like_comment')
-         ]
-     def __str__(self):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    author = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name="likes")
+    # https://stackoverflow.com/questions/8609192/what-is-the-difference-between-null-true-and-blank-true-in-django
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name="likes", null=True, blank=True
+    )
+    comment = models.ForeignKey(
+        Comment, on_delete=models.CASCADE, related_name="likes", null=True, blank=True
+    )
+    published = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["author", "post"], name="unique_like_post"),
+            models.UniqueConstraint(
+                fields=["author", "comment"], name="unique_like_comment"
+            ),
+        ]
+
+    def __str__(self):
         if self.post:
             return f"{self.author.displayName} like post {self.post.title}"
         else:
             return f"{self.author.displayName} like comment {self.comment.id}"
-        

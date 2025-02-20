@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from .forms import AuthorCreation, AvatarUpload, EditProfile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
@@ -8,8 +8,6 @@ from .serializers import authorSerializer, CommentSerialier, LikeSerializer
 from django.http import QueryDict
 from api.follow_views import *
 from api.viewsets import FollowersViewSet, FollowRequestViewSet
-from django.http import HttpResponseRedirect
-from django.urls import reverse
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
@@ -155,19 +153,21 @@ def sendFollowRequest(request, fqid):
 
     return redirect("accounts:profile", username=request.user.username)
 
-@login_required #ensures that this only works if user is logged in/authenticated, not sure if really needed???
+
+@login_required  # ensures that this only works if user is logged in/authenticated, not sure if really needed???
 def edit_profile(request):
     user = request.user
-    
-    if request.method == 'POST':
+
+    if request.method == "POST":
         form = EditProfile(request.POST, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('accounts:profile', username=user.username)
+            return redirect("accounts:profile", username=user.username)
     else:
-        form = EditProfile(instance=user) #prefill with current/existing data
-    
-    return render(request, 'edit_profile.html', {'form': form})
+        form = EditProfile(instance=user)  # prefill with current/existing data
+
+    return render(request, "edit_profile.html", {"form": form})
+
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 
@@ -196,6 +196,7 @@ def create_post(request):
         content = request.POST.get("content")
         content_type = request.POST.get("contentType")
         image = request.FILES.get("image")
+        video = request.FILES.get("video")
 
         if not all([title, description, content, content_type]):
             return HttpResponse("All fields are required.", status=400)
@@ -208,6 +209,7 @@ def create_post(request):
                 contentType=content_type,
                 author=request.user,
                 image=image,
+                video=video,
             )
             post.save()
             return redirect("pages:home")
@@ -227,39 +229,39 @@ def delete_post(request, post_id):
     return render(request, "home.html", {"error": "Only POST method is allowed."})
 
 
-#--------------Comment----------------
+# --------------Comment----------------
 class CommentView(viewsets.ModelViewSet):
     serializer_class = CommentSerialier
-    queryset = Comment.objects.all().order_by('published') 
-    
+    queryset = Comment.objects.all().order_by("published")
+
     # detail = True meant for a specific object
-    @action(detail = True, methods = ['get'])
+    @action(detail=True, methods=["get"])
     def post_comments(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id = post_serial)
-        comments = Comment.objects.filter(post = post).order_by('published')
-        serialier = self.get_serializer(comments, many = True)
+        post = get_object_or_404(Post, id=post_serial)
+        comments = Comment.objects.filter(post=post).order_by("published")
+        serialier = self.get_serializer(comments, many=True)
         return Response(serialier.data)
-    
+
     def create(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id = post_serial)
-        serializer = self.get_serializer(data = request.data)
+        post = get_object_or_404(Post, id=post_serial)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(author=author_serial, post = post)
+            serializer.save(author=author_serial, post=post)
             return redirect("pages:home")
         return render(request, "home.html", {"error": "Something wents wrong"})
-    
+
+
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
-    queryset = Like.objects.all().order_by('published')
+    queryset = Like.objects.all().order_by("published")
 
-    
     @action(detail=True, methods=["get"])
     def post_likes(self, request, author_serial, post_serial):
         post = get_object_or_404(Post, id=post_serial)
         likes = Like.objects.filter(post=post).order_by("published")
         serializer = self.get_serializer(likes, many=True)
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=["post"])
     def like_post(self, request, author_serial, post_serial):
         post = get_object_or_404(Post, id=post_serial)
