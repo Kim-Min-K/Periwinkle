@@ -95,7 +95,7 @@
                 <div class="mt-3">
                     <form method="POST" action="{% url 'accounts:post_comments' post.author.row_id post.id %}">
                         {% csrf_token %}
-                        <textarea name="comment" placeholder="Write a comment..." class="w-full p-2 border rounded"></textarea>
+                        <textarea name="comment" placeholder="Write a comment..." class="w-full p-2 border rounded"required></textarea>
                         <label for="commentContentType" class="block text-sm font-medium text-gray-700 mt-2">Content Type</label>
                         <select id="commentContentType" name="contentType"
                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
