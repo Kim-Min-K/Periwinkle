@@ -272,3 +272,17 @@ class LikeView(viewsets.ModelViewSet):
         like, created = Like.objects.get_or_create(author=request.user, post=post)
         serializer = self.get_serializer(like)
         return redirect("pages:home")
+    
+    @action(detail=True, methods=["get"])
+    def comment_likes(self, request, author_serial, comment_serial):
+        comment = get_object_or_404(Comment, id=comment_serial)
+        likes = Like.objects.filter(comment=comment).order_by("published")
+        serializer = self.get_serializer(likes, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def like_comment(self, request, author_serial, comment_serial):
+        comment = get_object_or_404(Comment, id=comment_serial)
+        like, created = Like.objects.get_or_create(author=request.user, comment=comment)
+        serializer = self.get_serializer(like)
+        return redirect("pages:home")
