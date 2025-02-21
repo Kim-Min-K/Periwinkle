@@ -75,12 +75,12 @@ class FollowRequestSerializer(serializers.ModelSerializer):
 }
 '''
 class CommentSerialier(serializers.ModelSerializer):
-    type = serializers.CharField(default = 'comment')
+    type = serializers.CharField(default = 'comment', read_only = True)
     author = serializers.SerializerMethodField()
     comment = serializers.CharField()
-    contentType = serializers.CharField()
+    contentType = serializers.CharField(source = 'content_type')
     # https://www.django-rest-framework.org/api-guide/fields/#date-and-time-fields
-    published = serializers.DateTimeField()
+    published = serializers.DateTimeField(read_only = True)
     # https://www.django-rest-framework.org/api-guide/fields/#serializermethodfield
     # To get the value by calling method
     id = serializers.SerializerMethodField()

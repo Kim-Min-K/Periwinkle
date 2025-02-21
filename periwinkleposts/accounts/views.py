@@ -243,18 +243,22 @@ class CommentView(viewsets.ModelViewSet):
         return Response(serialier.data)
 
     def create(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id=post_serial)
-        serializer = self.get_serializer(data=request.data)
+        post = get_object_or_404(Post, id = post_serial)
+        serializer = self.get_serializer(data = request.data)
+        author = get_object_or_404(Authors, row_id=author_serial)  
         if serializer.is_valid():
-            serializer.save(author=author_serial, post=post)
+            print("Serializer Validated Data:", serializer.validated_data)
+            serializer.save(author=author, post = post)
+            print("Comment successfully saved!")
             return redirect("pages:home")
+        print("Serializer Errors:", serializer.errors)
         return render(request, "home.html", {"error": "Something wents wrong"})
 
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
-    queryset = Like.objects.all().order_by("published")
-
+    queryset = Like.objects.all().order_by('published')
+    
     @action(detail=True, methods=["get"])
     def post_likes(self, request, author_serial, post_serial):
         post = get_object_or_404(Post, id=post_serial)
