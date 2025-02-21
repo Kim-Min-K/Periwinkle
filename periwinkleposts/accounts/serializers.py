@@ -75,12 +75,12 @@ class FollowRequestSerializer(serializers.ModelSerializer):
 }
 '''
 class CommentSerialier(serializers.ModelSerializer):
-    type = serializers.CharField(default = 'comment')
+    type = serializers.CharField(default = 'comment', read_only = True)
     author = serializers.SerializerMethodField()
     comment = serializers.CharField()
-    contentType = serializers.CharField()
+    contentType = serializers.CharField(source = 'content_type')
     # https://www.django-rest-framework.org/api-guide/fields/#date-and-time-fields
-    published = serializers.DateTimeField()
+    published = serializers.DateTimeField(read_only = True)
     # https://www.django-rest-framework.org/api-guide/fields/#serializermethodfield
     # To get the value by calling method
     id = serializers.SerializerMethodField()
@@ -92,10 +92,10 @@ class CommentSerialier(serializers.ModelSerializer):
         fields = ['type','author', 'comment','contentType','published','id','post','likes']
     
     def get_id(self, obj):
-        return f"{obj.author.host}authors/{obj.author.id}/commented/{obj.id}"
+        return f"{obj.author.id}/commented/{obj.id}"
     
     def get_post(self, obj):
-        return f"{obj.author.host}authors/{obj.post.author.id}/posts/{obj.post.id}"
+        return f"{obj.post.author.id}/posts/{obj.post.id}"
     
     '''"
     author":{
@@ -113,7 +113,7 @@ class CommentSerialier(serializers.ModelSerializer):
         host_without_api = author_obj.host.rstrip("api/")
         return {
             "type": "author",
-            "id": f"{author_obj.host}authors/{author_obj.id}",
+            "id": author_obj.id,
             "page": f"{host_without_api}/authors/{author_obj.username}",
             "host": {author_obj.host},
             "displayName": author_obj.displayName,
@@ -139,8 +139,8 @@ class CommentSerialier(serializers.ModelSerializer):
         host_without_api = obj.author.host.rstrip("api/")
         return {
             'type': 'likes',
-            'id':   f"{obj.author.host}authors/{obj.author.id}/commented/{obj.id}/likes",
-            'page': f"{host_without_api}/authors/{obj.author.id}/comments/{obj.id}/likes",
+            'id':   f"{obj.author.id}/commented/{obj.id}/likes",
+            'page': f"{obj.author.id}/comments/{obj.id}/likes",
             "page_number": 1,
             "size": 50,
             "count": total,
@@ -148,7 +148,7 @@ class CommentSerialier(serializers.ModelSerializer):
         }
     # def create(self, validated_data):
         
-
+    
 
 '''{
     "type":"like",
@@ -180,13 +180,13 @@ class LikeSerializer(serializers.Serializer):
         fileds = ['type', 'author','published','id','object']
 
     def get_id(self,obj):
-        return f"{obj.author.host}authors/{obj.author.id}/liked/{obj.id}"
+        return f"{obj.author.id}/liked/{obj.id}"
     
     def get_object(self, obj):
         if obj.post:
-            return f"{obj.author.host}authors/{obj.post.author.id}/posts/{obj.post.id}"
+            return f"{obj.post.author.id}/posts/{obj.post.id}"
         elif obj.comment:
-            return f"{obj.author.host}authors/{obj.comment.author.id}/commented/{obj.comment.id}"
+            return f"{obj.comment.author.id}/commented/{obj.comment.id}"
         return None
     
     def get_author(self, obj):
@@ -194,7 +194,8 @@ class LikeSerializer(serializers.Serializer):
         host_without_api = author_obj.host.rstrip("api/")
         return {
             "type": "author",
-            "id": f"{author_obj.host}authors/{author_obj.id}",
+            # "id": f"{author_obj.host}authors/{author_obj.id}",
+            "id": author_obj.id,
             "page": f"{host_without_api}/authors/{author_obj.username}",
             "host": {author_obj.host},
             "displayName": author_obj.displayName,

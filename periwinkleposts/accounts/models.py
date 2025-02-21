@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinLengthValidator
 import uuid
-
+from datetime import datetime
 
 class Authors(AbstractUser):
     row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -115,7 +115,7 @@ class Comment(models.Model):
     )
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     comment = models.TextField()
-    published = models.DateTimeField(auto_now_add=True)
+    published = models.DateTimeField(default = datetime.now)
     content_type = models.CharField(
         max_length=50,
         choices=[
@@ -130,26 +130,18 @@ class Comment(models.Model):
 
 
 class Like(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    author = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name="likes")
-    # https://stackoverflow.com/questions/8609192/what-is-the-difference-between-null-true-and-blank-true-in-django
-    post = models.ForeignKey(
-        Post, on_delete=models.CASCADE, related_name="likes", null=True, blank=True
-    )
-    comment = models.ForeignKey(
-        Comment, on_delete=models.CASCADE, related_name="likes", null=True, blank=True
-    )
-    published = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["author", "post"], name="unique_like_post"),
-            models.UniqueConstraint(
-                fields=["author", "comment"], name="unique_like_comment"
-            ),
-        ]
-
-    def __str__(self):
+     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+     author = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name='likes')
+     # https://stackoverflow.com/questions/8609192/what-is-the-difference-between-null-true-and-blank-true-in-django
+     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes', null = True, blank = True)
+     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes', null = True, blank = True)
+     published = models.DateTimeField(default = datetime.now)
+     class Meta:
+         constraints = [
+            models.UniqueConstraint(fields=['author', 'post'], name='unique_like_post'),
+            models.UniqueConstraint(fields=['author', 'comment'], name='unique_like_comment')
+         ]
+     def __str__(self):
         if self.post:
             return f"{self.author.displayName} like post {self.post.title}"
         else:
