@@ -72,7 +72,6 @@
                     <source src="{{ post.video.url }}" type="video/mp4">
                 </video>
                 {% endif %}
-
                 <!-- Like Button -->
                 <form action="{% url 'accounts:post_likes' author_serial=post.author.row_id post_serial=post.id %}
                 " method="POST" style="display: inline;">
@@ -82,15 +81,6 @@
                         Like ({{ post.likes.count }})
                     </button>
                 </form>
-
-                <!-- Like Button for Posts -->
-                <form action="{% url 'accounts:post_likes' author_serial=post.author.row_id post_serial=post.id %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="mt-1 px-3 py-1 border rounded-md bg-blue-500 text-white">
-                         Like ({{ post.likes.count }})
-                    </button>
-                </form>
-
                 <!-- Comment Form -->
                 <div class="mt-3">
                     <form method="POST" action="{% url 'accounts:post_comments' post.author.row_id post.id %}">
@@ -108,7 +98,6 @@
                         </button>
                     </form>
                 </div>
-
                 <!-- Display Comments -->
                 <div class="mt-4">
                     <h4 class="text-sm font-bold">Comments:</h4>

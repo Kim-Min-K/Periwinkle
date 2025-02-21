@@ -247,11 +247,11 @@ class CommentView(viewsets.ModelViewSet):
         serializer = self.get_serializer(data = request.data)
         author = get_object_or_404(Authors, row_id=author_serial)  
         if serializer.is_valid():
-            print("Serializer Validated Data:", serializer.validated_data)
+            # print("Serializer Validated Data:", serializer.validated_data)
             serializer.save(author=author, post = post)
-            print("Comment successfully saved!")
+            # print("Comment successfully saved!")
             return redirect("pages:home")
-        print("Serializer Errors:", serializer.errors)
+        # print("Serializer Errors:", serializer.errors)
         return render(request, "home.html", {"error": "Something wents wrong"})
 
 

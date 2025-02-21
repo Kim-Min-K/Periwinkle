@@ -148,7 +148,7 @@ class CommentSerialier(serializers.ModelSerializer):
         }
     # def create(self, validated_data):
         
-
+    
 
 '''{
     "type":"like",
