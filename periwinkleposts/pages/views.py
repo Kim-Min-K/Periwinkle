@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 
 def homeView(request):
     user = request.user
-    posts = Post.objects.all().order_by("-published")
+    posts = Post.objects.filter(is_deleted=False).order_by("-published")
 
     #convert content in posts where contentType == "text/markdown"
     for post in posts:

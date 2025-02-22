@@ -57,7 +57,6 @@
         <div class="mt-8">
             <h2 class="text-lg font-semibold text-gray-800">Recent Posts</h2>
             {% for post in posts %}
-            {% if not post.is_deleted %}
             <div class="mt-4 bg-gray-100 p-4 rounded-lg shadow">
                 <h2 class="font-medium text-black">{{ post.author }}</h2>
                 <h3 class="font-semibold">{{ post.title }}</h3>
@@ -123,7 +122,6 @@
                         onclick="return confirm('Confirm delete post?');">Delete</button>
                 </form>
             </div>
-            {% endif %}
             {% empty %}
             <p>No posts to show.</p>
             {% endfor %}
