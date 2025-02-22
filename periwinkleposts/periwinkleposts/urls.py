@@ -41,7 +41,7 @@ urlpatterns = [
     path('api/docs', schema_view.with_ui('swagger', cache_timeout=0), name="docs")
 ]
 
-#thank god stackexchange had a fix for this -- DO NOT USE THIS IN PRODUCTION!! Caddy and Docker will serve in production. We should be testing production weeks before the due date.
+# thank god stackexchange had a fix for this -- DO NOT USE THIS IN PRODUCTION!! Caddy and Docker will serve in production. We should be testing production weeks before the due date.
 if settings.DEBUG:
     urlpatterns += [
         re_path(r'^media/(?P<path>.*)$', django.views.static.serve, {
