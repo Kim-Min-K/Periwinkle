@@ -4,56 +4,74 @@
 {% block page_content %}
 <main class="flex justify-center">
     <section class="flex-1 p-6 max-w-6xl">
-        <div class="bg-white p-4 rounded-lg shadow-md mb-4">
-            <!-- Form for creating posts -->
-            <form method="POST" action="{% url 'accounts:create_post' %}" class="space-y-4"
-                enctype="multipart/form-data">
-                {% csrf_token %}
-                <!-- Input fields and button -->
-                <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
-                    <input type="text" name="title" id="title" placeholder="Enter title"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        required>
-                </div>
-                <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea name="description" id="description" rows="3" placeholder="Describe your post"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        required></textarea>
-                </div>
-                <div>
-                    <label for="content" class="block text-sm font-medium text-gray-700">Content</label>
-                    <textarea name="content" id="content" rows="4" placeholder="Content here..."
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        required></textarea>
-                </div>
-                <div>
-                    <label for="contentType" class="block text-sm font-medium text-gray-700">Content Type</label>
-                    <select id="contentType" name="contentType"
-                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        <option value="text/plain">Plain Text</option>
-                        <option value="text/markdown">Markdown</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
-                    <input type="file" name="image" id="image"
-                        class="mt-1 block w-full px-3 py-2 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        accept="image/*">
-                </div>
-                <div>
-                    <label for="video" class="block text-sm font-medium text-gray-700">Video</label>
-                    <input type="file" name="video" id="videoInput" accept="video/*"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </div>
-                <div class="flex justify-end">
-                    <button type="submit"
-                        class="inline-flex justify-center px-3 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Post</button>
-                </div>
-            </form>
-        </div>
+        
+        <!-- Floating Add Post Button -->
+        <button id="openPostForm"
+                class="fixed bottom-6 right-6 bg-[#A2A2E6] text-white p-4 rounded-full shadow-2xl hover:bg-[#8585E6] transition duration-300"
+        >
+            ➕
+        </button>
 
+        <!-- Popup Modal for Creating a Post -->
+        <div id="postModal" class="fixed inset-20 flex items-center justify-center bg-white hidden">
+            <div class="bg-white p-8 rounded-lg shadow-2xl mb-4 w-full">
+
+                <!-- Close Button -->
+                <button id="closePostForm" class="absolute top-4 right-2 text-gray-500 hover:text-gray-700 text-4xl">&times;</button>
+
+                <!-- Post Text -->
+                <h2 class="text-xl font-semibold mb-4">Create a New Post</h2>
+
+                <!-- Form for creating posts -->
+                <form method="POST" action="{% url 'accounts:create_post' %}" class="space-y-4"
+                    enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <!-- Input fields and button -->
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+                        <input type="text" name="title" id="title" placeholder="Enter title"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            required>
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea name="description" id="description" rows="3" placeholder="Describe your post"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            required></textarea>
+                    </div>
+                    <div>
+                        <label for="content" class="block text-sm font-medium text-gray-700">Content</label>
+                        <textarea name="content" id="content" rows="4" placeholder="Content here..."
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            required></textarea>
+                    </div>
+                    <div>
+                        <label for="contentType" class="block text-sm font-medium text-gray-700">Content Type</label>
+                        <select id="contentType" name="contentType"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="text/plain">Plain Text</option>
+                            <option value="text/markdown">Markdown</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+                        <input type="file" name="image" id="image"
+                            class="mt-1 block w-full px-3 py-2 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            accept="image/*">
+                    </div>
+                    <div>
+                        <label for="video" class="block text-sm font-medium text-gray-700">Video</label>
+                        <input type="file" name="video" id="videoInput" accept="video/*"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit"
+                            class="inline-flex justify-center px-3 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
         <!-- Display for posts -->
         <div class="mt-8 flex flex-col items-center">
             {% for post in posts %}
@@ -210,5 +228,28 @@
             console.error("Comment section not found for postId:", postId);
         }
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const openButton = document.getElementById("openPostForm");
+        const closeButton = document.getElementById("closePostForm");
+        const modal = document.getElementById("postModal");
+
+        // Open the modal
+        openButton.addEventListener("click", function () {
+            modal.classList.remove("hidden");
+        });
+
+        // Close the modal
+        closeButton.addEventListener("click", function () {
+            modal.classList.add("hidden");
+        });
+
+        // Close the modal when clicking outside of it
+        window.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                modal.classList.add("hidden");
+            }
+        });
+    });
 </script>
 {% endblock %}
