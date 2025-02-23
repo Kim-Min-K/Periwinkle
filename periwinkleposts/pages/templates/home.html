@@ -14,10 +14,10 @@
 
         <!-- Popup Modal for Creating a Post -->
         <div id="postModal" class="fixed inset-20 flex items-center justify-center bg-white hidden">
-            <div class="bg-white p-8 rounded-lg shadow-2xl mb-4 w-full">
+            <div class="bg-white p-8 rounded-lg mb-4 w-full">
 
                 <!-- Close Button -->
-                <button id="closePostForm" class="absolute top-4 right-2 text-gray-500 hover:text-gray-700 text-4xl">&times;</button>
+                <button id="closePostForm" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-4xl">&times;</button>
 
                 <!-- Post Text -->
                 <h2 class="text-xl font-semibold mb-4">Create a New Post</h2>
@@ -88,7 +88,11 @@
                 </div>
                 
                 <!-- Post Title -->
-                <div class="flex justify-center items-center p-4 border-[#CCCCFF] border-2 rounded-full mt-4 mb-4">{{ post.title }}</div>
+                <div class="flex justify-center items-center p-4 mt-4 mb-4">
+                    <div class="border-[#CCCCFF] border-2 rounded-full px-8 py-2">
+                        {{ post.title }}
+                    </div>
+                </div>
 
                 <!-- Image/Video -->
                 <div class="flex justify-center">
