@@ -6,6 +6,7 @@ from rest_framework.viewsets import GenericViewSet
 from drf_yasg.utils import swagger_auto_schema
 import uuid
 from rest_framework.decorators import action
+from django.core.paginator import Paginator
 
 class FollowersSerializer(serializers.Serializer):
     type = serializers.CharField(default="followers")
@@ -16,6 +17,36 @@ class FollowRequestSerializerRaw(serializers.Serializer):
     summary = serializers.CharField(default=None)
     actor = authorSerializer()
     object = authorSerializer()
+    
+class AuthorSerializer(serializers.Serializer):
+    type = serializers.CharField(default="author")
+    id = serializers.SerializerMethodField()
+    host = serializers.SerializerMethodField()
+    displayName = serializers.CharField(source="username")
+    github = serializers.SerializerMethodField()
+    profileImage = serializers.SerializerMethodField()
+    page = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return self.context['request'].build_absolute_uri(f'/api/authors/{obj.id}/')
+
+    def get_host(self, obj):
+        return self.context['request'].build_absolute_uri('/api/')
+
+    def get_github(self, obj):
+        return f"https://github.com/{obj.github_username}"
+
+    def get_profileImage(self, obj):
+        if obj.avatar:
+            return self.context['request'].build_absolute_uri(obj.avatar.url)
+        return obj.avatar_url
+
+    def get_page(self, obj):
+        return self.context['request'].build_absolute_uri(f'/accounts/profile/{obj.username}')
+
+class AuthorsSerializer(serializers.Serializer):
+    type = serializers.CharField(default="authors")
+    authors = AuthorSerializer(many=True)
 
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer
@@ -82,3 +113,44 @@ class FollowRequestViewSet(GenericViewSet):
             return Response({"error": str(e)}, status=400)
 
         return Response({"message":"Follow request successfuly sent."}, status=200)
+    
+    
+class AuthorViewSet(GenericViewSet):
+    serializer_class = AuthorsSerializer
+    queryset = Authors.objects.all().order_by('id')
+
+    @swagger_auto_schema(
+        operation_description="Get paginated list of authors",
+        responses={200: AuthorsSerializer()}
+    )
+    @action(detail=False, methods=['get'])
+    def list(self, request):
+        page_number = request.GET.get('page', 1)
+        size = request.GET.get('size', 10)
+        
+        try:
+            page_number = int(page_number)
+            size = int(size)
+        except ValueError:
+            return Response({"error": "Invalid page or size parameters"}, status=400)
+
+        paginator = Paginator(self.get_queryset(), size)
+        
+        try:
+            page = paginator.page(page_number)
+        except Exception:
+            return Response({"error": "Unknown error"}, status=500)
+
+        serializer = AuthorSerializer(
+            page.object_list,
+            many=True,
+            context={'request': request}
+        )
+
+        return Response({
+            "type": "authors",
+            "authors": serializer.data
+        })
+
+    def get_queryset(self):
+        return Authors.objects.all().order_by('id')

@@ -11,7 +11,6 @@
             <!-- Profile Header -->
             <div class="flex items-center space-x-6">
                 <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#A2A2E6]">
-                    <!-- Using django-avatar, whoever needs to add custom profile pics -->
                     <img src="{% if user.avatar_display %}{{ user.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}" 
                          alt="Profile Picture" class="w-full h-full object-cover">
                 </div>
@@ -26,9 +25,9 @@
                             </form>
                         {% else %}
                             <!-- edit profile button, only visible on your own account?-->
-                            <a href="{% url 'accounts:edit_profile' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90">Edit Profile</a>
+                            <a href="{% url 'accounts:edit_profile' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Edit Profile</a>
                             <!-- edit avatar button, only visible on your own account, might need some more work done? could be integrated into edit profile? -->
-                            <a href="{% url 'accounts:avatar' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90">Edit Avatar</a>
+                            <a href="{% url 'accounts:avatar' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Edit Avatar</a>
                         {% endif %}
                     </div>
                     <div class="flex space-x-6 mt-2">
@@ -47,7 +46,96 @@
             
             <!-- Main Content (e.g., posts) -->
             <div class="mt-8">
-                <!-- posts go here -->
+                {% for post in posts %}
+                    {% if not post.is_deleted %}
+                    <div class="mt-4 bg-white shadow rounded-2xl p-4">
+                        <h3 class="font-semibold">{{ post.title }}</h3>
+                        <div class="flex items-center gap-x-2 mt-1 text-sm text-gray-600">
+                            <span>By:</span>
+                            <h2 class="font-medium text-black">{{post.author}}</h2>
+                            <span>on</span>
+                            <time>{{ post.published|date:"N d, Y H:i" }}</time>
+                        </div>
+                        <p>{{ post.description }}</p>
+                        <div>{{ post.content }}</div>
+                        {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="Post Image" style="max-width: 100%; height: auto;">
+                        {% endif %}
+                        {% if post.video %}
+                        <video controls>
+                            <source src="{{ post.video.url }}" type="video/mp4">
+                        </video>
+                        {% endif %}
+            
+                        <div class="flex items-center gap-3 mt-3">
+                            <!-- Like Button -->
+                            <form method="POST" action="{% url 'accounts:post_likes' author_serial=post.author.row_id post_serial=post.id %}" class="m-0">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                <button type="submit" class="px-3 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                                    Like ({{ post.likes.count }})
+                                </button>
+                            </form>
+            
+                            <!-- Comments Toggle -->
+                            <button onclick="toggleComments('{{ post.id }}')" class="px-3 py-1 text-sm font-semibold text-[#A2A2E6] hover:text-[#8585e6] transition-colors duration-300">
+                                Comments ({{ post.comments.count }})
+                            </button>
+            
+                            <!-- Delete Button -->
+                            {% if ownProfile %}
+                            <form method="POST" action="{% url 'accounts:delete_post' post.id %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="px-3 py-1 text-sm font-semibold text-red-600 hover:text-red-800 transition-colors duration-300"
+                                    onclick="return confirm('Confirm delete post?');">
+                                    Delete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+
+                        <div id="comments-{{ post.id }}" class="hidden mt-3">
+                            <!-- Comment Form -->
+                            <form method="POST" action="{% url 'accounts:post_comments' post.author.row_id post.id %}">
+                                {% csrf_token %}
+                                <textarea name="comment" placeholder="Write a comment..." 
+                                       class="w-full p-2 border rounded" required></textarea>
+                                <label class="block text-sm font-medium text-gray-700 mt-2">Content Type</label>
+                                <select name="contentType"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                    <option value="text/plain">Plain Text</option>
+                                    <option value="text/markdown">Markdown</option>
+                                </select>
+                                <button type="submit"
+                                    class="mt-2 px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                                    Post Comment
+                                </button>
+                            </form>
+            
+                            <!-- Comments List -->
+                            <div class="mt-4 space-y-2">
+                                {% for comment in post.comments.all %}
+                                <div class="flex items-center justify-between bg-white p-2 rounded shadow-sm">
+                                    <p class="text-sm"><strong>{{ comment.author.displayName }}:</strong> {{ comment.comment }}</p>
+                                    <div class="flex items-center gap-2">
+                                        <form method="POST" action="{% url 'accounts:comment_likes' author_serial=comment.author.row_id comment_serial=comment.id %}" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="px-2 py-1 text-xs font-semibold text-white bg-[#A2A2E6] rounded hover:bg-[#8585e6] transition-colors duration-300">
+                                                Like ({{ comment.likes.count }})
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-gray-600 text-sm mt-2">No comments yet.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                    <p>No posts to show.</p>
+                {% endfor %}
             </div>
         </div>
         
@@ -164,4 +252,22 @@
         </div>
     </div>
 </div>
+
+<script>
+    window.toggleComments = function(postId) {
+        console.log("Toggling comments for post:", postId);
+        var commentSection = document.getElementById("comments-" + postId);
+        if (commentSection) {
+            commentSection.classList.toggle("hidden");
+            if (!commentSection.classList.contains("hidden")) {
+                commentSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        } else {
+            console.error("Comment section not found for postId:", postId);
+        }
+    }
+</script>
+
+
 {% endblock %}
+

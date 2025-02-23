@@ -13,7 +13,7 @@ from django.http import HttpResponse
 from .models import Post
 import uuid
 import requests
-
+from pages.views import markdown_to_html
 
 def loginView(request):
     if request.method == "POST":
@@ -81,7 +81,7 @@ def registerView(request):
 def profileView(request, username):
     author = get_object_or_404(Authors, username=username)
     ownProfile = request.user.is_authenticated and (request.user == author)
-
+    posts = author.posts.all()
     # Connections field
     friends = getFriends(request, author.row_id.hex).data["friends"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(
@@ -92,6 +92,10 @@ def profileView(request, username):
     followees = getFollowees(request, author.row_id.hex).data["followees"]
     sent_requests = getSentRequests(request, author.row_id.hex).data["sent_requests"]
 
+    for post in posts:
+        if post.contentType == "text/markdown":
+            post.content = markdown_to_html(post.content)
+    
     context = {
         "author": author,
         "ownProfile": ownProfile,
@@ -103,6 +107,7 @@ def profileView(request, username):
         "sent_requests": sent_requests,
         "follower_count": len(followers),
         "followee_count": len(followees),
+        "posts": posts,
     }
 
     return render(request, "profile.html", context)
@@ -271,7 +276,8 @@ class LikeView(viewsets.ModelViewSet):
         post = get_object_or_404(Post, id=post_serial)
         like, created = Like.objects.get_or_create(author=request.user, post=post)
         serializer = self.get_serializer(like)
-        return redirect("pages:home")
+        redirect_url = request.POST.get('next')
+        return redirect(redirect_url)
     
     @action(detail=True, methods=["get"])
     def comment_likes(self, request, author_serial, comment_serial):
