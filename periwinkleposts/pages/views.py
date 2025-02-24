@@ -2,11 +2,20 @@ from django.shortcuts import render
 from accounts.models import Post
 import commonmark
 from django.utils.safestring import mark_safe
+from django.db.models import Q
 
 
 def homeView(request):
     user = request.user
+    
+    # Get all posts that match visibility criteria
     posts = Post.objects.filter(is_deleted=False).order_by("-published")
+
+    posts = posts.filter(
+        Q(visibility="PUBLIC") |
+        Q(visibility="UNLISTED") |
+        Q(visibility="FRIENDS")
+    )
 
     #convert content in posts where contentType == "text/markdown"
     for post in posts:

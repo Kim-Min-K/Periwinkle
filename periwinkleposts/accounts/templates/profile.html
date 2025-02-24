@@ -60,7 +60,11 @@
                     </div>
                     
                     <!-- Post Title -->
-                    <div class="flex justify-center items-center p-4 border-[#CCCCFF] border-2 rounded-full mt-4 mb-4">{{ post.title }}</div>
+                    <div class="flex justify-center items-center p-4 mt-4 mb-4">
+                        <div class="border-[#CCCCFF] border-2 rounded-full px-8 py-2">
+                            {{ post.title }}
+                        </div>
+                    </div>
     
                     <!-- Image/Video -->
                     <div class="flex justify-center">
@@ -75,8 +79,21 @@
                     </div>
                     
     
-                    <!-- Description -->
-                    <div class="text-lg text-black mt-8">{{ post.description }}</div>
+                    <!-- Description + Visibility -->
+                    <div class="text-lg text-black mt-8 flex justify-between">
+                        <div>
+                            {{ post.description }}
+                        </div>
+                        <div class="text-sm">
+                            {% if post.visibility == "PUBLIC" %}
+                                🌍 Public
+                            {% elif post.visibility == "UNLISTED" %}
+                                🔒 Unlisted
+                            {% elif post.visibility == "FRIENDS" %}
+                                👥 Friends-Only
+                            {% endif %}
+                        </div>
+                    </div>
     
                     <!-- Content -->
                     <div class="text-base text-gray-500 mt-4">{{ post.content }}</div>

@@ -17,7 +17,7 @@
             <div class="bg-white p-8 rounded-lg mb-4 w-full">
 
                 <!-- Close Button -->
-                <button id="closePostForm" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-4xl">&times;</button>
+                <button id="closePostForm" class="absolute top-2 right-4 text-gray-500 hover:text-gray-700 text-4xl">&times;</button>
 
                 <!-- Post Text -->
                 <h2 class="text-xl font-semibold mb-4">Create a New Post</h2>
@@ -61,8 +61,20 @@
                     </div>
                     <div>
                         <label for="video" class="block text-sm font-medium text-gray-700">Video</label>
-                        <input type="file" name="video" id="videoInput" accept="video/*"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <input type="file" name="video" id="videoInput" accept="image/*"
+                            class="mt-1 block w-full px-3 py-2 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        >
+                    </div>
+
+                    <!-- Visibility Selector -->
+                    <div>
+                        <label for="visibility" class="block text-sm font-medium text-gray-700">Visibility</label>
+                        <select id="visibility" name="visibility"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="PUBLIC">Public</option>
+                            <option value="UNLISTED">Unlisted</option>
+                            <option value="FRIENDS">Friends-Only</option>
+                        </select>
                     </div>
                     <div class="flex justify-end">
                         <button type="submit"
@@ -107,8 +119,21 @@
                 </div>
                 
 
-                <!-- Description -->
-                <div class="text-lg text-black mt-8">{{ post.description }}</div>
+                <!-- Description + Visibility -->
+                <div class="text-lg text-black mt-8 flex justify-between">
+                    <div>
+                        {{ post.description }}
+                    </div>
+                    <div class="text-sm">
+                        {% if post.visibility == "PUBLIC" %}
+                            🌍 Public
+                        {% elif post.visibility == "UNLISTED" %}
+                            🔒 Unlisted
+                        {% elif post.visibility == "FRIENDS" %}
+                            👥 Friends-Only
+                        {% endif %}
+                    </div>
+                </div>
 
                 <!-- Content -->
                 <div class="text-base text-gray-500 mt-4">{{ post.content }}</div>
