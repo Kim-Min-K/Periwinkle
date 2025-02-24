@@ -202,6 +202,7 @@ def create_post(request):
         content_type = request.POST.get("contentType")
         image = request.FILES.get("image")
         video = request.FILES.get("video")
+        visibility = request.POST.get("visibility")
 
         if not all([title, description, content, content_type]):
             return HttpResponse("All fields are required.", status=400)
@@ -215,6 +216,7 @@ def create_post(request):
                 author=request.user,
                 image=image,
                 video=video,
+                visibility=visibility,
             )
             post.save()
             return redirect("pages:home")
