@@ -144,6 +144,7 @@
                     <form action="{% url 'accounts:post_likes' author_serial=post.author.row_id post_serial=post.id %}
                     " method="POST" style="display: inline;">
                         {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
                         <button type="submit"
                             class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
                             Like ({{ post.likes.count }})
