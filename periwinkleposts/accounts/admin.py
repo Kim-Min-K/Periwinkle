@@ -6,16 +6,18 @@ from django.utils.html import mark_safe
 
 # so the replaced users still shows up in the auth panel
 class AuthorsAdmin(UserAdmin):
-    list_display = ("username", "email", "is_staff", "is_active", "github_username")
+    list_display = ("username", "email", "is_staff", "is_active", "github_username", "is_approved")
+    list_filter = ("is_staff", "is_approved")
     fieldsets = UserAdmin.fieldsets + (
         (
             "Additional Info",
             {
-                "fields": ("github_username", "avatar_preview", "avatar_url", "avatar"),
+                "fields": ("github_username", "avatar_preview", "avatar_url", "avatar", "is_approved"),
             },
         ),
     )
     readonly_fields = ("avatar_preview",)
+    actions = ["approve_authors"]
 
     def avatar_preview(self, obj):
         if obj.avatar:
@@ -26,6 +28,11 @@ class AuthorsAdmin(UserAdmin):
         return "No Avatar"
 
     avatar_preview.short_description = "Avatar Preview"
+
+    def approve_authors(self, queryset):
+        queryset.update(is_approved=True)
+    
+    approve_authors.short_description = "Approve selected authors"
 
 
 class FollowsAdmin(admin.ModelAdmin):

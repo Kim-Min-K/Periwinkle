@@ -15,6 +15,8 @@ import uuid
 import requests
 from pages.views import markdown_to_html
 from django.db.models import Q
+from django.urls import reverse_lazy
+from django.contrib.auth.views import LogoutView
 
 def loginView(request):
     if request.method == "POST":
@@ -176,6 +178,19 @@ def edit_profile(request):
         form = EditProfile(instance=user)  # prefill with current/existing data
 
     return render(request, "edit_profile.html", {"form": form})
+
+def approval_pending(request):
+    if not request.user.is_authenticated:
+        return redirect('accounts:login')
+    if request.user.is_approved:
+        return redirect('pages:home')
+    return render(request, "approval_pending.html")
+
+class CustomLogoutView(LogoutView):
+    def get_next_page(self):
+        if not self.request.user.is_approved:
+            return reverse_lazy('accounts:login')
+        return self.next_page or self.get_redirect_url() or reverse_lazy('accounts:login')
 
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
