@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from accounts.models import FollowRequest, Authors, Follow
 from django.shortcuts import get_object_or_404
@@ -8,6 +9,7 @@ from django.db import transaction
 import uuid
 from accounts.models import Authors
 from django.core.paginator import Paginator
+from api.viewsets import AuthorSerializer
 
 @api_view(['GET'])
 def getAuthors(request):
@@ -60,3 +62,8 @@ def getAuthors(request):
 
     return Response(response_data)
     
+class getAuthorDetail(RetrieveAPIView):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorSerializer
+    lookup_field = 'row_id'
+
