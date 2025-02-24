@@ -14,6 +14,7 @@ from .models import Post
 import uuid
 import requests
 from pages.views import markdown_to_html
+from django.db.models import Q
 
 def loginView(request):
     if request.method == "POST":
@@ -81,7 +82,10 @@ def registerView(request):
 def profileView(request, username):
     author = get_object_or_404(Authors, username=username)
     ownProfile = request.user.is_authenticated and (request.user == author)
-    posts = author.posts.all()
+    posts = author.posts.all().order_by("-published")
+    posts = posts.filter(
+        Q(visibility="PUBLIC")
+    )
     # Connections field
     friends = getFriends(request, author.row_id.hex).data["friends"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(
