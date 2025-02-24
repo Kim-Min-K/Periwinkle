@@ -11,7 +11,8 @@ class ApprovalRequiredMiddleware:
             exempt_paths = [
                 reverse('accounts:approval_pending'),
                 reverse('accounts:logout'),
-                '/admin/'
+                '/admin/',
+                '/api/docs'
             ]
             
             # Check if current path is exempt
