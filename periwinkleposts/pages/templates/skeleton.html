@@ -8,9 +8,17 @@
         <div class="container mx-auto flex items-center">
             <a href="{% url 'pages:home' %}" class="text-white font-[Baskervville] text-4xl px-3 py-2 rounded">periwinkle.</a>
             <div class="ml-auto flex space-x-4">
-                <a href="#" class="headerbtn">inbox</a>
-                <a href="{% url 'accounts:profile' username=request.user.username %}" class="headerbtn">profile</a>
-                <a href="#" class="headerbtn">settings</a>
+                {% if user.is_authenticated and user.is_approved %}
+                    <a href="#" class="headerbtn">inbox</a>
+                    <a href="{% url 'accounts:profile' username=request.user.username %}" class="headerbtn">profile</a>
+                    <a href="#" class="headerbtn">settings</a>
+                {% endif %}
+                <form method="post" action="{% url 'accounts:logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="headerbtn">
+                        logout
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
