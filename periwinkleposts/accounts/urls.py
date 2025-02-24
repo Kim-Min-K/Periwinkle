@@ -26,6 +26,8 @@ urlpatterns = [
     path("create-post/", create_post, name="create_post"),
     path("post/delete/<uuid:post_id>/", delete_post, name="delete_post"),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
+    path('approval-pending/', views.approval_pending, name='approval_pending'),
+    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
     
 ]
 router = DefaultRouter()

@@ -9,6 +9,7 @@ class Authors(AbstractUser):
     host = models.CharField(max_length=200, blank=False, null=False)
     id = models.CharField(max_length=200, default=None, unique=True)
     displayName = models.CharField(max_length=200, default="John Doe")
+    is_approved = models.BooleanField(default=False)
 
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     avatar_url = models.URLField(blank=True, null=True)  # For image links
