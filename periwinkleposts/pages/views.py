@@ -12,9 +12,7 @@ def homeView(request):
     posts = Post.objects.filter(is_deleted=False).order_by("-published")
 
     posts = posts.filter(
-        Q(visibility="PUBLIC") |
-        Q(visibility="UNLISTED") |
-        Q(visibility="FRIENDS")
+        Q(visibility="PUBLIC")
     )
 
     #convert content in posts where contentType == "text/markdown"
