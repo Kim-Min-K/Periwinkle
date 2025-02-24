@@ -7,5 +7,6 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
       - run: pip install -r requirements.txt # install all our dependencies for the project
-      - run: cd periwinkleposts
-      - run: python3 manage.py test
+      - run: |
+          cd periwinkleposts  # Change directory to the project folder
+          python3 manage.py test  # Run Django tests
