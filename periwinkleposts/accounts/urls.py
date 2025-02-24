@@ -41,6 +41,8 @@ apipatterns = [
     path("api/", include(router.urls)),
     path("api/profile/", authorAPI.as_view({"get": "profile"}), name="api-profile"),
     # Comments API
+    path("api/authors/<uuid:author_serial>/comments/", 
+     CommentView.as_view({"get": "author_comments"}), name="author_comments"),
     path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/", 
          CommentView.as_view({"get": "post_comments", "post": "create"}), name="post_comments"),
     # Likes API for posts

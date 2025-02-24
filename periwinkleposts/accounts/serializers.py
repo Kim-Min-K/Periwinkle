@@ -97,29 +97,9 @@ class CommentSerialier(serializers.ModelSerializer):
     def get_post(self, obj):
         return f"{obj.post.author.id}/posts/{obj.post.id}"
     
-    '''"
-    author":{
-                "type":"author",
-                "id":"http://nodeaaaa/api/authors/111",
-                "page":"http://nodeaaaa/authors/greg",
-                "host":"http://nodeaaaa/api/",
-                "displayName":"Greg Johnson",
-                "github": "http://github.com/gjohnson",
-                "profileImage": "https://i.imgur.com/k7XVwpB.jpeg"
-            },
-    '''
     def get_author(self, obj):
-        author_obj = obj.author
-        host_without_api = author_obj.host.rstrip("api/")
-        return {
-            "type": "author",
-            "id": author_obj.id,
-            "page": f"{host_without_api}/authors/{author_obj.username}",
-            "host": {author_obj.host},
-            "displayName": author_obj.displayName,
-            "github": author_obj.github_username if author_obj.github_username else "",
-            "profileImage": author_obj.avatar_display() or "",
-        }
+        from api.viewsets import AuthorSerializer  # Lazy Import
+        return AuthorSerializer(obj.author, context={'request': self.context.get('request')}).data
 
     '''
     "likes": {
@@ -142,7 +122,7 @@ class CommentSerialier(serializers.ModelSerializer):
             'id':   f"{obj.author.id}/commented/{obj.id}/likes",
             'page': f"{obj.author.id}/comments/{obj.id}/likes",
             "page_number": 1,
-            "size": 50,
+            "size": total,
             "count": total,
             "src": like_src
         }
@@ -170,10 +150,10 @@ class CommentSerialier(serializers.ModelSerializer):
 }'''
 class LikeSerializer(serializers.Serializer):
     type = serializers.CharField(default = 'like')
-    author = serializers.SerializerMethodField()
+    author = authorSerializer()
     published = serializers.DateTimeField()
     id = serializers.SerializerMethodField()
-    object = serializers.SerializerMethodField
+    object = serializers.SerializerMethodField()
 
     class Meta:
         model = Like
@@ -190,15 +170,5 @@ class LikeSerializer(serializers.Serializer):
         return None
     
     def get_author(self, obj):
-        author_obj = obj.author
-        host_without_api = author_obj.host.rstrip("api/")
-        return {
-            "type": "author",
-            # "id": f"{author_obj.host}authors/{author_obj.id}",
-            "id": author_obj.id,
-            "page": f"{host_without_api}/authors/{author_obj.username}",
-            "host": {author_obj.host},
-            "displayName": author_obj.displayName,
-            "github": author_obj.github_username if author_obj.github_username else "",
-            "profileImage": author_obj.avatar_display() or "",
-        }
+        from api.viewsets import AuthorSerializer  # Lazy Import
+        return AuthorSerializer(obj.author, context={'request': self.context.get('request')}).data

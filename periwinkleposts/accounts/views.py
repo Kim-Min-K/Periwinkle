@@ -268,6 +268,7 @@ class CommentView(viewsets.ModelViewSet):
         serialier = self.get_serializer(comments, many=True)
         return Response(serialier.data)
 
+   
     def create(self, request, author_serial, post_serial):
         post = get_object_or_404(Post, id = post_serial)
         serializer = self.get_serializer(data = request.data)
@@ -275,11 +276,19 @@ class CommentView(viewsets.ModelViewSet):
         if serializer.is_valid():
             # print("Serializer Validated Data:", serializer.validated_data)
             serializer.save(author=author, post = post)
-            # print("Comment successfully saved!")
+        if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
+            #  API Client (Postman, Fetch API, Mobile App, etc.)
+            return Response(serializer.data, status=201)
+        else:
+            #  Browser Request → Redirect to the post page
             return redirect("pages:home")
-        # print("Serializer Errors:", serializer.errors)
-        return render(request, "home.html", {"error": "Something wents wrong"})
 
+    @action(detail=True, methods=["get"])
+    def author_comments(self, request, author_serial):
+        """ Retrieve all comments made by the author """
+        comments = Comment.objects.filter(author__id=author_serial).order_by("published")
+        serializer = self.get_serializer(comments, many=True)
+        return Response(serializer.data)
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer

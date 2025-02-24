@@ -28,11 +28,13 @@ class AuthorSerializer(serializers.Serializer):
     page = serializers.SerializerMethodField()
 
     def get_id(self, obj):
-        return self.context['request'].build_absolute_uri(f'/api/authors/{obj.id}/')
+        # return self.context['request'].build_absolute_uri(f'/api/authors/{obj.id}/')
+        return obj.id
 
     def get_host(self, obj):
-        return self.context['request'].build_absolute_uri('/api/')
-
+        # return self.context['request'].build_absolute_uri('/api/')
+        return obj.host
+    
     def get_github(self, obj):
         return f"https://github.com/{obj.github_username}"
 

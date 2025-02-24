@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Authors, Follow, Post
+from .models import Authors, Follow, Post, Comment, Like
 from django.utils.html import mark_safe
 
 
@@ -47,3 +47,5 @@ class PostAdmin(admin.ModelAdmin):
 admin.site.register(Authors, AuthorsAdmin)
 admin.site.register(Follow, FollowsAdmin)
 admin.site.register(Post, PostAdmin)
+admin.site.register(Comment)
+admin.site.register(Like)
