@@ -525,8 +525,29 @@
   .visible {
     visibility: visible;
   }
+  .absolute {
+    position: absolute;
+  }
+  .fixed {
+    position: fixed;
+  }
   .static {
     position: static;
+  }
+  .inset-20 {
+    inset: calc(var(--spacing) * 20);
+  }
+  .top-2 {
+    top: calc(var(--spacing) * 2);
+  }
+  .right-4 {
+    right: calc(var(--spacing) * 4);
+  }
+  .right-6 {
+    right: calc(var(--spacing) * 6);
+  }
+  .bottom-6 {
+    bottom: calc(var(--spacing) * 6);
   }
   .container {
     width: 100%;
@@ -603,6 +624,9 @@
   .inline-flex {
     display: inline-flex;
   }
+  .h-10 {
+    height: calc(var(--spacing) * 10);
+  }
   .h-24 {
     height: calc(var(--spacing) * 24);
   }
@@ -614,6 +638,9 @@
   }
   .h-screen {
     height: 100vh;
+  }
+  .w-10 {
+    width: calc(var(--spacing) * 10);
   }
   .w-24 {
     width: calc(var(--spacing) * 24);
@@ -657,12 +684,6 @@
   .gap-2 {
     gap: calc(var(--spacing) * 2);
   }
-  .gap-3 {
-    gap: calc(var(--spacing) * 3);
-  }
-  .gap-x-2 {
-    column-gap: calc(var(--spacing) * 2);
-  }
   .space-y-2 {
     :where(& > :not(:last-child)) {
       --tw-space-y-reverse: 0;
@@ -704,9 +725,6 @@
   .rounded {
     border-radius: 0.25rem;
   }
-  .rounded-2xl {
-    border-radius: var(--radius-2xl);
-  }
   .rounded-full {
     border-radius: calc(infinity * 1px);
   }
@@ -731,6 +749,9 @@
   .border-\[\#A2A2E6\] {
     border-color: #A2A2E6;
   }
+  .border-\[\#CCCCFF\] {
+    border-color: #CCCCFF;
+  }
   .border-\[\#d9d9d9\] {
     border-color: #d9d9d9;
   }
@@ -742,6 +763,9 @@
   }
   .bg-\[\#A2A2E6\] {
     background-color: #A2A2E6;
+  }
+  .bg-\[\#CCCCFF\] {
+    background-color: #CCCCFF;
   }
   .bg-\[\#F5F5F5\] {
     background-color: #F5F5F5;
@@ -770,6 +794,9 @@
   .p-6 {
     padding: calc(var(--spacing) * 6);
   }
+  .p-8 {
+    padding: calc(var(--spacing) * 8);
+  }
   .px-2 {
     padding-inline: calc(var(--spacing) * 2);
   }
@@ -781,6 +808,9 @@
   }
   .px-6 {
     padding-inline: calc(var(--spacing) * 6);
+  }
+  .px-8 {
+    padding-inline: calc(var(--spacing) * 8);
   }
   .py-1 {
     padding-block: calc(var(--spacing) * 1);
@@ -892,6 +922,9 @@
   .text-\[\#A2A2E6\] {
     color: #A2A2E6;
   }
+  .text-\[\#CCCCFF\] {
+    color: #CCCCFF;
+  }
   .text-black {
     color: var(--color-black);
   }
@@ -917,8 +950,8 @@
     --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
-  .shadow-md {
-    --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 2px 4px -2px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+  .shadow-2xl {
+    --tw-shadow: 0 25px 50px -12px var(--tw-shadow-color, rgb(0 0 0 / 0.25));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .shadow-sm {
@@ -927,6 +960,11 @@
   }
   .filter {
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+  }
+  .transition {
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter;
+    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+    transition-duration: var(--tw-duration, var(--default-transition-duration));
   }
   .transition-colors {
     transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
@@ -1002,6 +1040,13 @@
       }
     }
   }
+  .hover\:bg-\[\#8585E6\] {
+    &:hover {
+      @media (hover: hover) {
+        background-color: #8585E6;
+      }
+    }
+  }
   .hover\:bg-\[\#8585e6\] {
     &:hover {
       @media (hover: hover) {
@@ -1034,6 +1079,13 @@
     &:hover {
       @media (hover: hover) {
         color: #8C8CEC;
+      }
+    }
+  }
+  .hover\:text-gray-700 {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-gray-700);
       }
     }
   }

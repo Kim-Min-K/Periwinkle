@@ -14,6 +14,7 @@ from .models import Post
 import uuid
 import requests
 from pages.views import markdown_to_html
+from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth.views import LogoutView
 
@@ -83,7 +84,10 @@ def registerView(request):
 def profileView(request, username):
     author = get_object_or_404(Authors, username=username)
     ownProfile = request.user.is_authenticated and (request.user == author)
-    posts = author.posts.all()
+    posts = author.posts.all().order_by("-published")
+    posts = posts.filter(
+        Q(visibility="PUBLIC")
+    )
     # Connections field
     friends = getFriends(request, author.row_id.hex).data["friends"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(
@@ -217,6 +221,7 @@ def create_post(request):
         content_type = request.POST.get("contentType")
         image = request.FILES.get("image")
         video = request.FILES.get("video")
+        visibility = request.POST.get("visibility")
 
         if not all([title, description, content, content_type]):
             return HttpResponse("All fields are required.", status=400)
@@ -230,6 +235,7 @@ def create_post(request):
                 author=request.user,
                 image=image,
                 video=video,
+                visibility=visibility,
             )
             post.save()
             return redirect("pages:home")

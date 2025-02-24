@@ -85,6 +85,12 @@ class FollowRequest(models.Model):
 
 
 class Post(models.Model):
+    VISIBILITY_CHOICES = [
+        ("PUBLIC", "Public"),
+        ("UNLISTED", "Unlisted"),
+        ("FRIENDS", "Friends-Only"),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     author = models.ForeignKey(
         Authors, on_delete=models.SET_NULL, null=True, related_name="posts"
@@ -104,6 +110,7 @@ class Post(models.Model):
     published = models.DateTimeField(auto_now_add=True)
     page = models.CharField(max_length=200, blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default="PUBLIC")
 
     def __str__(self):
         return self.title
