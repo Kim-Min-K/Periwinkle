@@ -74,7 +74,7 @@ class FollowRequestSerializer(serializers.ModelSerializer):
             "likes:..............
 }
 '''
-class CommentSerialier(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     type = serializers.CharField(default = 'comment', read_only = True)
     author = serializers.SerializerMethodField()
     comment = serializers.CharField()

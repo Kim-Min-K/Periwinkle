@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Authors, FollowRequest, Comment, Like
-from .serializers import authorSerializer, CommentSerialier, LikeSerializer
+from .serializers import authorSerializer, CommentSerializer, LikeSerializer
 from django.http import QueryDict
 from api.follow_views import *
 from api.viewsets import FollowersViewSet, FollowRequestViewSet
@@ -257,18 +257,9 @@ def delete_post(request, post_id):
 
 # --------------Comment----------------
 class CommentView(viewsets.ModelViewSet):
-    serializer_class = CommentSerialier
+    serializer_class = CommentSerializer
     queryset = Comment.objects.all().order_by("published")
-
-    # # detail = True meant for a specific object
-    # @action(detail=True, methods=["get"])
-    # def post_comments(self, request, author_serial, post_serial):
-    #     post = get_object_or_404(Post, id=post_serial)
-    #     comments = Comment.objects.filter(post=post).order_by("published")
-    #     serialier = self.get_serializer(comments, many=True)
-    #     return Response(serialier.data)
-
-   
+ 
     def create(self, request, author_serial, post_serial):
         post = get_object_or_404(Post, id = post_serial)
         serializer = self.get_serializer(data = request.data)
@@ -282,13 +273,23 @@ class CommentView(viewsets.ModelViewSet):
         else:
             #  Browser Request → Redirect to the post page
             return redirect("pages:home")
-
-    # @action(detail=True, methods=["get"])
-    # def author_comments(self, request, author_serial):
-    #     """ Retrieve all comments made by the author """
-    #     comments = Comment.objects.filter(author__id=author_serial).order_by("published")
-    #     serializer = self.get_serializer(comments, many=True)
-    #     return Response(serializer.data)
+        
+    def comment_list(self, request):
+        comments = Comment.objects.all().order_by("-published")  
+        serializer = CommentSerializer(comments, many=True, context = {'request': request})  
+        return Response(serializer.data, status=200)
+    
+    def retrieve(self, request, author_serial, comment_serial):
+        comment = get_object_or_404(Comment, id=comment_serial)
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data)
+   
+    # def get_page(self, obj):
+    #     """Generates an absolute URL for the comment"""
+    #     request = self.context.get("request")  # Get request from context
+    #     if request:
+    #         return request.build_absolute_uri(f"/api/comments/{obj.id}/")  # Absolute URL
+    #     return f"/api/comments/{obj.id}/"  # Fallback if request is missing
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
@@ -322,3 +323,10 @@ class LikeView(viewsets.ModelViewSet):
         like, created = Like.objects.get_or_create(author=request.user, comment=comment)
         serializer = self.get_serializer(like)
         return redirect("pages:home")
+    
+    # def get_page(self, obj):
+    #     """Generates an absolute URL for the comment"""
+    #     request = self.context.get("request")  # Get request from context
+    #     if request:
+    #         return request.build_absolute_uri(f"/api/likes/{obj.id}/")  # Absolute URL
+    #     return f"/api/likes/{obj.id}/"  # Fallback if request is missing

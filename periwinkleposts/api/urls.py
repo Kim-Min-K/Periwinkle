@@ -3,6 +3,7 @@ from . import follow_views
 from api.viewsets import FollowersViewSet, FollowRequestViewSet, AuthorViewSet
 from api.authorViews import getAuthors, getAuthorDetail
 from accounts.views import CommentView, LikeView
+from rest_framework.routers import DefaultRouter
 app_name = 'api'  
 
 urlpatterns = [
@@ -12,14 +13,20 @@ urlpatterns = [
     path('authors/<str:row_id>', getAuthorDetail.as_view(), name=''),
     
 
-    path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/", 
-         CommentView.as_view({'post': 'create'}), name="createComment"),
+    path("authors/<str:author_serial>/posts/<str:post_serial>/comments/", 
+        CommentView.as_view({'post': 'create'}), name="createComment"),
+
+    path("authors/<str:author_serial>/commented/<uuid:comment_serial>/", 
+        CommentView.as_view({'get': 'retrieve'}), name="getComment"),
+
 
     # Liking a Post
-    path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/like/", 
+    path("authors/<str:author_serial>/posts/<str:post_serial>/like/", 
         LikeView.as_view({'post': 'like_post'}), name="likePost"),
 
     # Liking a Comment
-    path("authors/<uuid:author_serial>/comments/<uuid:comment_serial>/like/", 
+    path("authors/<str:author_serial>/comments/<str:comment_serial>/like/", 
         LikeView.as_view({'post': 'like_comment'}), name="likeComment"),
+
+    path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList')
 ]

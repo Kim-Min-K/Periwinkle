@@ -63,9 +63,9 @@ class FollowTests(APITestCase):
 class CommentTest(APITestCase):
     def test_create_comment(self):
         test_author = Authors.objects.create(username = 'test_author')
-        post = Post.objects.create()
+        post = Post.objects.create(author=test_author)
         url = reverse("api:createComment", kwargs={
-            "author_serial": str(test_author.id),
+            "author_serial": str(test_author.row_id),
             "post_serial": str(post.id)
         })
         comment_data = {
@@ -73,7 +73,7 @@ class CommentTest(APITestCase):
             "contentType": "text/plain"
         }
         response = self.client.post(url, comment_data, format="json")
-        self.assertEqual(response.status_code, status = 201)  
+        self.assertEqual(response.status_code, 201)  
         self.assertEqual(Comment.objects.count(), 1)  
         self.assertEqual(Comment.objects.first().comment, "This is a test comment")
 
