@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Authors, Follow, Post, Comment, Like
+from .models import Authors, Follow, Post, Comment, Like, SiteSettings
 from django.utils.html import mark_safe
 
 
@@ -43,6 +43,10 @@ class PostAdmin(admin.ModelAdmin):
     list_display = ("title", "author", "is_deleted", "published")
     search_fields = ("title", "author__displayName")
 
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    list_display = ('require_approval',)
+    
 
 admin.site.register(Authors, AuthorsAdmin)
 admin.site.register(Follow, FollowsAdmin)
