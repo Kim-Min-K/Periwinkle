@@ -1,9 +1,9 @@
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from .models import Authors, Follow, FollowRequest
+from .models import Authors, Follow, FollowRequest, Post, Comment, Like
 from .serializers import authorSerializer
-
+import uuid
 
 # Create your tests here.
 class FollowTests(APITestCase):
@@ -60,3 +60,22 @@ class FollowTests(APITestCase):
         self.assertTrue(follow.exists())
 
 
+class CommentTest(APITestCase):
+    def test_create_comment(self):
+        test_author = Authors.objects.create(username = 'test_author')
+        post = Post.objects.create()
+        url = reverse("accounts:post_comments", kwargs={
+            "author_serial": str(test_author.id),
+            "post_serial": str(post.id)
+        })
+        comment_data = {
+            "comment": "This is a test comment",
+            "contentType": "text/plain"
+        }
+        response = self.client.post(url, comment_data, format="json")
+        self.assertEqual(response.status_code, status = 201)  
+        self.assertEqual(Comment.objects.count(), 1)  
+        self.assertEqual(Comment.objects.first().comment, "This is a test comment")
+
+
+    

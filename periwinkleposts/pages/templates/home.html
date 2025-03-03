@@ -141,7 +141,7 @@
                 <!-- Footer -->
                 <div class="flex justify-between mt-8">
                     <!-- Like Button -->
-                    <form action="{% url 'accounts:post_likes' author_serial=post.author.row_id post_serial=post.id %}
+                    <form action="{% url 'api:likePost' author_serial=post.author.row_id post_serial=post.id %}
                     " method="POST" style="display: inline;">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.path }}">
@@ -170,7 +170,7 @@
 
                 <div id="comments-{{ post.id }}" class="hidden mt-3">
                     <!-- Comment Form -->
-                    <form method="POST" action="{% url 'accounts:post_comments' post.author.row_id post.id %}">
+                    <form method="POST" action="{% url 'api:createComment' post.author.row_id post.id %}">
                         {% csrf_token %}
                         <textarea name="comment" placeholder="Write a comment..." 
                                class=" p-2 border rounded w-full" required></textarea>
@@ -197,7 +197,7 @@
                         <div class="flex items-center justify-between bg-white p-2 rounded shadow-sm">
                             <p class="text-sm"><strong>{{ comment.author.displayName }}:</strong> {{ comment.comment }}</p>
                             <div class="flex items-center gap-2">
-                                <form method="POST" action="{% url 'accounts:comment_likes' author_serial=comment.author.row_id comment_serial=comment.id %}" class="m-0">
+                                <form method="POST" action="{% url 'api:likeComment' author_serial=comment.author.row_id comment_serial=comment.id %}" class="m-0">
                                     {% csrf_token %}
                                     <button type="submit" class="px-2 py-1 text-xs font-semibold text-white bg-[#CCCCFF] rounded hover:bg-[#8585e6] transition-colors duration-300">
                                         Like ({{ comment.likes.count }})

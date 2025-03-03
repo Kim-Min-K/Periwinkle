@@ -537,9 +537,6 @@
   .inset-20 {
     inset: calc(var(--spacing) * 20);
   }
-  .top-2 {
-    top: calc(var(--spacing) * 2);
-  }
   .right-4 {
     right: calc(var(--spacing) * 4);
   }

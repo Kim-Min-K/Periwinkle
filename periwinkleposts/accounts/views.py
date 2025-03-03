@@ -260,13 +260,13 @@ class CommentView(viewsets.ModelViewSet):
     serializer_class = CommentSerialier
     queryset = Comment.objects.all().order_by("published")
 
-    # detail = True meant for a specific object
-    @action(detail=True, methods=["get"])
-    def post_comments(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id=post_serial)
-        comments = Comment.objects.filter(post=post).order_by("published")
-        serialier = self.get_serializer(comments, many=True)
-        return Response(serialier.data)
+    # # detail = True meant for a specific object
+    # @action(detail=True, methods=["get"])
+    # def post_comments(self, request, author_serial, post_serial):
+    #     post = get_object_or_404(Post, id=post_serial)
+    #     comments = Comment.objects.filter(post=post).order_by("published")
+    #     serialier = self.get_serializer(comments, many=True)
+    #     return Response(serialier.data)
 
    
     def create(self, request, author_serial, post_serial):
@@ -283,23 +283,23 @@ class CommentView(viewsets.ModelViewSet):
             #  Browser Request → Redirect to the post page
             return redirect("pages:home")
 
-    @action(detail=True, methods=["get"])
-    def author_comments(self, request, author_serial):
-        """ Retrieve all comments made by the author """
-        comments = Comment.objects.filter(author__id=author_serial).order_by("published")
-        serializer = self.get_serializer(comments, many=True)
-        return Response(serializer.data)
+    # @action(detail=True, methods=["get"])
+    # def author_comments(self, request, author_serial):
+    #     """ Retrieve all comments made by the author """
+    #     comments = Comment.objects.filter(author__id=author_serial).order_by("published")
+    #     serializer = self.get_serializer(comments, many=True)
+    #     return Response(serializer.data)
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
     queryset = Like.objects.all().order_by('published')
     
-    @action(detail=True, methods=["get"])
-    def post_likes(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id=post_serial)
-        likes = Like.objects.filter(post=post).order_by("published")
-        serializer = self.get_serializer(likes, many=True)
-        return Response(serializer.data)
+    # @action(detail=True, methods=["get"])
+    # def post_likes(self, request, author_serial, post_serial):
+    #     post = get_object_or_404(Post, id=post_serial)
+    #     likes = Like.objects.filter(post=post).order_by("published")
+    #     serializer = self.get_serializer(likes, many=True)
+    #     return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def like_post(self, request, author_serial, post_serial):
@@ -309,12 +309,12 @@ class LikeView(viewsets.ModelViewSet):
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
-    @action(detail=True, methods=["get"])
-    def comment_likes(self, request, author_serial, comment_serial):
-        comment = get_object_or_404(Comment, id=comment_serial)
-        likes = Like.objects.filter(comment=comment).order_by("published")
-        serializer = self.get_serializer(likes, many=True)
-        return Response(serializer.data)
+    # @action(detail=True, methods=["get"])
+    # def comment_likes(self, request, author_serial, comment_serial):
+    #     comment = get_object_or_404(Comment, id=comment_serial)
+    #     likes = Like.objects.filter(comment=comment).order_by("published")
+    #     serializer = self.get_serializer(likes, many=True)
+    #     return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def like_comment(self, request, author_serial, comment_serial):

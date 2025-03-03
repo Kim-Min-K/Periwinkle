@@ -29,28 +29,32 @@ urlpatterns = [
     path('approval-pending/', views.approval_pending, name='approval_pending'),
     path('logout/', views.CustomLogoutView.as_view(), name='logout'),
     
+    
+   
 ]
 router = DefaultRouter()
-router.register(r"users", authorAPI)
-router.register(r"comments", CommentView)
-router.register(r"likes", LikeView)
+# router.register(r"users", authorAPI)
+# router.register(r"comments", CommentView)
+# router.register(r"likes", LikeView)
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 
 apipatterns = [
     path("api/", include(router.urls)),
     path("api/profile/", authorAPI.as_view({"get": "profile"}), name="api-profile"),
+
+    
     # Comments API
-    path("api/authors/<uuid:author_serial>/comments/", 
-     CommentView.as_view({"get": "author_comments"}), name="author_comments"),
-    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/", 
-         CommentView.as_view({"get": "post_comments", "post": "create"}), name="post_comments"),
-    # Likes API for posts
-    path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", 
-         LikeView.as_view({"get": "post_likes", "post": "like_post"}), name="post_likes"),
-    # Likes API for comments
-    path("api/authors/<uuid:author_serial>/comments/<uuid:comment_serial>/likes/", 
-         LikeView.as_view({"get": "comment_likes", "post": "like_comment"}), name="comment_likes"),
+    # path("api/authors/<uuid:author_serial>/comments/", 
+    #  CommentView.as_view({"get": "author_comments"}), name="author_comments"),
+    # path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/", 
+    #      CommentView.as_view({"get": "post_comments", "post": "create"}), name="post_comments"),
+    # # Likes API for posts
+    # path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", 
+    #      LikeView.as_view({"get": "post_likes", "post": "like_post"}), name="post_likes"),
+    # # Likes API for comments
+    # path("api/authors/<uuid:author_serial>/comments/<uuid:comment_serial>/likes/", 
+    #      LikeView.as_view({"get": "comment_likes", "post": "like_comment"}), name="comment_likes"),
 ]
 
 urlpatterns += apipatterns
