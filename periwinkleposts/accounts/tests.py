@@ -64,7 +64,7 @@ class CommentTest(APITestCase):
     def test_create_comment(self):
         test_author = Authors.objects.create(username = 'test_author')
         post = Post.objects.create()
-        url = reverse("accounts:post_comments", kwargs={
+        url = reverse("api:createComment", kwargs={
             "author_serial": str(test_author.id),
             "post_serial": str(post.id)
         })
