@@ -3,7 +3,7 @@ from .forms import AuthorCreation, AvatarUpload, EditProfile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from .models import Authors, FollowRequest, Comment, Like
+from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings
 from .serializers import authorSerializer, CommentSerialier, LikeSerializer
 from django.http import QueryDict
 from api.follow_views import *
@@ -73,7 +73,21 @@ def registerView(request):
 
         form = AuthorCreation(query_dict)
         if form.is_valid():
-            form.save()
+            user = form.save(commit=False)  #create user but don’t save yet
+
+            #get site settings to check if approval is required currently
+            site_settings = SiteSettings.objects.first()
+            approval_required = True  # Default to requiring approval
+
+            if site_settings:
+                approval_required = site_settings.require_approval
+
+            # Set approval status
+            if approval_required: #if approval is required, set user to not approved, else set to approved
+                user.is_approved = False
+            else:
+                user.is_approved = True
+            user.save()  #save it now
             return redirect("accounts:login")
         print(f"Error: {form.errors}")
     else:

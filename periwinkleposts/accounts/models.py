@@ -154,3 +154,9 @@ class Like(models.Model):
             return f"{self.author.displayName} like post {self.post.title}"
         else:
             return f"{self.author.displayName} like comment {self.comment.id}"
+
+class SiteSettings(models.Model): # for the admin to set site-wide settings
+    require_approval = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Require Approval: {self.require_approval}"
