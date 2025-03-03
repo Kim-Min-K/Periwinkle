@@ -3,7 +3,7 @@ from django.db import models
 from django.core.validators import MinLengthValidator
 import uuid
 from datetime import datetime
-
+from django.utils import timezone
 class Authors(AbstractUser):
     row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     host = models.CharField(max_length=200, blank=False, null=False)
@@ -123,7 +123,7 @@ class Comment(models.Model):
     )
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     comment = models.TextField()
-    published = models.DateTimeField(default = datetime.now)
+    published = models.DateTimeField(default = timezone.now)
     content_type = models.CharField(
         max_length=50,
         choices=[
@@ -143,7 +143,7 @@ class Like(models.Model):
     # https://stackoverflow.com/questions/8609192/what-is-the-difference-between-null-true-and-blank-true-in-django
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes', null = True, blank = True)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes', null = True, blank = True)
-    published = models.DateTimeField(default = datetime.now)
+    published = models.DateTimeField(default = timezone.now)
     class Meta:
         constraints = [
         models.UniqueConstraint(fields=['author', 'post'], name='unique_like_post'),
@@ -156,3 +156,9 @@ class Like(models.Model):
             return f"{self.author.displayName} like post {self.post.title}"
         else:
             return f"{self.author.displayName} like comment {self.comment.id}"
+
+class SiteSettings(models.Model): # for the admin to set site-wide settings
+    require_approval = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Require Approval: {self.require_approval}"
