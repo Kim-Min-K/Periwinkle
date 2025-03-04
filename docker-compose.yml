@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python periwinkleposts/manage.py migrate &&
+             gunicorn --workers=1 --bind 0.0.0.0:8000 periwinkleposts.wsgi:application"
+    volumes:
+      - .:/app
+      - sqlite_data:/app/db
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=periwinkleposts.settings
+    env_file:
+      - .env
+
+volumes:
+  sqlite_data:
