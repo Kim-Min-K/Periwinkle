@@ -16,9 +16,9 @@ urlpatterns = [
     path("authors/<str:author_serial>/posts/<str:post_serial>/comments/", 
         CommentView.as_view({'post': 'create'}), name="createComment"),
 
+    # Create a comment
     path("authors/<str:author_serial>/commented/<uuid:comment_serial>/", 
         CommentView.as_view({'get': 'retrieve'}), name="getComment"),
-
 
     # Liking a Post
     path("authors/<str:author_serial>/posts/<str:post_serial>/like/", 
