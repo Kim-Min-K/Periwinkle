@@ -28,11 +28,11 @@ class AuthorSerializer(serializers.Serializer):
     page = serializers.SerializerMethodField()
 
     def get_id(self, obj):
-        # return self.context['request'].build_absolute_uri(f'/api/authors/{obj.id}/')
-        return obj.id
+        request = self.context.get('request')
+        host = request.build_absolute_uri('/api/')
+        return f"{host}{obj.row_id}/"
 
     def get_host(self, obj):
-        # return self.context['request'].build_absolute_uri('/api/')
         return obj.host
     
     def get_github(self, obj):
@@ -154,5 +154,17 @@ class AuthorViewSet(GenericViewSet):
             "authors": serializer.data
         })
 
+    @swagger_auto_schema(
+        operation_description="Get a single author by ID",
+        responses={200: AuthorSerializer()}
+        )
+    
+    @action(detail=True, methods=['get'])
+    def retrieve(self, request, row_id):
+        author = get_object_or_404(Authors, row_id = row_id)
+        serializer = AuthorSerializer(author, context={'request': request})
+        return Response(serializer.data)
+
+    
     def get_queryset(self):
         return Authors.objects.all().order_by('id')
