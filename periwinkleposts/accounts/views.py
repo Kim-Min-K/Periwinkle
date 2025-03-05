@@ -95,8 +95,8 @@ def registerView(request):
     return render(request, "register.html", {"form": form})
 
 
-def profileView(request, username):
-    author = get_object_or_404(Authors, username=username)
+def profileView(request, row_id):
+    author = get_object_or_404(Authors, row_id=row_id)
     ownProfile = request.user.is_authenticated and (request.user == author)
     posts = author.posts.all().order_by("-published")
     posts = posts.filter(
@@ -268,6 +268,25 @@ def delete_post(request, post_id):
 
     return render(request, "home.html", {"error": "Only POST method is allowed."})
 
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    
+    # Check ownership
+    if request.user != post.author:
+        return redirect('accounts:profile', row_id=request.user.row_id)
+    
+    if request.method == 'POST':
+        post.title = request.POST.get('title', post.title)
+        post.description = request.POST.get('description', post.description)
+        post.content = request.POST.get('content', post.content)
+        post.visibility = request.POST.get('visibility', post.visibility)
+        post.save()
+        return redirect('accounts:profile', row_id=request.user.row_id)
+
+    return render(request, 'edit_post.html', {
+        'post': post,
+        'visibility_choices': Post.VISIBILITY_CHOICES
+    })
 
 # --------------Comment----------------
 class CommentView(viewsets.ModelViewSet):

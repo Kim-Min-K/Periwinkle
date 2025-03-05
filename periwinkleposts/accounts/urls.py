@@ -8,7 +8,7 @@ app_name = "accounts"
 urlpatterns = [
     path("register/", views.registerView, name="register"),
     path("login/", views.loginView, name="login"),
-    path("profile/<str:username>", views.profileView, name="profile"),
+    path("profile/<uuid:row_id>", views.profileView, name="profile"),
     path(
         "authors/<str:author_serial>/followers/<path:fqid>/accept",
         views.acceptRequest,
@@ -28,6 +28,7 @@ urlpatterns = [
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('approval-pending/', views.approval_pending, name='approval_pending'),
     path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+    path('edit_post/<uuid:post_id>/', views.edit_post, name='edit_post'),
     
     
    
