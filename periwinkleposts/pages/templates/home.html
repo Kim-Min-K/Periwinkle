@@ -61,7 +61,7 @@
                     </div>
                     <div>
                         <label for="video" class="block text-sm font-medium text-gray-700">Video</label>
-                        <input type="file" name="video" id="videoInput" accept="image/*"
+                        <input type="file" name="video" id="videoInput" accept="video/*"
                             class="mt-1 block w-full px-3 py-2 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         >
                     </div>
@@ -170,10 +170,14 @@
 
                 <div id="comments-{{ post.id }}" class="hidden mt-3">
                     <!-- Comment Form -->
-                    <form method="POST" action="{% url 'api:createComment' post.author.row_id post.id %}">
+                    <form method="POST" action="{% url 'api:createComment' author_serial=post.author.row_id post_id=post.id %}">
+
                         {% csrf_token %}
                         <textarea name="comment" placeholder="Write a comment..." 
                                class=" p-2 border rounded w-full" required></textarea>
+                        
+                        <input type="hidden" name="post" value="{{ post.id }}">
+                        
                         <div class="flex w-full justify-between">
                             <div class="flex">
                                 <label class="block text-sm px-4 py-1 font-medium text-white mt-2 bg-[#CCCCFF] rounded-lg">Content Type:</label>

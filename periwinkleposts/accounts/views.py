@@ -294,18 +294,16 @@ class CommentView(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all().order_by("published")
  
-    def create(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id = post_serial)
+    def create(self, request, author_serial):
+        post_serial = request.data.get("post")
+        post = get_object_or_404(Post, id= post_serial)  
         serializer = self.get_serializer(data = request.data)
         author = get_object_or_404(Authors, row_id=author_serial)  
         if serializer.is_valid():
-            # print("Serializer Validated Data:", serializer.validated_data)
             serializer.save(author=author, post = post)
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
-            #  API Client (Postman, Fetch API, Mobile App, etc.)
             return Response(serializer.data, status=201)
         else:
-            #  Browser Request → Redirect to the post page
             return redirect("pages:home")
         
     def comment_list(self, request):
@@ -318,12 +316,23 @@ class CommentView(viewsets.ModelViewSet):
         serializer = self.get_serializer(comment)
         return Response(serializer.data)
    
-    # def get_page(self, obj):
-    #     """Generates an absolute URL for the comment"""
-    #     request = self.context.get("request")  # Get request from context
-    #     if request:
-    #         return request.build_absolute_uri(f"/api/comments/{obj.id}/")  # Absolute URL
-    #     return f"/api/comments/{obj.id}/"  # Fallback if request is missing
+    def all_comments(self, request, author_serial):
+        author = get_object_or_404(Authors, row_id = author_serial)
+        # is_remote = request.get_host() != author.host
+        # if is_remote:
+        #     comments = Comment.objects.filter(
+        #         author=author,
+        #         post__visibility__in=["PUBLIC", "UNLISTED"]
+        #     ).order_by("-published")
+        # else:
+        #     comments = Comment.objects.filter(author=author).order_by("-published")
+        comments = Comment.objects.filter(author=author).order_by("-published")
+        page = self.paginate_queryset(comments)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(comments, many=True)
+        return Response(serializer.data)
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
