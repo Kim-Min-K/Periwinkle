@@ -3,8 +3,8 @@ from .forms import AuthorCreation, AvatarUpload, EditProfile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from .models import Authors, FollowRequest, Comment, Like
-from .serializers import authorSerializer, CommentSerialier, LikeSerializer
+from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings
+from .serializers import authorSerializer, CommentSerializer, LikeSerializer
 from django.http import QueryDict
 from api.follow_views import *
 from api.viewsets import FollowersViewSet, FollowRequestViewSet
@@ -73,7 +73,21 @@ def registerView(request):
 
         form = AuthorCreation(query_dict)
         if form.is_valid():
-            form.save()
+            user = form.save(commit=False)  #create user but don’t save yet
+
+            #get site settings to check if approval is required currently
+            site_settings = SiteSettings.objects.first()
+            approval_required = True  # Default to requiring approval
+
+            if site_settings:
+                approval_required = site_settings.require_approval
+
+            # Set approval status
+            if approval_required: #if approval is required, set user to not approved, else set to approved
+                user.is_approved = False
+            else:
+                user.is_approved = True
+            user.save()  #save it now
             return redirect("accounts:login")
         print(f"Error: {form.errors}")
     else:
@@ -81,8 +95,8 @@ def registerView(request):
     return render(request, "register.html", {"form": form})
 
 
-def profileView(request, username):
-    author = get_object_or_404(Authors, username=username)
+def profileView(request, row_id):
+    author = get_object_or_404(Authors, row_id=row_id)
     ownProfile = request.user.is_authenticated and (request.user == author)
     posts = author.posts.all().order_by("-published")
     posts = posts.filter(
@@ -254,39 +268,68 @@ def delete_post(request, post_id):
 
     return render(request, "home.html", {"error": "Only POST method is allowed."})
 
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    
+    # Check ownership
+    if request.user != post.author:
+        return redirect('accounts:profile', row_id=request.user.row_id)
+    
+    if request.method == 'POST':
+        post.title = request.POST.get('title', post.title)
+        post.description = request.POST.get('description', post.description)
+        post.content = request.POST.get('content', post.content)
+        post.visibility = request.POST.get('visibility', post.visibility)
+        post.save()
+        return redirect('accounts:profile', row_id=request.user.row_id)
+
+    return render(request, 'edit_post.html', {
+        'post': post,
+        'visibility_choices': Post.VISIBILITY_CHOICES
+    })
 
 # --------------Comment----------------
 class CommentView(viewsets.ModelViewSet):
-    serializer_class = CommentSerialier
+    serializer_class = CommentSerializer
     queryset = Comment.objects.all().order_by("published")
-
-    # detail = True meant for a specific object
-    @action(detail=True, methods=["get"])
-    def post_comments(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id=post_serial)
-        comments = Comment.objects.filter(post=post).order_by("published")
-        serialier = self.get_serializer(comments, many=True)
-        return Response(serialier.data)
-
-   
-    def create(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id = post_serial)
+ 
+    def create(self, request, author_serial):
+        post_serial = request.data.get("post")
+        post = get_object_or_404(Post, id= post_serial)  
         serializer = self.get_serializer(data = request.data)
         author = get_object_or_404(Authors, row_id=author_serial)  
         if serializer.is_valid():
-            # print("Serializer Validated Data:", serializer.validated_data)
             serializer.save(author=author, post = post)
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
-            #  API Client (Postman, Fetch API, Mobile App, etc.)
             return Response(serializer.data, status=201)
         else:
-            #  Browser Request → Redirect to the post page
             return redirect("pages:home")
-
-    @action(detail=True, methods=["get"])
-    def author_comments(self, request, author_serial):
-        """ Retrieve all comments made by the author """
-        comments = Comment.objects.filter(author__id=author_serial).order_by("published")
+        
+    def comment_list(self, request):
+        comments = Comment.objects.all().order_by("-published")  
+        serializer = CommentSerializer(comments, many=True, context = {'request': request})  
+        return Response(serializer.data, status=200)
+    
+    def retrieve(self, request, author_serial, comment_serial):
+        comment = get_object_or_404(Comment, id=comment_serial)
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data)
+   
+    def all_comments(self, request, author_serial):
+        author = get_object_or_404(Authors, row_id = author_serial)
+        # is_remote = request.get_host() != author.host
+        # if is_remote:
+        #     comments = Comment.objects.filter(
+        #         author=author,
+        #         post__visibility__in=["PUBLIC", "UNLISTED"]
+        #     ).order_by("-published")
+        # else:
+        #     comments = Comment.objects.filter(author=author).order_by("-published")
+        comments = Comment.objects.filter(author=author).order_by("-published")
+        page = self.paginate_queryset(comments)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(comments, many=True)
         return Response(serializer.data)
 
@@ -294,12 +337,12 @@ class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
     queryset = Like.objects.all().order_by('published')
     
-    @action(detail=True, methods=["get"])
-    def post_likes(self, request, author_serial, post_serial):
-        post = get_object_or_404(Post, id=post_serial)
-        likes = Like.objects.filter(post=post).order_by("published")
-        serializer = self.get_serializer(likes, many=True)
-        return Response(serializer.data)
+    # @action(detail=True, methods=["get"])
+    # def post_likes(self, request, author_serial, post_serial):
+    #     post = get_object_or_404(Post, id=post_serial)
+    #     likes = Like.objects.filter(post=post).order_by("published")
+    #     serializer = self.get_serializer(likes, many=True)
+    #     return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def like_post(self, request, author_serial, post_serial):
@@ -309,12 +352,12 @@ class LikeView(viewsets.ModelViewSet):
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
-    @action(detail=True, methods=["get"])
-    def comment_likes(self, request, author_serial, comment_serial):
-        comment = get_object_or_404(Comment, id=comment_serial)
-        likes = Like.objects.filter(comment=comment).order_by("published")
-        serializer = self.get_serializer(likes, many=True)
-        return Response(serializer.data)
+    # @action(detail=True, methods=["get"])
+    # def comment_likes(self, request, author_serial, comment_serial):
+    #     comment = get_object_or_404(Comment, id=comment_serial)
+    #     likes = Like.objects.filter(comment=comment).order_by("published")
+    #     serializer = self.get_serializer(likes, many=True)
+    #     return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def like_comment(self, request, author_serial, comment_serial):
@@ -322,3 +365,10 @@ class LikeView(viewsets.ModelViewSet):
         like, created = Like.objects.get_or_create(author=request.user, comment=comment)
         serializer = self.get_serializer(like)
         return redirect("pages:home")
+    
+    # def get_page(self, obj):
+    #     """Generates an absolute URL for the comment"""
+    #     request = self.context.get("request")  # Get request from context
+    #     if request:
+    #         return request.build_absolute_uri(f"/api/likes/{obj.id}/")  # Absolute URL
+    #     return f"/api/likes/{obj.id}/"  # Fallback if request is missing

@@ -10,7 +10,7 @@ import uuid
 from accounts.models import Authors
 from django.core.paginator import Paginator
 from api.viewsets import AuthorSerializer
-
+''' EVERYTHING HERE IS DEPRECATED. LEAVING IT FOR REFERENCE. 
 @api_view(['GET'])
 def getAuthors(request):
     page_number = request.GET.get('page', 1)
@@ -41,7 +41,7 @@ def getAuthors(request):
 
     for author in page.object_list:
         # Build individual author URLs
-        author_url = f"{api_base}{author.id}/"
+        author_url = f"{api_base}{author.row_id}/"
         profile_page = f"{base_url.replace('/api/', '/')}accounts/{author.username}/"
         github = "https://github.com/" + author.github_username
         if author.avatar:
@@ -67,3 +67,4 @@ class getAuthorDetail(RetrieveAPIView):
     serializer_class = AuthorSerializer
     lookup_field = 'row_id'
 
+'''

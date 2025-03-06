@@ -74,7 +74,7 @@ class FollowRequestSerializer(serializers.ModelSerializer):
             "likes:..............
 }
 '''
-class CommentSerialier(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     type = serializers.CharField(default = 'comment', read_only = True)
     author = serializers.SerializerMethodField()
     comment = serializers.CharField()
@@ -172,3 +172,4 @@ class LikeSerializer(serializers.Serializer):
     def get_author(self, obj):
         from api.viewsets import AuthorSerializer  # Lazy Import
         return AuthorSerializer(obj.author, context={'request': self.context.get('request')}).data
+    

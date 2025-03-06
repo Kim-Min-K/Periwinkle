@@ -1,9 +1,9 @@
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from .models import Authors, Follow, FollowRequest
+from .models import Authors, Follow, FollowRequest, Post, Comment, Like
 from .serializers import authorSerializer
-
+import uuid
 
 # Create your tests here.
 class FollowTests(APITestCase):
@@ -60,3 +60,42 @@ class FollowTests(APITestCase):
         self.assertTrue(follow.exists())
 
 
+class CommentTest(APITestCase):
+    def setUp(self):
+        self.author = Authors.objects.create(username = 'test_author')
+        self.post = Post.objects.create(author=self.author)
+        Comment.objects.create(
+            author=self.author, post=self.post, comment="Comment 1", content_type="text/plain"
+        )
+        Comment.objects.create(
+            author=self.author, post=self.post, comment="Comment 2", content_type="text/plain"
+        )
+        return super().setUp()
+    
+    #://service/api/authors/{AUTHOR_SERIAL}/commented POST
+    def test_create_comment(self):
+        url = reverse("api:createComment", kwargs={
+            "author_serial": str(self.author.row_id),
+        })
+        comment_data = {
+            "comment": "Comment 3",
+            "contentType": "text/plain",
+            "post": str(self.post.id)
+        }
+        response = self.client.post(url, comment_data, format="json")
+        self.assertEqual(response.status_code, 201)  
+        self.assertEqual(Comment.objects.count(), 3)  
+        self.assertEqual(Comment.objects.first().comment, "Comment 3")
+
+    #://service/api/authors/{AUTHOR_SERIAL}/commented GET
+    def test_get_author_comments(self):
+        url = reverse("api:createComment", kwargs={"author_serial": str(self.author.row_id)})
+        response = self.client.get(url, format="json")
+        comments_data = response.data
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(comments_data), 2)
+
+class LikeTest(APITestCase):
+    def test_create_like(self):
+        pass
+    
