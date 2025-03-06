@@ -44,18 +44,6 @@ apipatterns = [
     path("api/", include(router.urls)),
     path("api/profile/", authorAPI.as_view({"get": "profile"}), name="api-profile"),
 
-    
-    # Comments API
-    # path("api/authors/<uuid:author_serial>/comments/", 
-    #  CommentView.as_view({"get": "author_comments"}), name="author_comments"),
-    # path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/", 
-    #      CommentView.as_view({"get": "post_comments", "post": "create"}), name="post_comments"),
-    # # Likes API for posts
-    # path("api/authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", 
-    #      LikeView.as_view({"get": "post_likes", "post": "like_post"}), name="post_likes"),
-    # # Likes API for comments
-    # path("api/authors/<uuid:author_serial>/comments/<uuid:comment_serial>/likes/", 
-    #      LikeView.as_view({"get": "comment_likes", "post": "like_comment"}), name="comment_likes"),
 ]
 
 urlpatterns += apipatterns

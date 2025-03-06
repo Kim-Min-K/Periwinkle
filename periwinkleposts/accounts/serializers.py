@@ -172,3 +172,4 @@ class LikeSerializer(serializers.Serializer):
     def get_author(self, obj):
         from api.viewsets import AuthorSerializer  # Lazy Import
         return AuthorSerializer(obj.author, context={'request': self.context.get('request')}).data
+    

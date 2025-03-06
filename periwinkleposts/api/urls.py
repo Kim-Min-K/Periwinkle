@@ -11,11 +11,13 @@ urlpatterns = [
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='get-authors'),
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name=''),
     
-
-    path("authors/<str:author_serial>/posts/<str:post_serial>/comments/", 
-        CommentView.as_view({'post': 'create'}), name="createComment"),
-
     # Create a comment
+    path("authors/<str:author_serial>/commented/",
+         CommentView.as_view({'get': 'all_comments', 'post':'create'}), name = 'createComment'),
+    # path("authors/<str:author_serial>/posts/<str:post_serial>/comments/", 
+    #     CommentView.as_view({'post': 'create'}), name="createComment"),
+    
+    
     path("authors/<str:author_serial>/commented/<uuid:comment_serial>/", 
         CommentView.as_view({'get': 'retrieve'}), name="getComment"),
 
@@ -27,5 +29,6 @@ urlpatterns = [
     path("authors/<str:author_serial>/comments/<str:comment_serial>/like/", 
         LikeView.as_view({'post': 'like_comment'}), name="likeComment"),
 
+    # Get all comment list 
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList')
 ]
