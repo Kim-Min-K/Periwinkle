@@ -136,7 +136,11 @@ def getFollowRequests(request, author_serial):
 def getSuggestions(request, author_serial):
     try:
         # Convert the provided author_serial (assumed to be a UUID string) into a UUID object
-        author_uuid = uuid.UUID(author_serial)
+        if type(author_serial) == str:
+            author_uuid = uuid.UUID(author_serial)
+        else:
+            author_uuid = author_serial
+            
     except ValueError:
         return Response({'error': 'Invalid UUID format.'}, status=400)
 

@@ -25,8 +25,6 @@ class authorSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         # Get the default representation from the superclass
         representation = super().to_representation(instance)
-
-        del representation["row_id"]
         
         return representation
 

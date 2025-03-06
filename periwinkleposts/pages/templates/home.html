@@ -195,7 +195,7 @@
                     <div class="mt-8 space-y-2">
                         {% for comment in post.comments.all %}
                         <div class="flex items-center justify-between bg-white p-2 rounded shadow-sm">
-                            <p class="text-sm"><strong>{{ comment.author.displayName }}:</strong> {{ comment.comment }}</p>
+                            <p class="text-sm"><strong>{{ comment.author.username }}:</strong> {{ comment.comment }}</p>
                             <div class="flex items-center gap-2">
                                 <form method="POST" action="{% url 'api:likeComment' author_serial=comment.author.row_id comment_serial=comment.id %}" class="m-0">
                                     {% csrf_token %}

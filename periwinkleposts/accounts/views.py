@@ -48,7 +48,7 @@ def uploadAvatar(request):
                 user.avatar_url = form.cleaned_data["avatar_url"]
                 user.avatar = None
             form.save()
-            return redirect("accounts:profile", username=user.username)
+            return redirect("accounts:profile", row_id=user.row_id)
         else:
             print("\nFORM ERRORS:")
             print("Non-field errors:", form.non_field_errors())
@@ -127,6 +127,7 @@ def profileView(request, row_id):
         "sent_requests": sent_requests,
         "follower_count": len(followers),
         "followee_count": len(followees),
+        "post_count": len(posts),
         "posts": posts,
     }
 
