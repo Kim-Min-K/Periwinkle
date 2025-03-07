@@ -1,7 +1,7 @@
 from django.urls import path
 from . import follow_views
 from api.viewsets import FollowersViewSet, FollowRequestViewSet, AuthorViewSet
-from accounts.views import CommentView, LikeView
+from accounts.views import CommentView, LikeView, InboxView
 from rest_framework.routers import DefaultRouter
 app_name = 'api'  
 
@@ -11,7 +11,7 @@ urlpatterns = [
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='get-authors'),
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name=''),
     #----------Comments API ---------------------------------
-    # path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="author_inbox"),
+    path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="author_inbox"),
     #----------Commented API------------------------------
     # Create a comment, api tested 
     path("authors/<str:author_serial>/commented/",

@@ -103,12 +103,37 @@ class CommentTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 2)
 
-    # def test_get_all_comments(self):
-    #     url = reverse('api:commentList')
-    #     response = self.client.get(url, format="json")
-    #     comments_data = response.data
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertEqual(len(comments_data), 3)
+    def test_get_all_comments(self):
+        url = reverse('api:commentList')
+        response = self.client.get(url, format="json")
+        comments_data = response.data
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(comments_data), 3)
+
+class InboxTest(APITestCase):
+    def setUp(self):
+        self.author = Authors.objects.create(username="test_author")
+        self.post = Post.objects.create(author=self.author)
+        self.author2 = Authors.objects.create(username="test_author2")
+
+    # ://service/api/authors/{AUTHOR_SERIAL}/inbox POST
+    def test_post_comment_to_inbox(self):
+        url = reverse("api:author_inbox", kwargs={"author_serial": str(self.author.row_id)})
+        comment_data = {
+            "type": "comment",
+            "comment": "Inbox comment",
+            "contentType": "text/plain",
+            "post": f"http://localhost:8000/api/authors/{self.author.row_id}/posts/{self.post.id}",
+            "author": {  
+                "id": str(self.author2.id),  
+                "username": self.author2.username,
+            }
+        }
+        response = self.client.post(url, comment_data, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Comment.objects.count(), 1)  
+        self.assertEqual(Comment.objects.first().comment, "Inbox comment")
+
 
 
 class LikeTest(APITestCase):

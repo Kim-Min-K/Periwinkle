@@ -368,26 +368,25 @@ class LikeView(viewsets.ModelViewSet):
         serializer = self.get_serializer(like)
         return redirect("pages:home")
     
-# class InboxView(APIView):
-#     class InboxView(APIView):
-#         def post(self, request, author_serial):
-#             author = get_object_or_404(Authors, row_id=author_serial)
-#             data_type = request.data.get("type")
-#             if data_type == "comment":
-#                 return self.handle_comment(request, author)
-#             elif data_type == "like":
-#                 return Response({"message": "Like received"}, status=201)
-#             return Response({"error": "Invalid type"}, status=400)
+class InboxView(APIView):
+    def post(self, request, author_serial):
+        author = get_object_or_404(Authors, row_id=author_serial)
+        data_type = request.data.get("type")
+        if data_type == "comment":
+            return self.handle_comment(request, author)
+        elif data_type == "like":
+            return Response({"message": "Like received"}, status=201)
+        return Response({"error": "Invalid type"}, status=400)
 
-#         def handle_comment(self, request, author):
-#             post_url = request.data.get("post")  
-#             post_id = post_url.split("/")[-1] if post_url else None  
-
-#             post = get_object_or_404(Post, id=post_id) if post_id else None
-#             if not post:
-#                 return Response({"error": "Post not found"}, status=404)
-#             serializer = CommentSerializer(data=request.data)
-#             if serializer.is_valid():
-#                 serializer.save(author=author, post=post)
-#                 return Response(serializer.data, status=201)
-#             return Response(serializer.errors, status=400)
+    def handle_comment(self, request, author):
+        post_url = request.data.get("post")  
+        if post_url:
+            post_id = post_url.split("/")[-1]
+            post = get_object_or_404(Post, id=post_id) 
+        else:
+            return Response({"error": "Post URL is required"}, status=400)
+        serializer = CommentSerializer(data=request.data, context={"request": request})  # ✅ Fix here
+        if serializer.is_valid():
+            serializer.save(author=author, post=post)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
