@@ -138,7 +138,7 @@ def acceptRequest(request, author_serial, fqid):
         FollowRequest, requester=requester, requestee=requestee
     )
     response = acceptFollowRequest(request, follow_request.id)
-    return redirect("accounts:profile", username=requestee.username)
+    return redirect("accounts:profile", row_id=requestee.row_id)
 
 
 def declineRequest(request, author_serial, fqid):
@@ -149,7 +149,7 @@ def declineRequest(request, author_serial, fqid):
     )
     response = declineFollowRequest(request, follow_request.id)
     print(response)
-    return redirect("accounts:profile", username=requestee.username)
+    return redirect("accounts:profile", row_id=requestee.row_id)
 
 
 def sendFollowRequest(request, fqid):
@@ -174,7 +174,7 @@ def sendFollowRequest(request, fqid):
     if not response.ok:
         raise Exception(response.json().get("message"))
 
-    return redirect("accounts:profile", username=request.user.username)
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 
 @login_required  # ensures that this only works if user is logged in/authenticated, not sure if really needed???
