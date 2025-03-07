@@ -11,10 +11,14 @@ urlpatterns = [
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='get-authors'),
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name=''),
     #----------Comments API ---------------------------------
-    path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="author_inbox"),
-    #://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
+    # ://service/api/authors/{AUTHOR_SERIAL}/inbox 
+    path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+    # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
     path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/",
         CommentView.as_view({'get': 'get_post_comments'}), name='get_post_comments' ),
+    # ://service/api/posts/{POST_FQID}/comments
+    path("posts/<uuid:post_serial>/comments/", 
+        CommentView.as_view({'get': 'known_post_comments'}), name = 'known_post_comments'),
     #----------Commented API------------------------------
     # Create a comment, api tested 
     path("authors/<uuid:author_serial>/commented/",

@@ -107,7 +107,8 @@ class CommentTest(APITestCase):
             comments.append(comment['comment'])
         self.assertIn("Comment 1", comments)
         self.assertNotIn('Comment 1 by author2', comments) # ensure comment made by author2 won't be included
-
+    
+    # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments GET
     def test_get_post_comments(self):
         url = reverse("api:get_post_comments", kwargs={"author_serial": str(self.author.row_id), "post_serial": str(self.post.id)})
         response = self.client.get(url, format="json")
@@ -130,7 +131,7 @@ class InboxTest(APITestCase):
 
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox POST
     def test_post_comment_to_inbox(self):
-        url = reverse("api:author_inbox", kwargs={"author_serial": str(self.author.row_id)})
+        url = reverse("api:inbox", kwargs={"author_serial": str(self.author.row_id)})
         comment_data = {
             "type": "comment",
             "comment": "Inbox comment",

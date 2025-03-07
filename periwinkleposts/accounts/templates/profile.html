@@ -195,7 +195,7 @@
                     <ul class="space-y-2">
                         {% for requester in requesters %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <span><a href="{% url 'accounts:profile' username=requester.username %}">{{ requester.username }}</a></span>
+                                <span><a href="{% url 'accounts:profile' row_id=requester.row_id %}">{{ requester.username }}</a></span>
                                 <div class="space-x-2">
                                     <button class="px-3 py-1 text-xs text-white bg-green-500 rounded hover:bg-green-600">
                                         <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id.hex fqid=requester.id %}">Accept</a>
@@ -219,7 +219,7 @@
                     <ul class="space-y-2">
                         {% for request in sent_requests %}
                             <li class="bg-gray-100 p-2 rounded">
-                                <a href="{% url 'accounts:profile' username=request.username %}">{{ request.username }}</a>
+                                <a href="{% url 'accounts:profile' row_id=request.row_id %}">{{ request.username }}</a>
                             </li>
                         {% empty %}
                             <li class="text-gray-500">No sent requests</li>
@@ -255,7 +255,7 @@
                     <ul class="space-y-2">
                         {% for friend in friends %}
                             <li class="bg-gray-100 p-2 rounded">
-                                <a href="{% url 'accounts:profile' username=friend.username %}">{{ friend.username }}</a>
+                                <a href="{% url 'accounts:profile' row_id=friend.row_id %}">{{ friend.username }}</a>
                             </li>
                         {% empty %}
                             <li class="text-gray-500">No friends</li>
@@ -269,7 +269,7 @@
                     <ul class="space-y-2">
                         {% for follower in followers %}
                             <li class="bg-gray-100 p-2 rounded">
-                                <a href="{% url 'accounts:profile' username=follower.username %}">{{ follower.username }}</a>
+                                <a href="{% url 'accounts:profile' row_id=follower.row_id %}">{{ follower.username }}</a>
                             </li>
                         {% empty %}
                             <li class="text-gray-500">No followers</li>
@@ -283,7 +283,7 @@
                     <ul class="space-y-2">
                         {% for followee in followees %}
                             <li class="bg-gray-100 p-2 rounded">
-                                <a href="{% url 'accounts:profile' username=followee.username %}">{{ followee.username }}</a>
+                                <a href="{% url 'accounts:profile' row_id=followee.row_id %}">{{ followee.username }}</a>
                             </li>
                         {% empty %}
                             <li class="text-gray-500">No followees</li>
