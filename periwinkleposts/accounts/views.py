@@ -318,7 +318,9 @@ class CommentView(viewsets.ModelViewSet):
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
             return Response(serializer.data, status=201)
         else:
-            return redirect("pages:home")
+            redirect_url = request.META.get("HTTP_REFERER", "pages:home")  
+            return redirect(redirect_url)
+
         
     def comment_list(self, request):
         comments = Comment.objects.all().order_by("-published")  

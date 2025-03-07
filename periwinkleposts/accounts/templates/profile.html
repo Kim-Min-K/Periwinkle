@@ -139,6 +139,7 @@
                         {% csrf_token %}
                         <textarea name="comment" placeholder="Write a comment..." 
                                class=" p-2 border rounded w-full" required></textarea>
+                        <input type="hidden" name="post" value="{{ post.id }}">
                         <div class="flex w-full justify-between">
                             <div class="flex">
                                 <label class="block text-sm px-4 py-1 font-medium text-white mt-2 bg-[#CCCCFF] rounded-lg">Content Type:</label>
