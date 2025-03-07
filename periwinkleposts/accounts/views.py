@@ -98,10 +98,7 @@ def registerView(request):
 def profileView(request, row_id):
     author = get_object_or_404(Authors, row_id=row_id)
     ownProfile = request.user.is_authenticated and (request.user == author)
-    posts = author.posts.all().order_by("-published")
-    posts = posts.filter(
-        Q(visibility="PUBLIC")
-    )
+    posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     # Connections field
     friends = getFriends(request, author.row_id.hex).data["friends"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(
