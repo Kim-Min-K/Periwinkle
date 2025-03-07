@@ -70,7 +70,12 @@ class CommentTest(APITestCase):
         Comment.objects.create(
             author=self.author, post=self.post, comment="Comment 2", content_type="text/plain"
         )
+        self.author2 = Authors.objects.create(username = 'test_author2')
+        Comment.objects.create(
+            author=self.author2, post=self.post, comment="Comment 1 by author2", content_type="text/plain"
+        )
         return super().setUp()
+        
     
     #://service/api/authors/{AUTHOR_SERIAL}/commented POST
     def test_create_comment(self):
@@ -84,9 +89,9 @@ class CommentTest(APITestCase):
         }
         response = self.client.post(url, comment_data, format="json")
         self.assertEqual(response.status_code, 201)  
-        self.assertEqual(Comment.objects.count(), 3)  
+        self.assertEqual(Comment.objects.count(), 4)  
         commentList = Comment.objects.all().order_by('published')
-        self.assertEqual(commentList[2].comment, "Comment 3")
+        self.assertEqual(commentList[3].comment, "Comment 3")
 
     #://service/api/authors/{AUTHOR_SERIAL}/commented GET
     def test_get_author_comments(self):
@@ -95,6 +100,14 @@ class CommentTest(APITestCase):
         comments_data = response.data
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 2)
+
+    # def test_get_all_comments(self):
+    #     url = reverse('api:commentList')
+    #     response = self.client.get(url, format="json")
+    #     comments_data = response.data
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(comments_data), 3)
+
 
 class LikeTest(APITestCase):
     def test_create_like(self):

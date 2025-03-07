@@ -17,7 +17,7 @@ from pages.views import markdown_to_html
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth.views import LogoutView
-
+from rest_framework.views import APIView
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -188,7 +188,7 @@ def edit_profile(request):
         form = EditProfile(request.POST, instance=user)
         if form.is_valid():
             form.save()
-            return redirect("accounts:profile", username=user.username)
+            return redirect("accounts:profile", row_id = user.row_id)
     else:
         form = EditProfile(instance=user)  # prefill with current/existing data
 
@@ -346,13 +346,6 @@ class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
     queryset = Like.objects.all().order_by('published')
     
-    # @action(detail=True, methods=["get"])
-    # def post_likes(self, request, author_serial, post_serial):
-    #     post = get_object_or_404(Post, id=post_serial)
-    #     likes = Like.objects.filter(post=post).order_by("published")
-    #     serializer = self.get_serializer(likes, many=True)
-    #     return Response(serializer.data)
-
     @action(detail=True, methods=["post"])
     def like_post(self, request, author_serial, post_serial):
         post = get_object_or_404(Post, id=post_serial)
@@ -361,12 +354,6 @@ class LikeView(viewsets.ModelViewSet):
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
-    # @action(detail=True, methods=["get"])
-    # def comment_likes(self, request, author_serial, comment_serial):
-    #     comment = get_object_or_404(Comment, id=comment_serial)
-    #     likes = Like.objects.filter(comment=comment).order_by("published")
-    #     serializer = self.get_serializer(likes, many=True)
-    #     return Response(serializer.data)
 
     @action(detail=True, methods=["post"])
     def like_comment(self, request, author_serial, comment_serial):
@@ -375,9 +362,26 @@ class LikeView(viewsets.ModelViewSet):
         serializer = self.get_serializer(like)
         return redirect("pages:home")
     
-    # def get_page(self, obj):
-    #     """Generates an absolute URL for the comment"""
-    #     request = self.context.get("request")  # Get request from context
-    #     if request:
-    #         return request.build_absolute_uri(f"/api/likes/{obj.id}/")  # Absolute URL
-    #     return f"/api/likes/{obj.id}/"  # Fallback if request is missing
+# class InboxView(APIView):
+#     class InboxView(APIView):
+#         def post(self, request, author_serial):
+#             author = get_object_or_404(Authors, row_id=author_serial)
+#             data_type = request.data.get("type")
+#             if data_type == "comment":
+#                 return self.handle_comment(request, author)
+#             elif data_type == "like":
+#                 return Response({"message": "Like received"}, status=201)
+#             return Response({"error": "Invalid type"}, status=400)
+
+#         def handle_comment(self, request, author):
+#             post_url = request.data.get("post")  
+#             post_id = post_url.split("/")[-1] if post_url else None  
+
+#             post = get_object_or_404(Post, id=post_id) if post_id else None
+#             if not post:
+#                 return Response({"error": "Post not found"}, status=404)
+#             serializer = CommentSerializer(data=request.data)
+#             if serializer.is_valid():
+#                 serializer.save(author=author, post=post)
+#                 return Response(serializer.data, status=201)
+#             return Response(serializer.errors, status=400)
