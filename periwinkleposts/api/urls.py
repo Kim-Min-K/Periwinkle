@@ -17,9 +17,9 @@ urlpatterns = [
         CommentView.as_view({'get': 'get_post_comments'}), name='get_post_comments' ),
     #----------Commented API------------------------------
     # Create a comment, api tested 
-    path("authors/<str:author_serial>/commented/",
+    path("authors/<uuid:author_serial>/commented/",
         CommentView.as_view({'get': 'all_comments', 'post':'create'}), name = 'createComment'),
-    path("authors/<str:author_serial>/commented/<uuid:comment_serial>/", 
+    path("authors/<uuid:author_serial>/commented/<uuid:comment_serial>/", 
         CommentView.as_view({'get': 'retrieve'}), name="getComment"),
     
 

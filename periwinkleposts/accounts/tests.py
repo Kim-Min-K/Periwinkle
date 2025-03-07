@@ -102,7 +102,19 @@ class CommentTest(APITestCase):
         comments_data = response.data
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 2)
-    
+        comments = []
+        for comment in response.data:
+            comments.append(comment['comment'])
+        self.assertIn("Comment 1", comments)
+        self.assertNotIn('Comment 1 by author2', comments) # ensure comment made by author2 won't be included
+
+    def test_get_post_comments(self):
+        url = reverse("api:get_post_comments", kwargs={"author_serial": str(self.author.row_id), "post_serial": str(self.post.id)})
+        response = self.client.get(url, format="json")
+        comments_data = response.data
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(comments_data), 3)
+
     def test_get_all_comments(self):
         url = reverse('api:commentList')
         response = self.client.get(url, format="json")
