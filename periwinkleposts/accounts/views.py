@@ -280,6 +280,14 @@ def edit_post(request, post_id):
         post.description = request.POST.get('description', post.description)
         post.content = request.POST.get('content', post.content)
         post.visibility = request.POST.get('visibility', post.visibility)
+
+        print("your request:", request.FILES)
+        if 'image' in request.FILES:
+            # print("YES",request.FILES)
+            post.image = request.FILES['image']
+        if 'video' in request.FILES:
+            # print("YES",request.FILES)
+            post.video = request.FILES['video']
         post.save()
         return redirect('accounts:profile', row_id=request.user.row_id)
 
