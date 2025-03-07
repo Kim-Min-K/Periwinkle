@@ -57,15 +57,15 @@
         <div class="mb-4">
             <label for="videoInput" class="block text-sm font-medium text-gray-700">Video</label>
             <input type="file" id="videoInput" name="video" accept="video/*" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            <video id="videoPreview" controls style="width: 100%; max-width: 500px; height: auto;" class="mt-2">
+            <video id="videoPreview" controls style="width: 100%; max-width: 500px; height: auto;" class="mt-2 {% if not post.video %}hidden{% endif %}">
                 {% if post.video %}
                 <source src="{{ post.video.url }}" type="video/mp4">
                 {% else %}
                 <source src="#" type="video/mp4">
                 {% endif %}
-                Your browser does not support the video tag.
             </video>
         </div>
+
 
 
         <!-- Submit Button -->
@@ -101,12 +101,17 @@
         if (file) {
             const video = document.createElement('video');
             video.preload = 'metadata';
+            const videoPreview = document.getElementById('videoPreview');
 
             video.onloadedmetadata = function () {
                 window.URL.revokeObjectURL(video.src);
                 if (video.duration > 4) {
                     alert('Video must be 4 seconds or less');
                     event.target.value = '';  // Clear the file input
+                    videoPreview.classList.add('hidden');
+                } else {
+                    videoPreview.src = URL.createObjectURL(file);
+                    videoPreview.classList.remove('hidden');
                 }
             };
 
@@ -116,10 +121,20 @@
 
     document.querySelector('form').onsubmit = function (event) {
         const videoInput = document.getElementById('videoInput');
-        if (videoInput.files.length > 0 && video.duration > 4) {
-            event.preventDefault();  // Stop form submission
-            alert('Please upload a video that is 4 seconds or less.');
+        if (videoInput.files.length > 0) {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.src = URL.createObjectURL(videoInput.files[0]);
+            
+            video.onloadedmetadata = function () {
+                window.URL.revokeObjectURL(video.src);
+                if (video.duration > 4) {
+                    event.preventDefault();  // Stop form submission
+                    alert('Please upload a video that is 4 seconds or less.');
+                }
+            };
         }
     };
+
 </script>
 {% endblock %}
