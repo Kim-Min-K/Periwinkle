@@ -81,6 +81,7 @@
                             class="inline-flex justify-center px-3 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Post</button>
                     </div>
                 </form>
+
             </div>
         </div>
         
@@ -107,12 +108,12 @@
                 </div>
 
                 <!-- Image/Video -->
-                <div class="flex justify-center">
+                <div class="media-container flex flex-col justify-center">
                     {% if post.image %}
-                    <img src="{{ post.image.url }}" alt="Post Image" style="max-width: 100%; height: auto;">
+                    <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 max-w-full h-auto rounded-lg shadow">
                     {% endif %}
                     {% if post.video %}
-                    <video controls>
+                    <video controls class="max-w-full h-auto rounded-lg shadow">
                         <source src="{{ post.video.url }}" type="video/mp4">
                     </video>
                     {% endif %}
@@ -166,7 +167,17 @@
                         </button>
                     </form>
                     {% endif %}
+
                 </div>
+
+                 <!--Edit Post-->
+                 <!-- Logic: if the post belongs to the author, then the edit is there if not it does not show  -->
+                 {% if post.author == user %}
+                    <a href="{% url 'accounts:edit_post' post.id %}" 
+                    class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                    Edit
+                    </a>
+                {% endif %}
 
                 <div id="comments-{{ post.id }}" class="hidden mt-3">
                     <!-- Comment Form -->
