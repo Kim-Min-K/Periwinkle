@@ -170,7 +170,8 @@
 
                 <div id="comments-{{ post.id }}" class="hidden mt-3">
                     <!-- Comment Form -->
-                    <form method="POST" action="{% url 'api:createComment' post.author.row_id  %}">
+                    <form method="POST" action="{% url 'api:createComment' author_serial=post.author.row_id  %}">
+
                         {% csrf_token %}
                         <textarea name="comment" placeholder="Write a comment..." 
                                class=" p-2 border rounded w-full" required></textarea>
@@ -198,7 +199,7 @@
                     <div class="mt-8 space-y-2">
                         {% for comment in post.comments.all %}
                         <div class="flex items-center justify-between bg-white p-2 rounded shadow-sm">
-                            <p class="text-sm"><strong>{{ comment.author.displayName }}:</strong> {{ comment.comment }}</p>
+                            <p class="text-sm"><strong>{{ comment.author.username }}:</strong> {{ comment.comment }}</p>
                             <div class="flex items-center gap-2">
                                 <form method="POST" action="{% url 'api:likeComment' author_serial=comment.author.row_id comment_serial=comment.id %}" class="m-0">
                                     {% csrf_token %}
