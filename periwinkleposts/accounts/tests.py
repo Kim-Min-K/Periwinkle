@@ -123,6 +123,13 @@ class CommentTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 3)
 
+    def known_post_comments(self):
+        url = reverse('api:known_post_comments')
+        response = self.client.get(url, format="json")
+        comments_data = response.data
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(comments_data), 3)
+
 class InboxTest(APITestCase):
     def setUp(self):
         self.author = Authors.objects.create(username="test_author")

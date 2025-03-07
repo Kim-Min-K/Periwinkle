@@ -353,6 +353,13 @@ class CommentView(viewsets.ModelViewSet):
         serializer = self.get_serializer(comments, many = True)
         return Response(serializer.data, status = 200)
 
+    def known_post_comments(self,request, post_fqid):
+        post_id = post_fqid.split("/")[-1]
+        post = get_object_or_404(Post, id = post_id)
+        comments = Comment.objects.filter(post=post).order_by("published")
+        serializer = self.get_serializer(comments, many = True)
+        return Response(serializer.data, status = 200)
+    
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
     queryset = Like.objects.all().order_by('published')
