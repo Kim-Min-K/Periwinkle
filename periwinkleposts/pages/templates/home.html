@@ -170,7 +170,7 @@
 
                 <div id="comments-{{ post.id }}" class="hidden mt-3">
                     <!-- Comment Form -->
-                    <form method="POST" action="{% url 'api:createComment' author_serial=post.author.row_id post_id=post.id %}">
+                    <form method="POST" action="{% url 'api:createComment' author_serial=post.author.row_id  %}">
 
                         {% csrf_token %}
                         <textarea name="comment" placeholder="Write a comment..." 
