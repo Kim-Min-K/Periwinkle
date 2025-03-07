@@ -67,12 +67,12 @@
                 </div>
 
                 <!-- Image/Video -->
-                <div class="flex justify-center">
+                <div class="media-container flex flex-col justify-center">
                     {% if post.image %}
-                    <img src="{{ post.image.url }}" alt="Post Image" style="max-width: 100%; height: auto;">
+                    <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 max-w-full h-auto rounded-lg shadow">
                     {% endif %}
                     {% if post.video %}
-                    <video controls>
+                    <video controls class="max-w-full h-auto rounded-lg shadow">
                         <source src="{{ post.video.url }}" type="video/mp4">
                     </video>
                     {% endif %}
@@ -125,6 +125,7 @@
                             Delete
                         </button>
                     </form>
+                    <!--Edit Post-->
                     <a href="{% url 'accounts:edit_post' post.id %}" 
                         class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
                         Edit
@@ -138,6 +139,7 @@
                         {% csrf_token %}
                         <textarea name="comment" placeholder="Write a comment..." 
                                class=" p-2 border rounded w-full" required></textarea>
+                        <input type="hidden" name="post" value="{{ post.id }}">
                         <div class="flex w-full justify-between">
                             <div class="flex">
                                 <label class="block text-sm px-4 py-1 font-medium text-white mt-2 bg-[#CCCCFF] rounded-lg">Content Type:</label>
