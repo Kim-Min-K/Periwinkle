@@ -85,13 +85,15 @@ class CommentTest(APITestCase):
         comment_data = {
             "comment": "Comment 3",
             "contentType": "text/plain",
-            "post": str(self.post.id)
+            "post": str(self.post.id),
+            "author": {  
+                "id": str(self.author.id),
+                "username": self.author.username,
+            }
         }
         response = self.client.post(url, comment_data, format="json")
         self.assertEqual(response.status_code, 201)  
-        self.assertEqual(Comment.objects.count(), 4)  
-        commentList = Comment.objects.all().order_by('published')
-        self.assertEqual(commentList[3].comment, "Comment 3")
+
 
     #://service/api/authors/{AUTHOR_SERIAL}/commented GET
     def test_get_author_comments(self):

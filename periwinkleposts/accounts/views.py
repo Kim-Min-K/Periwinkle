@@ -306,7 +306,13 @@ class CommentView(viewsets.ModelViewSet):
         post_serial = request.data.get("post")
         post = get_object_or_404(Post, id= post_serial)  
         serializer = self.get_serializer(data = request.data)
-        author = get_object_or_404(Authors, row_id=author_serial)  
+        if request.user.is_authenticated:
+            author = request.user
+        else:
+            author_data = request.data.get("author")
+            if not author_data:
+                return Response({"error": "Author data is required for remote comments"}, status=400)
+            author, _ = Authors.objects.get_or_create(id=author_data["id"], defaults=author_data)
         if serializer.is_valid():
             serializer.save(author=author, post = post)
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
