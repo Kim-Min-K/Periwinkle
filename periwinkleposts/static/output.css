@@ -636,6 +636,9 @@
   .h-screen {
     height: 100vh;
   }
+  .max-h-\[100px\] {
+    max-height: 100px;
+  }
   .w-10 {
     width: calc(var(--spacing) * 10);
   }
@@ -653,6 +656,9 @@
   }
   .max-w-6xl {
     max-width: var(--container-6xl);
+  }
+  .max-w-\[100px\] {
+    max-width: 100px;
   }
   .max-w-full {
     max-width: 100%;

@@ -105,8 +105,8 @@ class Post(models.Model):
             ("text/markdown", "Markdown"),
         ],
     )
-    image = models.ImageField(default="media/fallback.png", blank=True)
-    video = models.FileField(upload_to="media/", null=True, blank=True)
+    image = models.ImageField(upload_to="image/", blank=True)
+    video = models.FileField(upload_to="video/", null=True, blank=True)
     published = models.DateTimeField(auto_now_add=True)
     page = models.CharField(max_length=200, blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
