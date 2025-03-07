@@ -37,6 +37,25 @@
             </select>
         </div>
 
+        <!-- Image upload input -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Image</label>
+            <input type="file" name="image" id="image" accept="image/*" class="w-full px-3 py-2 border rounded-lg">
+            <img id="imagePreview" src="{{ post.image.url }}" alt="Current Image"
+                 class="max-w-[100px] max-h-[100px] {% if post.image %}block{% else %}hidden{% endif %}">
+        </div>
+        
+        <!-- Video upload input -->
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Video</label>
+            <input type="file" name="video" id="videoInput" accept="video/*"  class="w-full px-3 py-2 border rounded-lg">
+            {% if post.video %}
+            <video controls style="max-width: 200px;">
+                <source src="{{ post.video.url }}" type="video/mp4">
+            </video>
+            {% endif %}
+        </div>
+
         <div class="flex justify-end gap-4">
             <button type="submit" 
                     class="px-4 py-2 bg-[#CCCCFF] text-white rounded-lg hover:bg-[#8585e6] transition-colors">
@@ -45,4 +64,45 @@
         </div>
     </form>
 </div>
+<script>
+    // This is changing the image view when uploading a new image
+    document.getElementById('imageInput').addEventListener('change', function(event) {
+        const [file] = event.target.files;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    // <!--This is for the video input to see if the video is valid (less the 4 seconds) if not it will alert user-->
+
+    document.getElementById('videoInput').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+
+            video.onloadedmetadata = function () {
+                window.URL.revokeObjectURL(video.src);
+                if (video.duration > 4) {
+                    alert('Video must be 4 seconds or less');
+                    event.target.value = '';  // Clear the file input
+                }
+            };
+
+            video.src = URL.createObjectURL(file);
+        }
+    });
+
+    document.querySelector('form').onsubmit = function (event) {
+        const videoInput = document.getElementById('videoInput');
+        if (videoInput.files.length > 0 && video.duration > 4) {
+            event.preventDefault();  // Stop form submission
+            alert('Please upload a video that is 4 seconds or less.');
+        }
+    };
+</script>
 {% endblock %}
