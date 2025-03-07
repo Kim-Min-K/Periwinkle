@@ -349,6 +349,12 @@ class CommentView(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(comments, many=True)
         return Response(serializer.data)
+    
+    def get_post_comments(self, request, author_serial, post_serial):
+        post = get_object_or_404(Post, id = post_serial)
+        comments = Comment.objects.filter(post=post).order_by("published")
+        serializer = self.get_serializer(comments, many = True)
+        return Response(serializer.data, status = 200)
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
@@ -378,6 +384,8 @@ class InboxView(APIView):
             return self.handle_comment(request, author)
         elif data_type == "like":
             return Response({"message": "Like received"}, status=201)
+        elif data_type == "follow":
+            return Response({"message": "Like received"}, status=201)
         return Response({"error": "Invalid type"}, status=400)
 
     def handle_comment(self, request, author):
@@ -387,7 +395,7 @@ class InboxView(APIView):
             post = get_object_or_404(Post, id=post_id) 
         else:
             return Response({"error": "Post URL is required"}, status=400)
-        serializer = CommentSerializer(data=request.data, context={"request": request})  # ✅ Fix here
+        serializer = CommentSerializer(data=request.data, context={"request": request})  
         if serializer.is_valid():
             serializer.save(author=author, post=post)
             return Response(serializer.data, status=201)

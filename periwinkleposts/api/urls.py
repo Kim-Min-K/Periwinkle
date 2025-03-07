@@ -12,14 +12,17 @@ urlpatterns = [
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name=''),
     #----------Comments API ---------------------------------
     path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="author_inbox"),
+    #://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
+    path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/",
+        CommentView.as_view({'get': 'get_post_comments'}), name='get_post_comments' ),
     #----------Commented API------------------------------
     # Create a comment, api tested 
     path("authors/<str:author_serial>/commented/",
-         CommentView.as_view({'get': 'all_comments', 'post':'create'}), name = 'createComment'),
-      
+        CommentView.as_view({'get': 'all_comments', 'post':'create'}), name = 'createComment'),
     path("authors/<str:author_serial>/commented/<uuid:comment_serial>/", 
         CommentView.as_view({'get': 'retrieve'}), name="getComment"),
     
+
     # Liking a Post
     path("authors/<uuid:author_serial>/posts/<str:post_serial>/like/", 
         LikeView.as_view({'post': 'like_post'}), name="likePost"),

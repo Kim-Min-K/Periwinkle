@@ -102,7 +102,7 @@ class CommentTest(APITestCase):
         comments_data = response.data
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 2)
-
+    
     def test_get_all_comments(self):
         url = reverse('api:commentList')
         response = self.client.get(url, format="json")
