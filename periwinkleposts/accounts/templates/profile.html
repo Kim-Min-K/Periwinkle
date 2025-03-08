@@ -203,8 +203,8 @@
                 {% if ownProfile %}
                 <!-- Received Requests -->
                 <div class="mb-4">
-                    <h4 class="font-semibold text-lg mb-2">Received Requests</h4>
-                    <ul class="space-y-2">
+                    <h4 class="font-semibold text-lg px-2 mb-2">Received Requests</h4>
+                    <ul class="space-y-2 px-2">
                         {% for requester in requesters %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded overflow-hidden">
                                 <span class="truncate mr-2">
@@ -229,8 +229,8 @@
                 {% if ownProfile %}
                 <!-- Sent Requests -->
                 <div>
-                    <h4 class="font-semibold text-lg mb-2">Sent Requests</h4>
-                    <ul class="space-y-2">
+                    <h4 class="font-semibold text-lg px-2 mb-2">Sent Requests</h4>
+                    <ul class="space-y-2 px-2">
                         {% for request in sent_requests %}
                             <li class="bg-gray-100 p-2 rounded">
                                 <a href="{% url 'accounts:profile' row_id=request.row_id %}">{{ request.displayName }}</a>
@@ -243,12 +243,16 @@
                 {% endif %}
 
                 {% if ownProfile %}
-                <!-- People You May Know -->
-                <div class="mb-4">
-                    <h4 class="font-semibold text-lg mb-2">People You May Know</h4>
-                    <ul class="space-y-2">
-                        {% for person in suggestions %}
-                            <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
+                    <div class="mb-4">
+                        <button onclick="toggleSection('suggestions')" 
+                                class="flex justify-between items-center w-full text-left font-semibold text-lg mb-2 p-2 hover:bg-gray-50 rounded">
+                            People You May Know
+                            <span class="text-xl">▾</span>
+                        </button>
+                        <div id="suggestions" class="hidden">
+                            <ul class="space-y-2">
+                                {% for person in suggestions %}
+                                <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
                                 <span><a href="{% url 'accounts:profile' row_id=person.row_id %}">{{ person.displayName }}</a></span>
                                 <form action="{% url 'accounts:sendFollowRequest' fqid=person.row_id %}" method="POST">
                                     {% csrf_token %}
@@ -256,18 +260,24 @@
                                     <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
                                 </form>
                             </li>
-                        {% empty %}
+                            {% empty %}
                             <li class="text-gray-500">No suggestions</li>
-                        {% endfor %}
-                    </ul>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
                 {% endif %}
 
                 <!-- Friends -->
                 <div class="mb-4">
-                    <h4 class="font-semibold text-lg mb-2">Friends</h4>
-                    <ul class="space-y-2">
-                        {% for friend in friends %}
+                    <button onclick="toggleSection('friends')" 
+                            class="flex justify-between items-center w-full text-left font-semibold text-lg mb-2 p-2 hover:bg-gray-50 rounded">
+                        Friends
+                        <span class="text-xl">▾</span>
+                    </button>
+                    <div id="friends" class="hidden">
+                        <ul class="space-y-2">
+                            {% for friend in friends %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
                                 <a href="{% url 'accounts:profile' row_id=friend.row_id %}">{{ friend.displayName }}</a>
                                 {% if ownProfile %}
@@ -278,33 +288,45 @@
                                 </form>
                                 {% endif %}
                             </li>
-                        {% empty %}
+                            {% empty %}
                             <li class="text-gray-500">No friends</li>
-                        {% endfor %}
-                    </ul>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
                 
                 <!-- Followers -->
-                <div>
-                    <h4 class="font-semibold text-lg mb-2">Followers</h4>
-                    <ul class="space-y-2">
-                        {% for follower in followers %}
+                <div class="mb-4">
+                    <button onclick="toggleSection('followers')" 
+                            class="flex justify-between items-center w-full text-left font-semibold text-lg mb-2 p-2 hover:bg-gray-50 rounded">
+                        Followers
+                        <span class="text-xl">▾</span>
+                    </button>
+                    <div id="followers" class="hidden">
+                        <ul class="space-y-2">
+                            {% for follower in followers %}
                             <li class="bg-gray-100 p-2 rounded">
                                 <a href="{% url 'accounts:profile' row_id=follower.row_id %}">{{ follower.username }}</a>
                             </li>
-                        {% empty %}
+                            {% empty %}
                             <li class="text-gray-500">No followers</li>
-                        {% endfor %}
-                    </ul>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Followees -->
-                <div>
-                    <h4 class="font-semibold text-lg mb-2">Followees</h4>
-                    <ul class="space-y-2">
-                        {% for followee in followees %}
+                <div class="mb-4">
+                    <button onclick="toggleSection('followees')" 
+                            class="flex justify-between items-center w-full text-left font-semibold text-lg mb-2 p-2 hover:bg-gray-50 rounded">
+                        Followees
+                        <span class="text-xl">▾</span>
+                    </button>
+                    <div id="followees" class="hidden">
+                        <ul class="space-y-2">
+                            {% for followee in followees %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <a href="{% url 'accounts:profile' row_id=followee.row_id %}">{{ followee.username }}</a>
+                                <a href="{% url 'accounts:profile' row_id=followee.row_id %}">{{ followee.displayName }}</a>
                                 {% if ownProfile %}
                                 <form action="{% url 'accounts:unfollow' author_serial=user.row_id fqid=followee.id %}" method="POST">
                                     {% csrf_token %}
@@ -313,17 +335,14 @@
                                 </form>
                                 {% endif %}
                             </li>
-                        {% empty %}
+                            {% empty %}
                             <li class="text-gray-500">No followees</li>
-                        {% endfor %}
-                    </ul>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
-
-
             </div>
         </div>
-    </div>
-</div>
 
 <script>
     window.toggleComments = function(postId) {
@@ -336,6 +355,16 @@
             }
         } else {
             console.error("Comment section not found for postId:", postId);
+        }
+    }
+
+    function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.classList.toggle('hidden');
+            const button = section.previousElementSibling;
+            const caret = button.querySelector('span:last-child');
+            caret.textContent = section.classList.contains('hidden') ? '▾' : '▴';
         }
     }
 </script>
