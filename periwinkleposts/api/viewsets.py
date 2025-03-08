@@ -22,36 +22,6 @@ class FollowRequestSerializerRaw(serializers.Serializer):
     summary = serializers.CharField(default=None)
     actor = authorSerializer()
     object = authorSerializer()
-    
-class AuthorSerializer(serializers.Serializer):
-    type = serializers.CharField(default="author")
-    id = serializers.SerializerMethodField()
-    host = serializers.SerializerMethodField()
-    displayName = serializers.CharField(source="username")
-    github = serializers.SerializerMethodField()
-    profileImage = serializers.SerializerMethodField()
-    page = serializers.SerializerMethodField()
-
-    def get_id(self, obj):
-        request = self.context.get('request')
-        host = request.build_absolute_uri('/api/authors/')
-        return f"{host}{obj.row_id}/"
-
-    def get_host(self, obj):
-        request = self.context.get('request')
-        host = request.build_absolute_uri('/api/')
-        return f"{host}"
-    
-    def get_github(self, obj):
-        return f"https://github.com/{obj.github_username}"
-
-    def get_profileImage(self, obj):
-        if obj.avatar:
-            return self.context['request'].build_absolute_uri(obj.avatar.url)
-        return obj.avatar_url
-
-    def get_page(self, obj):
-        return self.context['request'].build_absolute_uri(f'/accounts/profile/{obj.username}')
 
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer

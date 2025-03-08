@@ -164,7 +164,7 @@ def getSuggestions(request, author_serial):
                                  .order_by('?')[:5]
     
     # Serialize the suggestions using the authorSerializer
-    serializer = AuthorSerializer(suggestions, many=True)
+    serializer = AuthorSerializer(suggestions, many=True, context={'request': request})
 
     return Response({
         "type":"suggestions",

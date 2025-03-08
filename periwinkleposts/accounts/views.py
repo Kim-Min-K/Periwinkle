@@ -110,6 +110,7 @@ def profileView(request, row_id):
     ).data["followers"]
     requesters = getFollowRequests(request, author.row_id).data["requesters"]
     suggestions = getSuggestions(request, author.row_id).data["suggestions"]
+    print("Suggestions data:", suggestions)
     followees = getFollowees(request, author.row_id).data["followees"]
     sent_requests = getSentRequests(request, author.row_id).data["sent_requests"]
 

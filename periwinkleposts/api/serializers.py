@@ -5,6 +5,7 @@ from django.urls import reverse
 
 class AuthorSerializer(serializers.Serializer):
     type = serializers.CharField(default="author")
+    row_id = serializers.UUIDField(default="row.id")
     id = serializers.SerializerMethodField()
     host = serializers.SerializerMethodField()
     displayName = serializers.CharField(source="username")
