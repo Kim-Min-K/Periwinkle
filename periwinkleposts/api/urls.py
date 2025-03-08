@@ -11,14 +11,19 @@ urlpatterns = [
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
     #----------Comments API ---------------------------------
+    # Get all comment objects,for testing purpose only
+    path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox 
     path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
     path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/",
         CommentView.as_view({'get': 'get_post_comments'}), name='get_post_comments' ),
     # ://service/api/posts/{POST_FQID}/comments
-    path("posts/<str:post_fqid>/comments/", 
+    path("posts/<path:post_fqid>/comments/", 
         CommentView.as_view({'get': 'known_post_comments'}), name = 'known_post_comments'),
+    # ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
+    path("authors/<uuid:author_serial>/post/<uuid:post_serial>/comment/<str:remote_comment_fqid>/",
+        CommentView.as_view({'get': 'get_comment'}), name="get_comment"),
     #----------Commented API------------------------------
     # Create a comment, api tested 
     path("authors/<uuid:author_serial>/commented/",
@@ -35,8 +40,7 @@ urlpatterns = [
     path("authors/<uuid:author_serial>/comments/<str:comment_serial>/like/", 
         LikeView.as_view({'post': 'like_comment'}), name="likeComment"),
 
-    # Get all comment list 
-    path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
+    
     
     path('authors/<uuid:author_serial>/posts/', PostViewSet.as_view({
         'get': 'list',

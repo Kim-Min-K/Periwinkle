@@ -18,6 +18,7 @@ from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth.views import LogoutView
 from rest_framework.views import APIView
+from urllib.parse import unquote
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -376,12 +377,25 @@ class CommentView(viewsets.ModelViewSet):
         return Response(serializer.data, status = 200)
 
     def known_post_comments(self,request, post_fqid):
-        post_id = post_fqid.split("/")[-1]
+        decoded_post_fqid = unquote(post_fqid)
+        post_id = decoded_post_fqid.split("/")[-1]
         post = get_object_or_404(Post, id = post_id)
         comments = Comment.objects.filter(post=post).order_by("published")
         serializer = self.get_serializer(comments, many = True)
         return Response(serializer.data, status = 200)
     
+    def get_comment(self, request, author_serial, post_serial, remote_comment_fqid):
+        try:
+            if remote_comment_fqid.startswith("http"):
+                return Response({"error": "Only local comments are supported currently"}, status=400)
+
+            comment = get_object_or_404(Comment, id=remote_comment_fqid, post__id=post_serial)
+            serializer = self.get_serializer(comment)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
     queryset = Like.objects.all().order_by('published')
