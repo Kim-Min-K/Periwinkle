@@ -147,8 +147,10 @@ def profileView(request, row_id):
 
 
 def acceptRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(id=fqid)
-    requestee = Authors.objects.get(row_id=author_serial)
+    print(author_serial)
+    print(fqid)
+    requester = Authors.objects.get(row_id=fqid)
+    requestee = Authors.objects.get(row_id=request.user.row_id)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee
     )
@@ -176,8 +178,8 @@ def unfollow(request, author_serial, fqid):
 def sendFollowRequest(request, fqid):
     print(fqid)
     print(request.user.id)
-    requestee = Authors.objects.get(id=fqid)
-    requester = Authors.objects.get(id=request.user.id)
+    requestee = Authors.objects.get(row_id=fqid)
+    requester = Authors.objects.get(row_id=request.user.row_id)
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)
 

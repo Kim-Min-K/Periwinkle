@@ -208,14 +208,14 @@
                         {% for requester in requesters %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded overflow-hidden">
                                 <span class="truncate mr-2">
-                                    <a href="{% url 'accounts:profile' row_id=requester.row_id %}">{{ requester.username }}</a>
+                                    <a href="{% url 'accounts:profile' row_id=requester.row_id %}">{{ requester.displayName }}</a>
                                 </span>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     <button class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
-                                        <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id fqid=requester.id %}">Accept</a>
+                                        <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id fqid=requester.row_id %}">Accept</a>
                                     </button>
                                     <button class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
-                                        <a href="{% url 'accounts:declineRequest' author_serial=author.row_id fqid=requester.id %}">Decline</a>
+                                        <a href="{% url 'accounts:declineRequest' author_serial=author.row_id fqid=requester.row_id %}">Decline</a>
                                     </button>
                                 </div>
                             </li>
@@ -233,7 +233,7 @@
                     <ul class="space-y-2">
                         {% for request in sent_requests %}
                             <li class="bg-gray-100 p-2 rounded">
-                                <a href="{% url 'accounts:profile' row_id=request.row_id %}">{{ request.username }}</a>
+                                <a href="{% url 'accounts:profile' row_id=request.row_id %}">{{ request.displayName }}</a>
                             </li>
                         {% empty %}
                             <li class="text-gray-500">No sent requests</li>
@@ -249,8 +249,8 @@
                     <ul class="space-y-2">
                         {% for person in suggestions %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <span><a href="{% url 'accounts:profile' row_id=person.row_id %}">{{ person.username }}</a></span>
-                                <form action="{% url 'accounts:sendFollowRequest' fqid=person.id %}" method="POST">
+                                <span><a href="{% url 'accounts:profile' row_id=person.row_id %}">{{ person.displayName }}</a></span>
+                                <form action="{% url 'accounts:sendFollowRequest' fqid=person.row_id %}" method="POST">
                                     {% csrf_token %}
                                     <input type="text" name="your_field" placeholder="Enter something" hidden>
                                     <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>

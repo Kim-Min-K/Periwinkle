@@ -106,7 +106,7 @@ def getFriends(request, author_serial):
     friends = Authors.objects.filter(row_id__in=friend_ids)
 
     # Serialize the friend objects
-    serializer = AuthorSerializer(friends, many=True)
+    serializer = AuthorSerializer(friends, many=True, context={'request': request})
 
     return Response({
         "type":"friends",
@@ -127,7 +127,7 @@ def getFollowRequests(request, author_serial):
     requesters = Authors.objects.filter(row_id__in=requesters_ids)
 
     # Serialize the friend objects
-    serializer = AuthorSerializer(requesters, many=True)
+    serializer = AuthorSerializer(requesters, many=True, context={'request': request})
     
     return Response({
         "type":"requesters",
@@ -181,7 +181,7 @@ def getSentRequests(request, author_serial):
 
     requestee_ids = [connection.requestee for connection in requestees]
 
-    requestee_serializer = AuthorSerializer(requestee_ids, many=True)
+    requestee_serializer = AuthorSerializer(requestee_ids, many=True, context={'request': request})
 
     return Response({
         "type": "sent_requests",
