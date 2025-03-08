@@ -16,6 +16,7 @@ class Authors(AbstractUser):
     github_username = models.CharField(
         max_length=100, blank=True, null=True, unique=True
     )
+    local = models.BooleanField(default=True)
 
     def __str__(self):
         return self.username

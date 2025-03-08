@@ -12,7 +12,7 @@ class AuthorsAdmin(UserAdmin):
         (
             "Additional Info",
             {
-                "fields": ("github_username", "avatar_preview", "avatar_url", "avatar", "is_approved"),
+                "fields": ("github_username", "avatar_preview", "avatar_url", "avatar", "is_approved", "local"),
             },
         ),
     )
