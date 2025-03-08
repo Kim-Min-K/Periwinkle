@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 import uuid
 from rest_framework.decorators import action
 from django.core.paginator import Paginator
@@ -50,6 +51,7 @@ class AuthorsSerializer(serializers.Serializer):
     type = serializers.CharField(default="authors")
     authors = AuthorSerializer(many=True)
 
+
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer
 
@@ -81,10 +83,10 @@ class FollowersViewSet(GenericViewSet):
 class FolloweesViewSet(GenericViewSet):
     @action(detail=False, methods=["post"])
     @swagger_auto_schema(
-        operation_description="Unfollow an author",
+        operation_description="Unfollow a followee of an author",
         responses={
-            200: "Followee successfully unfollowed.",
-            404: "The author is not following the corresponding followee."
+            200: UnfollowSerializer(),
+            404: "The author is not following the corresponding followee or one of the authors does not exist ."
             }
     )
     def unfollow(self, request, author_serial, fqid):
@@ -95,9 +97,10 @@ class FolloweesViewSet(GenericViewSet):
 
         follower = get_object_or_404(Authors, row_id=author_uuid)
         followee = get_object_or_404(Authors, id=fqid)
-        follow_object = get_object_or_404(Follow, followee=followee, follower=follower)
-        follow_object.delete()
-        return Response({"message":"Followee successfully unfollowed."}, status=200)
+        serializer = UnfollowSerializer(actor=follower, object=followee)
+        data = serializer.to_representation()
+        serializer.save()
+        return Response(data, status=200)
 
 
 class FollowRequestViewSet(GenericViewSet):
