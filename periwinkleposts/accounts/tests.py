@@ -6,6 +6,7 @@ from .serializers import authorSerializer
 import uuid
 from urllib.parse import urlencode
 from django.contrib.staticfiles.testing import LiveServerTestCase
+from urllib.parse import quote
 
 # Create your tests here.
 class FollowLiveServerTests(LiveServerTestCase):
@@ -199,6 +200,7 @@ class CommentTest(APITestCase):
     def setUp(self):
         self.author = Authors.objects.create(username = 'test_author')
         self.post = Post.objects.create(author=self.author)
+        self.post2 = Post.objects.create(author= self.author)
         Comment.objects.create(
             author=self.author, post=self.post, comment="Comment 1", content_type="text/plain"
         )
@@ -208,6 +210,9 @@ class CommentTest(APITestCase):
         self.author2 = Authors.objects.create(username = 'test_author2')
         Comment.objects.create(
             author=self.author2, post=self.post, comment="Comment 1 by author2", content_type="text/plain"
+        )
+        Comment.objects.create(
+            author=self.author, post=self.post2, comment="author Comment on post2", content_type="text/plain"
         )
         return super().setUp()
         
@@ -236,7 +241,7 @@ class CommentTest(APITestCase):
         response = self.client.get(url, format="json")
         comments_data = response.data
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(comments_data), 2)
+        self.assertEqual(len(comments_data), 3)
         comments = []
         for comment in response.data:
             comments.append(comment['comment'])
@@ -251,19 +256,37 @@ class CommentTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 3)
 
+
     def test_get_all_comments(self):
         url = reverse('api:commentList')
         response = self.client.get(url, format="json")
         comments_data = response.data
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(comments_data), 3)
+        self.assertEqual(len(comments_data), 4)
 
-    def known_post_comments(self):
-        url = reverse('api:known_post_comments')
+    def test_known_post_comments(self):
+        post_fqid = f"http://localhost:8000/api/authors/{self.author.row_id}/posts/{self.post.id}"
+        encoded_post_fqid = quote(post_fqid, safe='') 
+        # URLs contain special characters (/, :), which Django's URL routing does not parse correctly.
+        url = reverse('api:known_post_comments', kwargs={'post_fqid':encoded_post_fqid})
         response = self.client.get(url, format="json")
         comments_data = response.data
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 3)
+
+    # def test_get_local_comment(self):
+    #     url = reverse(
+    #         "get_comment",
+    #         kwargs={
+    #             "author_serial": str(self.author.row_id),
+    #             "post_serial": str(self.post.id),
+    #             "remote_comment_fqid": str(self.local_comment.id)
+    #         },
+    #     )
+    #     response = self.client.get(url, format="json")
+
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     self.assertEqual(response.data["comment"], "Local Comment")
 
 class InboxTest(APITestCase):
     def setUp(self):

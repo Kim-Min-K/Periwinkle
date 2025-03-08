@@ -18,8 +18,11 @@ urlpatterns = [
     path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/",
         CommentView.as_view({'get': 'get_post_comments'}), name='get_post_comments' ),
     # ://service/api/posts/{POST_FQID}/comments
-    path("posts/<str:post_fqid>/comments/", 
+    path("posts/<path:post_fqid>/comments/", 
         CommentView.as_view({'get': 'known_post_comments'}), name = 'known_post_comments'),
+    # ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
+    path("authors/<uuid:author_serial>/post/<uuid:post_serial>/comment/<path:remote_comment_fqid>/",
+        CommentView.as_view({'get': 'get_comment'}), name = 'get_comment'),
     #----------Commented API------------------------------
     # Create a comment, api tested 
     path("authors/<uuid:author_serial>/commented/",
