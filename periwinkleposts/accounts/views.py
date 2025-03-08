@@ -383,10 +383,16 @@ class CommentView(viewsets.ModelViewSet):
         serializer = self.get_serializer(comments, many = True)
         return Response(serializer.data, status = 200)
     
-    def get_comment(self,request, author_serial, post_serial, remote_comment_fqid ):
-        comment = get_object_or_404(Comment, id=remote_comment_fqid, post__id=post_serial)
-        serializer = self.get_serializer(comment)
-        return Response(serializer.data, status=200)
+    def get_comment(self, request, author_serial, post_serial, remote_comment_fqid):
+        try:
+            if remote_comment_fqid.startswith("http"):
+                return Response({"error": "Only local comments are supported currently"}, status=400)
+
+            comment = get_object_or_404(Comment, id=remote_comment_fqid, post__id=post_serial)
+            serializer = self.get_serializer(comment)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
 
 class LikeView(viewsets.ModelViewSet):
