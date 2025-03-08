@@ -105,8 +105,39 @@ class FollowLiveServerTests(LiveServerTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(FollowRequest.objects.all()), 0)
         self.assertEqual(len(Follow.objects.all()), 0)
-        print(FollowRequest.objects.all())
-        print(Follow.objects.all())
+
+    def test_unfollow(self):
+        print("\nTesting unfollow live ...")
+
+        success = self.client.login(username="test_author_2", password="my_password2")
+        self.assertEqual(success, True)
+
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(FollowRequest.objects.all()), 1)
+
+        success = self.client.login(username="test_author_1", password="my_password1")
+        self.assertEqual(success, True)
+
+        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id.hex, self.test_author_2.id])
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(FollowRequest.objects.all()), 0)
+        self.assertEqual(len(Follow.objects.all()), 1)
+
+        url = reverse("accounts:unfollow", args=[self.test_author_2.row_id.hex, self.test_author_1.id])
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(Follow.objects.all()), 0)
+
+
     
 
 
@@ -153,8 +184,6 @@ class FollowAPITests(APITestCase):
             "actor": authorSerializer(test_author_2).data,  # The author sending the request
             "object": authorSerializer(test_author_1).data  # The author receiving the follow request
         }
-
-        print(data)
 
         # Simulate sending a POST request
         response = self.client.post(url, data, format="json")
