@@ -104,14 +104,14 @@ def profileView(request, row_id):
     ownProfile = request.user.is_authenticated and (request.user == author)
     posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     # Connections field
-    friends = getFriends(request, author.row_id.hex).data["friends"]
+    friends = getFriends(request, author.row_id).data["friends"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(
-        request, author.row_id.hex
+        request, author.row_id
     ).data["followers"]
-    requesters = getFollowRequests(request, author.row_id.hex).data["requesters"]
-    suggestions = getSuggestions(request, author.row_id.hex).data["suggestions"]
-    followees = getFollowees(request, author.row_id.hex).data["followees"]
-    sent_requests = getSentRequests(request, author.row_id.hex).data["sent_requests"]
+    requesters = getFollowRequests(request, author.row_id).data["requesters"]
+    suggestions = getSuggestions(request, author.row_id).data["suggestions"]
+    followees = getFollowees(request, author.row_id).data["followees"]
+    sent_requests = getSentRequests(request, author.row_id).data["sent_requests"]
 
     for post in posts:
         if post.contentType == "text/markdown":
@@ -146,7 +146,7 @@ def profileView(request, row_id):
 
 def acceptRequest(request, author_serial, fqid):
     requester = Authors.objects.get(id=fqid)
-    requestee = Authors.objects.get(row_id=uuid.UUID(hex=author_serial))
+    requestee = Authors.objects.get(row_id=author_serial)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee
     )
@@ -156,7 +156,7 @@ def acceptRequest(request, author_serial, fqid):
 
 def declineRequest(request, author_serial, fqid):
     requester = Authors.objects.get(id=fqid)
-    requestee = Authors.objects.get(row_id=uuid.UUID(hex=author_serial))
+    requestee = Authors.objects.get(row_id=author_serial)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee
     )
@@ -166,7 +166,7 @@ def declineRequest(request, author_serial, fqid):
 
 def unfollow(request, author_serial, fqid):
     followee = Authors.objects.get(id=fqid)
-    author = Authors.objects.get(row_id=uuid.UUID(hex=author_serial))
+    author = Authors.objects.get(row_id=author_serial)
     (FolloweesViewSet.as_view({'post':'unfollow'}))(request, author_serial, fqid)
     return redirect("accounts:profile", row_id=request.user.row_id)
 
@@ -187,7 +187,7 @@ def sendFollowRequest(request, fqid):
     }
 
     response = requests.post(
-        f"{requestee.host}authors/{requestee.row_id.hex}/inbox",
+        f"{requestee.host}authors/{requestee.row_id}/inbox",
         headers={"Content-Type": "application/json"},
         json=follow_request,
     )

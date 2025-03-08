@@ -73,7 +73,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_1", password="my_password1")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id.hex, self.test_author_2.id])
+        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id, self.test_author_2.id])
 
         response = self.client.post(url)
 
@@ -98,7 +98,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_1", password="my_password1")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:declineRequest", args=[self.test_author_1.row_id.hex, self.test_author_2.id])
+        url = reverse("accounts:declineRequest", args=[self.test_author_1.row_id, self.test_author_2.id])
 
         response = self.client.post(url)
 
@@ -122,7 +122,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_1", password="my_password1")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id.hex, self.test_author_2.id])
+        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id, self.test_author_2.id])
 
         response = self.client.post(url)
 
@@ -130,7 +130,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         self.assertEqual(len(FollowRequest.objects.all()), 0)
         self.assertEqual(len(Follow.objects.all()), 1)
 
-        url = reverse("accounts:unfollow", args=[self.test_author_2.row_id.hex, self.test_author_1.id])
+        url = reverse("accounts:unfollow", args=[self.test_author_2.row_id, self.test_author_1.id])
 
         response = self.client.post(url)
 
@@ -153,7 +153,7 @@ class FollowAPITests(APITestCase):
         Follow.objects.create(followee=test_author_1, follower=test_author_2)
         Follow.objects.create(followee=test_author_1, follower=test_author_3)
 
-        url = reverse("api:getFollowers", args=[test_author_1.row_id.hex])
+        url = reverse("api:getFollowers", args=[test_author_1.row_id])
         response = self.client.get(url)
         
         result = response.json()
@@ -176,7 +176,7 @@ class FollowAPITests(APITestCase):
         test_author_2 = Authors.objects.create(username="test_author_2")
 
         # URL for sending the follow request
-        url = reverse("api:followRequest", args=[test_author_1.row_id.hex])
+        url = reverse("api:followRequest", args=[test_author_1.row_id])
 
         # The request body for sending a follow request
         data = {

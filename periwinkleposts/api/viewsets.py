@@ -62,7 +62,7 @@ class FollowersViewSet(GenericViewSet):
     )
     def list(self, request, author_serial):
         try:
-            author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+            author_uuid = author_serial  # Convert string to UUID
         except ValueError:
             return Response({'error': 'Invalid UUID format'}, status=400)
 
@@ -91,7 +91,7 @@ class FolloweesViewSet(GenericViewSet):
     )
     def unfollow(self, request, author_serial, fqid):
         try:
-            author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+            author_uuid = author_serial  # Convert string to UUID
         except ValueError:
             return Response({'error': 'Invalid UUID format'}, status=400)
 
@@ -118,7 +118,7 @@ class FollowRequestViewSet(GenericViewSet):
         try:
             with transaction.atomic():
 
-                requestee = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
+                requestee = get_object_or_404(Authors, pk=author_serial)
                 requester_json = request.data.get("actor")
                 print(requester_json)
 
