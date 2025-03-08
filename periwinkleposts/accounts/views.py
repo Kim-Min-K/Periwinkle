@@ -3,11 +3,11 @@ from .forms import AuthorCreation, AvatarUpload, EditProfile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings
+from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings, Follow
 from .serializers import authorSerializer, CommentSerializer, LikeSerializer
 from django.http import QueryDict
 from api.follow_views import *
-from api.viewsets import FollowersViewSet, FollowRequestViewSet
+from api.viewsets import FollowersViewSet, FollowRequestViewSet, FolloweesViewSet
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
@@ -18,6 +18,7 @@ from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib.auth.views import LogoutView
 from rest_framework.views import APIView
+from urllib.parse import unquote
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -66,7 +67,7 @@ def registerView(request):
         # Add a "host" field in the post request and set it to our server's / proxy's host name
         print(" RegisterView/request.POST : " + str(request.POST))
         ordinary_dict = dict(request.POST.dict())
-        ordinary_dict["host"] = request.build_absolute_uri("/api/")
+        ordinary_dict["host"] = request.build_absolute_uri("/api/") if "host" not in ordinary_dict else ordinary_dict["host"]
         query_dict = QueryDict("", mutable=True)
         query_dict.update(ordinary_dict)
         print(" RegisterView/QueryDict : " + str(query_dict))
@@ -97,25 +98,38 @@ def registerView(request):
 
 def profileView(request, row_id):
     author = get_object_or_404(Authors, row_id=row_id)
+    
+    if author.is_staff:
+        author = request.user
+
     ownProfile = request.user.is_authenticated and (request.user == author)
     posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     # Connections field
-    friends = getFriends(request, author.row_id.hex).data["friends"]
+    friends = getFriends(request, author.row_id).data["friends"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(
-        request, author.row_id.hex
+        request, author.row_id
     ).data["followers"]
-    requesters = getFollowRequests(request, author.row_id.hex).data["requesters"]
-    suggestions = getSuggestions(request, author.row_id.hex).data["suggestions"]
-    followees = getFollowees(request, author.row_id.hex).data["followees"]
-    sent_requests = getSentRequests(request, author.row_id.hex).data["sent_requests"]
+    requesters = getFollowRequests(request, author.row_id).data["requesters"]
+    suggestions = getSuggestions(request, author.row_id).data["suggestions"]
+    followees = getFollowees(request, author.row_id).data["followees"]
+    sent_requests = getSentRequests(request, author.row_id).data["sent_requests"]
 
     for post in posts:
         if post.contentType == "text/markdown":
             post.content = markdown_to_html(post.content)
-    
+    isFollowee = Follow.objects.filter(followee=author, follower=request.user).exists()
+    isPending = FollowRequest.objects.filter(requestee=author, requester=request.user).exists()
+    isFriend = (
+        Follow.objects.filter(followee=author, follower=request.user).exists() and
+        Follow.objects.filter(followee=request.user, follower=author).exists()
+    )
+
     context = {
         "author": author,
         "ownProfile": ownProfile,
+        "isFollowee": isFollowee,
+        "isFriend": isFriend,
+        "isPending": isPending,
         "friends": friends,
         "followers": followers,
         "requesters": requesters,
@@ -132,29 +146,35 @@ def profileView(request, row_id):
 
 
 def acceptRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(id=fqid)
-    requestee = Authors.objects.get(row_id=uuid.UUID(hex=author_serial))
+    requester = Authors.objects.get(row_id=fqid)
+    requestee = Authors.objects.get(row_id=author_serial)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee
     )
     response = acceptFollowRequest(request, follow_request.id)
-    return redirect("accounts:profile", username=requestee.username)
+    return redirect("accounts:profile", row_id=requestee.row_id)
 
 
 def declineRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(id=fqid)
-    requestee = Authors.objects.get(row_id=uuid.UUID(hex=author_serial))
+    requester = Authors.objects.get(row_id=fqid)
+    requestee = Authors.objects.get(row_id=author_serial)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee
     )
     response = declineFollowRequest(request, follow_request.id)
     print(response)
-    return redirect("accounts:profile", username=requestee.username)
+    return redirect("accounts:profile", row_id=requestee.row_id)
+
+def unfollow(request, author_serial, fqid):
+    followee = Authors.objects.get(id=fqid)
+    author = Authors.objects.get(row_id=author_serial)
+    (FolloweesViewSet.as_view({'post':'unfollow'}))(request, author_serial, fqid)
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 
 def sendFollowRequest(request, fqid):
-    requestee = Authors.objects.get(id=fqid)
-    requester = Authors.objects.get(id=request.user.id)
+    requestee = Authors.objects.get(row_id=fqid)
+    requester = Authors.objects.get(row_id=request.user.row_id)
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)
 
@@ -166,7 +186,7 @@ def sendFollowRequest(request, fqid):
     }
 
     response = requests.post(
-        f"{requestee.host}authors/{requestee.row_id.hex}/inbox",
+        f"{requestee.host}authors/{requestee.row_id}/inbox",
         headers={"Content-Type": "application/json"},
         json=follow_request,
     )
@@ -174,7 +194,7 @@ def sendFollowRequest(request, fqid):
     if not response.ok:
         raise Exception(response.json().get("message"))
 
-    return redirect("accounts:profile", username=request.user.username)
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 
 @login_required  # ensures that this only works if user is logged in/authenticated, not sure if really needed???
@@ -352,6 +372,26 @@ class CommentView(viewsets.ModelViewSet):
         comments = Comment.objects.filter(post=post).order_by("published")
         serializer = self.get_serializer(comments, many = True)
         return Response(serializer.data, status = 200)
+
+    def known_post_comments(self,request, post_fqid):
+        decoded_post_fqid = unquote(post_fqid)
+        post_id = decoded_post_fqid.split("/")[-1]
+        post = get_object_or_404(Post, id = post_id)
+        comments = Comment.objects.filter(post=post).order_by("published")
+        serializer = self.get_serializer(comments, many = True)
+        return Response(serializer.data, status = 200)
+    
+    def get_comment(self, request, author_serial, post_serial, remote_comment_fqid):
+        try:
+            if remote_comment_fqid.startswith("http"):
+                return Response({"error": "Only local comments are supported currently"}, status=400)
+
+            comment = get_object_or_404(Comment, id=remote_comment_fqid, post__id=post_serial)
+            serializer = self.get_serializer(comment)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer

@@ -3,9 +3,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from accounts.models import FollowRequest, Authors, Follow
 from django.shortcuts import get_object_or_404
-from accounts.serializers import authorSerializer, FollowRequestSerializer, FollowSerializer
+from accounts.serializers import FollowRequestSerializer, FollowSerializer
+from api.serializers import AuthorSerializer
 from django.db import transaction
 import uuid
+from api.serializers import AuthorSerializer
 
 # Create your views here.
 
@@ -14,14 +16,14 @@ def followRequest(request, author_serial):
     try:
         with transaction.atomic():
 
-            requestee = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
+            requestee = get_object_or_404(Authors, pk=author_serial)
             requester_json = request.data.get("actor")
 
             # Use requester object in database if it exists otherwise create it
             try:
                 requester = Authors.objects.get(id=requester_json["id"])
             except Authors.DoesNotExist:
-                requester_serializer = authorSerializer(data=requester_json)
+                requester_serializer = AuthorSerializer(data=requester_json)
                 if not requester_serializer.is_valid():
                     raise ValueError(requester_serializer.errors)
                 requester = requester_serializer.save()
@@ -39,7 +41,7 @@ def followRequest(request, author_serial):
 
 def getFollowees(request, author_serial):
     try:
-        author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+        author_uuid = author_serial  # Convert string to UUID
     except ValueError:
         return Response({'error': 'Invalid UUID format'}, status=400)
 
@@ -48,7 +50,7 @@ def getFollowees(request, author_serial):
     # Get the list of followers by extracting the `follower` field from each Follow object
     followee_ids = [connection.followee for connection in followees]
 
-    followee_serializer = authorSerializer(followee_ids, many=True)  # Serialize multiple followers
+    followee_serializer = AuthorSerializer(followee_ids, many=True, context={'request': request})  # Serialize multiple followers
 
     return Response({
         "type": "followees",
@@ -84,7 +86,7 @@ def getFriends(request, author_serial):
 
     try:
         # Convert the serial string to a UUID object if your IDs are UUIDs
-        author_uuid = uuid.UUID(author_serial)
+        author_uuid = author_serial
     except ValueError:
         return Response({'error': 'Invalid UUID format.'}, status=400)
 
@@ -104,7 +106,7 @@ def getFriends(request, author_serial):
     friends = Authors.objects.filter(row_id__in=friend_ids)
 
     # Serialize the friend objects
-    serializer = authorSerializer(friends, many=True)
+    serializer = AuthorSerializer(friends, many=True, context={'request': request})
 
     return Response({
         "type":"friends",
@@ -114,7 +116,7 @@ def getFriends(request, author_serial):
 @api_view(['GET'])
 def getFollowRequests(request, author_serial):
     try:
-        author_uuid = uuid.UUID(author_serial)
+        author_uuid = author_serial
     except ValueError:
         return Response({'error': 'Invalid UUID format.'}, status=400)
 
@@ -125,7 +127,7 @@ def getFollowRequests(request, author_serial):
     requesters = Authors.objects.filter(row_id__in=requesters_ids)
 
     # Serialize the friend objects
-    serializer = authorSerializer(requesters, many=True)
+    serializer = AuthorSerializer(requesters, many=True, context={'request': request})
     
     return Response({
         "type":"requesters",
@@ -137,7 +139,7 @@ def getSuggestions(request, author_serial):
     try:
         # Convert the provided author_serial (assumed to be a UUID string) into a UUID object
         if type(author_serial) == str:
-            author_uuid = uuid.UUID(author_serial)
+            author_uuid = author_serial
         else:
             author_uuid = author_serial
             
@@ -158,10 +160,11 @@ def getSuggestions(request, author_serial):
     suggestions = Authors.objects.exclude(row_id__in=followed_ids)\
                                  .exclude(row_id=current_author.row_id)\
                                  .exclude(row_id__in=request_ids)\
+                                 .exclude(is_staff=1)\
                                  .order_by('?')[:5]
     
     # Serialize the suggestions using the authorSerializer
-    serializer = authorSerializer(suggestions, many=True)
+    serializer = AuthorSerializer(suggestions, many=True, context={'request': request})
 
     return Response({
         "type":"suggestions",
@@ -170,7 +173,7 @@ def getSuggestions(request, author_serial):
 
 def getSentRequests(request, author_serial):
     try:
-        author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+        author_uuid = author_serial  # Convert string to UUID
     except ValueError:
         return Response({'error': 'Invalid UUID format'}, status=400)
 
@@ -178,7 +181,7 @@ def getSentRequests(request, author_serial):
 
     requestee_ids = [connection.requestee for connection in requestees]
 
-    requestee_serializer = authorSerializer(requestee_ids, many=True)
+    requestee_serializer = AuthorSerializer(requestee_ids, many=True, context={'request': request})
 
     return Response({
         "type": "sent_requests",

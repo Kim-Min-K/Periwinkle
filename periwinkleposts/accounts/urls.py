@@ -10,18 +10,19 @@ urlpatterns = [
     path("login/", views.loginView, name="login"),
     path("profile/<uuid:row_id>", views.profileView, name="profile"),
     path(
-        "authors/<str:author_serial>/followers/<path:fqid>/accept",
+        "authors/<uuid:author_serial>/followers/<path:fqid>/accept",
         views.acceptRequest,
         name="acceptRequest",
     ),
     path(
-        "authors/<str:author_serial>/followers/<path:fqid>/decline",
+        "authors/<uuid:author_serial>/followers/<path:fqid>/decline",
         views.declineRequest,
         name="declineRequest",
     ),
     path(
         "authors/<path:fqid>/inbox", views.sendFollowRequest, name="sendFollowRequest"
     ),
+    path("authors/<uuid:author_serial>/followees/<path:fqid>/unfollow", views.unfollow, name="unfollow"),
     path("avatar/", views.uploadAvatar, name="avatar"),
     path("create-post/", create_post, name="create_post"),
     path("post/delete/<uuid:post_id>/", delete_post, name="delete_post"),

@@ -16,13 +16,14 @@ class Authors(AbstractUser):
     github_username = models.CharField(
         max_length=100, blank=True, null=True, unique=True
     )
+    local = models.BooleanField(default=True)
 
     def __str__(self):
         return self.username
 
     def save(self, *args, **kwargs):
         if self.id is None:
-            self.id = str(self.host) + "authors/" + str(self.row_id.hex)
+            self.id = str(self.host) + "authors/" + str(self.row_id)
         super().save(*args, **kwargs)
 
     def avatar_display(self):
