@@ -153,7 +153,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         self.assertEqual(len(FollowRequest.objects.all()), 0)
         self.assertEqual(len(Follow.objects.all()), 1)
 
-        url = reverse("accounts:unfollow", args=[self.test_author_2.row_id, self.test_author_1.row_id])
+        url = reverse("accounts:unfollow", args=[self.test_author_2.row_id, self.test_author_1.id])
 
         response = self.client.post(url)
 
