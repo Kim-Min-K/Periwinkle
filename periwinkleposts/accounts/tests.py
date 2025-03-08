@@ -1,12 +1,116 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from .models import Authors, Follow, FollowRequest, Post, Comment, Like
 from .serializers import authorSerializer
 import uuid
+from urllib.parse import urlencode
+from django.contrib.staticfiles.testing import LiveServerTestCase
 
 # Create your tests here.
-class FollowTests(APITestCase):
+class FollowLiveServerTests(LiveServerTestCase):
+    """ 
+    This tests whether follow works on the frontend.
+    """
+    def setUp(self):
+        host = self.live_server_url+"/api/"
+        url = reverse("accounts:register")
+        response = self.client.post(url, urlencode({
+            'username': 'test_author_1', 
+            'github_username':'test_author_1', 
+            'host':host,
+            'password1': 'my_password1', 
+            'password2':'my_password1'
+            }), content_type="application/x-www-form-urlencoded")
+        self.assertEqual(response.status_code, 302) 
+
+        response = self.client.post(url, urlencode({
+            'username': 'test_author_2', 
+            'github_username':'test_author_2', 
+            'host':host,
+            'password1': 'my_password2', 
+            'password2':'my_password2'
+            }), content_type="application/x-www-form-urlencoded")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(Authors.objects.all()), 2) 
+
+        self.assertEqual(len(FollowRequest.objects.all()), 0)
+
+        self.test_author_1 = Authors.objects.get(username="test_author_1")
+        self.test_author_2 = Authors.objects.get(username="test_author_2")
+        self.test_author_1.is_approved = 1
+        self.test_author_2.is_approved = 1
+        self.test_author_1.save()
+        self.test_author_2.save()
+
+
+    def test_send_follow_request(self):
+        
+        success = self.client.login(username="test_author_2", password="my_password2")
+        self.assertEqual(success, True)
+
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(FollowRequest.objects.all()), 1)
+    
+    def test_accept_follow_request(self):
+        print("\nTesting accept follow request live ...")
+        self.assertEqual(len(Follow.objects.all()), 0)
+
+        success = self.client.login(username="test_author_2", password="my_password2")
+        self.assertEqual(success, True)
+
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(FollowRequest.objects.all()), 1)
+
+        success = self.client.login(username="test_author_1", password="my_password1")
+        self.assertEqual(success, True)
+
+        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id.hex, self.test_author_2.id])
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(FollowRequest.objects.all()), 0)
+        self.assertEqual(len(Follow.objects.all()), 1)
+    
+    def test_decline_follow_request(self):
+        print("\nTesting decline follow request live ...")
+        self.assertEqual(len(FollowRequest.objects.all()), 0)
+
+        success = self.client.login(username="test_author_2", password="my_password2")
+        self.assertEqual(success, True)
+
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(FollowRequest.objects.all()), 1)
+
+        success = self.client.login(username="test_author_1", password="my_password1")
+        self.assertEqual(success, True)
+
+        url = reverse("accounts:declineRequest", args=[self.test_author_1.row_id.hex, self.test_author_2.id])
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(FollowRequest.objects.all()), 0)
+        self.assertEqual(len(Follow.objects.all()), 0)
+        print(FollowRequest.objects.all())
+        print(Follow.objects.all())
+    
+
+
+class FollowAPITests(APITestCase):
     def test_get_followers(self):
         """
         Tests /api/authors/{author_serial}/followers endpoint with body.type == "followers"
@@ -49,6 +153,8 @@ class FollowTests(APITestCase):
             "actor": authorSerializer(test_author_2).data,  # The author sending the request
             "object": authorSerializer(test_author_1).data  # The author receiving the follow request
         }
+
+        print(data)
 
         # Simulate sending a POST request
         response = self.client.post(url, data, format="json")

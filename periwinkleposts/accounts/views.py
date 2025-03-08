@@ -66,7 +66,7 @@ def registerView(request):
         # Add a "host" field in the post request and set it to our server's / proxy's host name
         print(" RegisterView/request.POST : " + str(request.POST))
         ordinary_dict = dict(request.POST.dict())
-        ordinary_dict["host"] = request.build_absolute_uri("/api/")
+        ordinary_dict["host"] = request.build_absolute_uri("/api/") if "host" not in ordinary_dict else ordinary_dict["host"]
         query_dict = QueryDict("", mutable=True)
         query_dict.update(ordinary_dict)
         print(" RegisterView/QueryDict : " + str(query_dict))
@@ -153,6 +153,8 @@ def declineRequest(request, author_serial, fqid):
 
 
 def sendFollowRequest(request, fqid):
+    print(fqid)
+    print(request.user.id)
     requestee = Authors.objects.get(id=fqid)
     requester = Authors.objects.get(id=request.user.id)
     requestee_serializer = authorSerializer(requestee)

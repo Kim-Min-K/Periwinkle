@@ -95,6 +95,7 @@ class FollowRequestViewSet(GenericViewSet):
 
                 requestee = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
                 requester_json = request.data.get("actor")
+                print(requester_json)
 
                 # Use requester object in database if it exists otherwise create it
                 try:
