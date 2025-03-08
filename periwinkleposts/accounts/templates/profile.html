@@ -269,7 +269,7 @@
                     <ul class="space-y-2">
                         {% for friend in friends %}
                             <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <a href="{% url 'accounts:profile' row_id=friend.row_id %}">{{ friend.username }}</a>
+                                <a href="{% url 'accounts:profile' row_id=friend.row_id %}">{{ friend.displayName }}</a>
                                 {% if ownProfile %}
                                 <form action="{% url 'accounts:unfollow' author_serial=user.row_id fqid=friend.id %}" method="POST">
                                     {% csrf_token %}
