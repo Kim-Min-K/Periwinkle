@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, permissions, status
+from drf_yasg import openapi
 import uuid
 from rest_framework.decorators import action
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -62,7 +63,7 @@ class FollowersViewSet(GenericViewSet):
     )
     def list(self, request, author_serial):
         try:
-            author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+            author_uuid = author_serial  # Convert string to UUID
         except ValueError:
             return Response({'error': 'Invalid UUID format'}, status=400)
 
@@ -80,6 +81,29 @@ class FollowersViewSet(GenericViewSet):
 
         return Response(res)
 
+class FolloweesViewSet(GenericViewSet):
+    @action(detail=False, methods=["post"])
+    @swagger_auto_schema(
+        operation_description="Unfollow a followee of an author",
+        responses={
+            200: UnfollowSerializer(),
+            404: "The author is not following the corresponding followee or one of the authors does not exist ."
+            }
+    )
+    def unfollow(self, request, author_serial, fqid):
+        try:
+            author_uuid = author_serial  # Convert string to UUID
+        except ValueError:
+            return Response({'error': 'Invalid UUID format'}, status=400)
+
+        follower = get_object_or_404(Authors, row_id=author_uuid)
+        followee = get_object_or_404(Authors, id=fqid)
+        serializer = UnfollowSerializer(actor=follower, object=followee)
+        data = serializer.to_representation()
+        serializer.save()
+        return Response(data, status=200)
+
+
 class FollowRequestViewSet(GenericViewSet):
     serializer_class=FollowRequestSerializerRaw
 
@@ -95,8 +119,9 @@ class FollowRequestViewSet(GenericViewSet):
         try:
             with transaction.atomic():
 
-                requestee = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
+                requestee = get_object_or_404(Authors, pk=author_serial)
                 requester_json = request.data.get("actor")
+                print(requester_json)
 
                 # Use requester object in database if it exists otherwise create it
                 try:

@@ -16,7 +16,7 @@ def followRequest(request, author_serial):
     try:
         with transaction.atomic():
 
-            requestee = get_object_or_404(Authors, pk=uuid.UUID(hex=author_serial))
+            requestee = get_object_or_404(Authors, pk=author_serial)
             requester_json = request.data.get("actor")
 
             # Use requester object in database if it exists otherwise create it
@@ -41,7 +41,7 @@ def followRequest(request, author_serial):
 
 def getFollowees(request, author_serial):
     try:
-        author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+        author_uuid = author_serial  # Convert string to UUID
     except ValueError:
         return Response({'error': 'Invalid UUID format'}, status=400)
 
@@ -86,7 +86,7 @@ def getFriends(request, author_serial):
 
     try:
         # Convert the serial string to a UUID object if your IDs are UUIDs
-        author_uuid = uuid.UUID(author_serial)
+        author_uuid = author_serial
     except ValueError:
         return Response({'error': 'Invalid UUID format.'}, status=400)
 
@@ -116,7 +116,7 @@ def getFriends(request, author_serial):
 @api_view(['GET'])
 def getFollowRequests(request, author_serial):
     try:
-        author_uuid = uuid.UUID(author_serial)
+        author_uuid = author_serial
     except ValueError:
         return Response({'error': 'Invalid UUID format.'}, status=400)
 
@@ -139,7 +139,7 @@ def getSuggestions(request, author_serial):
     try:
         # Convert the provided author_serial (assumed to be a UUID string) into a UUID object
         if type(author_serial) == str:
-            author_uuid = uuid.UUID(author_serial)
+            author_uuid = author_serial
         else:
             author_uuid = author_serial
             
@@ -160,6 +160,7 @@ def getSuggestions(request, author_serial):
     suggestions = Authors.objects.exclude(row_id__in=followed_ids)\
                                  .exclude(row_id=current_author.row_id)\
                                  .exclude(row_id__in=request_ids)\
+                                 .exclude(is_staff=1)\
                                  .order_by('?')[:5]
     
     # Serialize the suggestions using the authorSerializer
@@ -172,7 +173,7 @@ def getSuggestions(request, author_serial):
 
 def getSentRequests(request, author_serial):
     try:
-        author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+        author_uuid = author_serial  # Convert string to UUID
     except ValueError:
         return Response({'error': 'Invalid UUID format'}, status=400)
 

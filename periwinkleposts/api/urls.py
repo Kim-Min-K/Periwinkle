@@ -1,6 +1,6 @@
 from django.urls import path
 from . import follow_views
-from api.viewsets import FollowersViewSet, FollowRequestViewSet, AuthorViewSet, PostViewSet
+from api.viewsets import FollowersViewSet, FollowRequestViewSet, AuthorViewSet, PostViewSet, FolloweesViewSet
 from accounts.views import CommentView, LikeView, InboxView
 from rest_framework.routers import DefaultRouter
 app_name = 'api'  

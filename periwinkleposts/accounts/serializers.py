@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Authors, Follow, FollowRequest, Comment, Like
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 
 def required(value):
     if value is None or value == '':
@@ -171,3 +172,28 @@ class LikeSerializer(serializers.Serializer):
         from api.viewsets import AuthorSerializer  # Lazy Import
         return AuthorSerializer(obj.author, context={'request': self.context.get('request')}).data
     
+# Usage: 
+# UnfollowSerializer(actor=author1, object=author2)
+# UnfollowSerializer(actor=author1, object=author2).to_representation() ( to json )
+# UnfollowSerializer(actor=author1, object=author2).save() ( perform unfollow )
+class UnfollowSerializer(serializers.Serializer):
+    type = serializers.CharField(default='unfollow')
+    actor = authorSerializer()
+    object = authorSerializer()
+
+    def __init__(self, *args, actor=None, object=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.actor_instance = actor
+        self.object_instance = object
+
+    def to_representation(self, instance=None):
+        return {
+            "type": "unfollow",
+            "actor": authorSerializer(self.actor_instance).data if self.actor_instance else None,
+            "object": authorSerializer(self.object_instance).data if self.object_instance else None,
+        }
+
+    def save(self, **kwargs):
+        """Custom save logic for unfollowing."""
+        follow_object = get_object_or_404(Follow, followee=self.object_instance, follower=self.actor_instance)
+        follow_object.delete()

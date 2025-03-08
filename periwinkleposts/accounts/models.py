@@ -23,7 +23,7 @@ class Authors(AbstractUser):
 
     def save(self, *args, **kwargs):
         if self.id is None:
-            self.id = str(self.host) + "authors/" + str(self.row_id.hex)
+            self.id = str(self.host) + "authors/" + str(self.row_id)
         super().save(*args, **kwargs)
 
     def avatar_display(self):
