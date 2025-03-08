@@ -246,7 +246,7 @@ class CommentTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 3)
 
-    # shows all comments
+    # shows all comments GET
     def test_get_all_comments(self):
         url = reverse('api:commentList')
         response = self.client.get(url, format="json")
@@ -254,7 +254,7 @@ class CommentTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 4)
 
-    # ://service/api/posts/{POST_FQID}/comments
+    # ://service/api/posts/{POST_FQID}/comments GET
     def test_known_post_comments(self):
         post_fqid = f"http://localhost:8000/api/authors/{self.author.row_id}/posts/{self.post.id}"
         encoded_post_fqid = quote(post_fqid, safe='') 
@@ -265,7 +265,7 @@ class CommentTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(comments_data), 3)
 
-    # ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
+    # ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID} GET
     def test_get_comment(self):
         url = reverse(
             'api:get_comment',  
@@ -311,7 +311,7 @@ class CommentTest(APITestCase):
         self.assertIn("Comment 1", comments)
         self.assertNotIn('Comment 1 by author2', comments) # ensure comment made by author2 won't be included
     
-
+    
 class InboxTest(APITestCase):
     def setUp(self):
         self.author = Authors.objects.create(username="test_author")
