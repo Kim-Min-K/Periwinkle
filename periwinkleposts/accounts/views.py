@@ -150,7 +150,7 @@ def acceptRequest(request, author_serial, fqid):
     print(author_serial)
     print(fqid)
     requester = Authors.objects.get(row_id=fqid)
-    requestee = Authors.objects.get(row_id=request.user.row_id)
+    requestee = Authors.objects.get(row_id=author_serial)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee
     )
@@ -159,7 +159,7 @@ def acceptRequest(request, author_serial, fqid):
 
 
 def declineRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(id=fqid)
+    requester = Authors.objects.get(row_id=fqid)
     requestee = Authors.objects.get(row_id=author_serial)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee

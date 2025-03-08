@@ -50,7 +50,7 @@ def getFollowees(request, author_serial):
     # Get the list of followers by extracting the `follower` field from each Follow object
     followee_ids = [connection.followee for connection in followees]
 
-    followee_serializer = AuthorSerializer(followee_ids, many=True)  # Serialize multiple followers
+    followee_serializer = AuthorSerializer(followee_ids, many=True, context={'request': request})  # Serialize multiple followers
 
     return Response({
         "type": "followees",
