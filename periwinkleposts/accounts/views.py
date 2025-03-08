@@ -97,6 +97,10 @@ def registerView(request):
 
 def profileView(request, row_id):
     author = get_object_or_404(Authors, row_id=row_id)
+    
+    if author.is_staff:
+        author = request.user
+
     ownProfile = request.user.is_authenticated and (request.user == author)
     posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     # Connections field

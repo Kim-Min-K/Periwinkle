@@ -158,6 +158,7 @@ def getSuggestions(request, author_serial):
     suggestions = Authors.objects.exclude(row_id__in=followed_ids)\
                                  .exclude(row_id=current_author.row_id)\
                                  .exclude(row_id__in=request_ids)\
+                                 .exclude(is_staff=1)\
                                  .order_by('?')[:5]
     
     # Serialize the suggestions using the authorSerializer
