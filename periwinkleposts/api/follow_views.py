@@ -3,9 +3,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from accounts.models import FollowRequest, Authors, Follow
 from django.shortcuts import get_object_or_404
-from accounts.serializers import authorSerializer, FollowRequestSerializer, FollowSerializer
+from accounts.serializers import FollowRequestSerializer, FollowSerializer
+from api.serializers import AuthorSerializer
 from django.db import transaction
 import uuid
+from api.serializers import AuthorSerializer
 
 # Create your views here.
 
@@ -21,7 +23,7 @@ def followRequest(request, author_serial):
             try:
                 requester = Authors.objects.get(id=requester_json["id"])
             except Authors.DoesNotExist:
-                requester_serializer = authorSerializer(data=requester_json)
+                requester_serializer = AuthorSerializer(data=requester_json)
                 if not requester_serializer.is_valid():
                     raise ValueError(requester_serializer.errors)
                 requester = requester_serializer.save()
@@ -48,7 +50,7 @@ def getFollowees(request, author_serial):
     # Get the list of followers by extracting the `follower` field from each Follow object
     followee_ids = [connection.followee for connection in followees]
 
-    followee_serializer = authorSerializer(followee_ids, many=True)  # Serialize multiple followers
+    followee_serializer = AuthorSerializer(followee_ids, many=True)  # Serialize multiple followers
 
     return Response({
         "type": "followees",
@@ -104,7 +106,7 @@ def getFriends(request, author_serial):
     friends = Authors.objects.filter(row_id__in=friend_ids)
 
     # Serialize the friend objects
-    serializer = authorSerializer(friends, many=True)
+    serializer = AuthorSerializer(friends, many=True)
 
     return Response({
         "type":"friends",
@@ -125,7 +127,7 @@ def getFollowRequests(request, author_serial):
     requesters = Authors.objects.filter(row_id__in=requesters_ids)
 
     # Serialize the friend objects
-    serializer = authorSerializer(requesters, many=True)
+    serializer = AuthorSerializer(requesters, many=True)
     
     return Response({
         "type":"requesters",
@@ -162,7 +164,7 @@ def getSuggestions(request, author_serial):
                                  .order_by('?')[:5]
     
     # Serialize the suggestions using the authorSerializer
-    serializer = authorSerializer(suggestions, many=True)
+    serializer = AuthorSerializer(suggestions, many=True)
 
     return Response({
         "type":"suggestions",
@@ -179,7 +181,7 @@ def getSentRequests(request, author_serial):
 
     requestee_ids = [connection.requestee for connection in requestees]
 
-    requestee_serializer = authorSerializer(requestee_ids, many=True)
+    requestee_serializer = AuthorSerializer(requestee_ids, many=True)
 
     return Response({
         "type": "sent_requests",

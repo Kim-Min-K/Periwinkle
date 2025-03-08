@@ -4,9 +4,31 @@ from rest_framework.test import APITestCase
 from .models import Authors, Follow, FollowRequest, Post, Comment, Like
 from .serializers import authorSerializer
 import uuid
+from rest_framework import status
+from rest_framework import permissions
 from urllib.parse import urlencode
 from django.contrib.staticfiles.testing import LiveServerTestCase
 from urllib.parse import quote
+
+
+class IsOwnerOrPublic(permissions.BasePermission):
+    """
+    Custom permission:
+    - Allow read access for public posts to everyone
+    - Allow full access to post owner
+    """
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return obj.visibility == 'PUBLIC'
+        return obj.author == request.user
+
+class IsLocalAuthor(permissions.BasePermission):
+    """
+    Simplified local author check for testing:
+    - Treat any authenticated user as local
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated
 
 # Create your tests here.
 class FollowLiveServerTests(LiveServerTestCase):
@@ -312,9 +334,158 @@ class InboxTest(APITestCase):
         self.assertEqual(Comment.objects.count(), 1)  
         self.assertEqual(Comment.objects.first().comment, "Inbox comment")
 
-
-
 class LikeTest(APITestCase):
     def test_create_like(self):
         pass
-    
+
+class AuthorViewSetTests(APITestCase):
+    def setUp(self):
+        for i in range(15):
+            Authors.objects.create(
+                username=f"author_{i}",
+                github_username=f"github_{i}",
+                host="http://testserver",
+                avatar_url=f"http://example.com/avatar_{i}.jpg"
+            )
+
+    # Retrieve single author tests
+    def test_author(self):
+        author = Authors.objects.first()
+        url = reverse('api:getAuthor', args=[author.row_id])
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data['id'],
+            f"http://testserver/api/authors/{author.row_id}/"  # Updated URL format
+        )
+
+    def test_404(self):
+        invalid_uuid = uuid.uuid4()
+        url = reverse('api:getAuthor', args=[invalid_uuid])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    # List authors tests
+    def test_authors_dpag(self):
+        url = reverse('api:getAuthors')
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['type'], 'authors')
+        self.assertEqual(len(response.data['authors']), 10)
+        first_author = Authors.objects.order_by('id').first()
+        self.assertEqual(
+            response.data['authors'][0]['displayName'],
+            first_author.username
+        )
+
+    def test_authors_cpag(self):
+        url = reverse('api:getAuthors')
+        response = self.client.get(url, {'page': 2, 'size': 5})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['authors']), 5)
+        # first item on page 2 is 6th author
+        sixth_author = Authors.objects.order_by('id')[5]
+        self.assertEqual(
+            response.data['authors'][0]['displayName'],
+            sixth_author.username
+        )
+
+    def test_authors_ipag(self):
+        """Test invalid pagination parameters"""
+        url = reverse('api:getAuthors')
+        response = self.client.get(url, {'page': 'invalid', 'size': 'wrong'})
+        
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('error', response.data)
+        self.assertEqual(response.data['error'], 'Invalid page or size parameters')
+
+    def test_authors_empty(self):
+        """Test requesting non-existent page returns empty list"""
+        url = reverse('api:getAuthors')
+        response = self.client.get(url, {'page': 3, 'size': 10})
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {
+            "type": "authors",
+            "authors": []
+        })
+        
+class PostAPITests(APITestCase):
+    def setUp(self):
+        # Create test authors
+        self.owner = Authors.objects.create_user(
+            username="owner",
+            password="ownerpass"
+        )
+        self.anon = Authors.objects.create_user(
+            username="anon",
+            password="anonpass"
+        )
+        
+        self.public_post = Post.objects.create(
+            author=self.owner,
+            title="Public Post",
+            content="Public content",
+            contentType="text/plain",
+            visibility="PUBLIC"
+        )
+        
+        self.private_post = Post.objects.create(
+            author=self.owner,
+            title="Private Post",
+            content="Private content",
+            contentType="text/plain",
+            visibility="FRIENDS" 
+        )
+
+    def test_create_post_success(self):
+        self.client.force_authenticate(user=self.owner)
+        url = reverse('api:author-posts', args=[self.owner.row_id])
+        data = {
+            "title": "Manual Test Post",
+            "description": "Testing post creation",
+            "content": "test content",
+            "contentType": "text/plain",
+            "visibility": "PUBLIC"
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_update_owner(self):
+        self.client.force_authenticate(user=self.owner)
+        url = reverse('api:post-detail', args=[self.owner.row_id, self.public_post.id])
+        data = {
+            "title": "Updated Title",
+            "description": "Updated description", 
+            "content": "Updated content",
+            "contentType": "text/plain",
+            "visibility": "PUBLIC"
+        }
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.public_post.refresh_from_db()
+        self.assertEqual(self.public_post.title, "Updated Title")
+
+    def test_update_anon(self):
+        self.client.force_authenticate(user=self.anon)
+        url = reverse('api:post-detail', args=[self.owner.row_id, self.public_post.id])
+        data = {"title": "you shouldnt be able to see this"}
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_owner(self):
+        """Owner can soft-delete their post"""
+        self.client.force_authenticate(user=self.owner)
+        url = reverse('api:post-detail', args=[self.owner.row_id, self.public_post.id])
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertTrue(Post.objects.get(id=self.public_post.id).is_deleted)
+
+    def test_delete_anon(self):
+        """anon cannot delete post"""
+        self.client.force_authenticate(user=self.anon)
+        url = reverse('api:post-detail', args=[self.owner.row_id, self.public_post.id])
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

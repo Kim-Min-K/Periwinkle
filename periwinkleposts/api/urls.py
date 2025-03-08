@@ -1,16 +1,15 @@
 from django.urls import path
 from . import follow_views
-from api.viewsets import FollowersViewSet, FollowRequestViewSet, AuthorViewSet, FolloweesViewSet
+from api.viewsets import FollowersViewSet, FollowRequestViewSet, AuthorViewSet, PostViewSet, FolloweesViewSet
 from accounts.views import CommentView, LikeView, InboxView
 from rest_framework.routers import DefaultRouter
 app_name = 'api'  
 
 urlpatterns = [
-    path('authors/<uuid:author_serial>/inbox', FollowRequestViewSet.as_view({'post': 'makeRequest'}), name='followRequest'),
-    path('authors/<uuid:author_serial>/followers', FollowersViewSet.as_view({'get': 'list'}), name='getFollowers'),
-    path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='get-authors'),
-    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name=''),
-    path('authors/<uuid:author_serial>/followees/<path:fqid>/unfollow', FolloweesViewSet.as_view({'post': 'unfollow'}), name='unfollow'),
+    path('authors/<str:author_serial>/inbox', FollowRequestViewSet.as_view({'post': 'makeRequest'}), name='followRequest'),
+    path('authors/<str:author_serial>/followers', FollowersViewSet.as_view({'get': 'list'}), name='getFollowers'),
+    path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
+    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
     #----------Comments API ---------------------------------
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox 
     path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
@@ -40,5 +39,20 @@ urlpatterns = [
         LikeView.as_view({'post': 'like_comment'}), name="likeComment"),
 
     # Get all comment list 
-    path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList')
+    path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
+    
+    path('authors/<uuid:author_serial>/posts/', PostViewSet.as_view({
+        'get': 'list',
+        'post': 'create'
+    }), name='author-posts'),
+    
+    path('authors/<uuid:author_serial>/posts/<uuid:id>', PostViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'delete': 'destroy'
+    }), name='post-detail'),
+    
+    path('posts/<path:post_fqid>', PostViewSet.as_view({
+        'get': 'get_by_fqid'
+    }), name='post-by-fqid'),
 ]

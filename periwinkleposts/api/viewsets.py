@@ -4,10 +4,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import viewsets, permissions, status
 from drf_yasg import openapi
 import uuid
 from rest_framework.decorators import action
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from rest_framework import permissions
+from django.urls import reverse
+from api.serializers import *
 
 class FollowersSerializer(serializers.Serializer):
     type = serializers.CharField(default="followers")
@@ -30,11 +34,13 @@ class AuthorSerializer(serializers.Serializer):
 
     def get_id(self, obj):
         request = self.context.get('request')
-        host = request.build_absolute_uri('/api/')
+        host = request.build_absolute_uri('/api/authors/')
         return f"{host}{obj.row_id}/"
 
     def get_host(self, obj):
-        return obj.host
+        request = self.context.get('request')
+        host = request.build_absolute_uri('/api/')
+        return f"{host}"
     
     def get_github(self, obj):
         return f"https://github.com/{obj.github_username}"
@@ -46,11 +52,6 @@ class AuthorSerializer(serializers.Serializer):
 
     def get_page(self, obj):
         return self.context['request'].build_absolute_uri(f'/accounts/profile/{obj.username}')
-
-class AuthorsSerializer(serializers.Serializer):
-    type = serializers.CharField(default="authors")
-    authors = AuthorSerializer(many=True)
-
 
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer
@@ -166,6 +167,13 @@ class AuthorViewSet(GenericViewSet):
         
         try:
             page = paginator.page(page_number)
+        except PageNotAnInteger:
+            page = paginator.page(1)
+        except EmptyPage:
+            return Response({
+                "type": "authors",
+                "authors": []
+            }, status=200)
         except Exception:
             return Response({"error": "Unknown error"}, status=500)
 
@@ -194,3 +202,87 @@ class AuthorViewSet(GenericViewSet):
     
     def get_queryset(self):
         return Authors.objects.all().order_by('id')
+    
+class IsOwnerOrPublic(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            if obj.visibility == 'PUBLIC':
+                return True
+            if obj.visibility == 'FRIENDS' and request.user.is_authenticated:
+                return request.user in obj.author.friends.all()
+            return False
+        return obj.author == request.user
+
+class IsLocalAuthor(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.local
+
+# views.py
+class PostViewSet(viewsets.ModelViewSet):
+    serializer_class = PostSerializer
+    permission_classes = [IsOwnerOrPublic]
+    lookup_field = 'id'
+    
+    def get_queryset(self):
+        author_serial = self.kwargs.get('author_serial')
+        if author_serial:
+            return Post.objects.filter(author__row_id=author_serial, is_deleted=False)
+        return Post.objects.filter(is_deleted=False)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    # POST /api/authors/{AUTHOR_SERIAL}/posts/
+    def create(self, request, author_serial=None):
+        author = get_object_or_404(Authors, row_id=author_serial)
+        if not author.local:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+            
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(author=author)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.is_deleted = True
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def list(self, request, author_serial=None):
+        author = get_object_or_404(Authors, row_id=author_serial)
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        if not request.user.is_authenticated:
+            queryset = queryset.filter(visibility='PUBLIC')
+        elif request.user != author:
+            if request.user in author.followers.all():
+                queryset = queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
+            else:
+                queryset = queryset.filter(visibility='PUBLIC')
+        
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='posts/(?P<post_fqid>.+)')
+    def get_by_fqid(self, request, post_fqid=None):
+        post_id = post_fqid.split('/')[-1]
+        post = get_object_or_404(Post, id=post_id)
+        serializer = self.get_serializer(post)
+        return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        if 'image' in self.request.data:
+            image_data = self.request.data['image']
+            fmt, imgstr = image_data.split(';base64,')
+            ext = fmt.split('/')[-1]
+            filename = f"{uuid.uuid4()}.{ext}"
+            data = ContentFile(base64.b64decode(imgstr), name=filename)
+            serializer.save(image=data)
+        else:
+            serializer.save()
+
+
