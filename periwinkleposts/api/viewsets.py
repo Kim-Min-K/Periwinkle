@@ -78,6 +78,28 @@ class FollowersViewSet(GenericViewSet):
 
         return Response(res)
 
+class FolloweesViewSet(GenericViewSet):
+    @action(detail=False, methods=["post"])
+    @swagger_auto_schema(
+        operation_description="Unfollow an author",
+        responses={
+            200: "Followee successfully unfollowed.",
+            404: "The author is not following the corresponding followee."
+            }
+    )
+    def unfollow(self, request, author_serial, fqid):
+        try:
+            author_uuid = uuid.UUID(hex=author_serial)  # Convert string to UUID
+        except ValueError:
+            return Response({'error': 'Invalid UUID format'}, status=400)
+
+        follower = get_object_or_404(Authors, row_id=author_uuid)
+        followee = get_object_or_404(Authors, id=fqid)
+        follow_object = get_object_or_404(Follow, followee=followee, follower=follower)
+        follow_object.delete()
+        return Response({"message":"Followee successfully unfollowed."}, status=200)
+
+
 class FollowRequestViewSet(GenericViewSet):
     serializer_class=FollowRequestSerializerRaw
 

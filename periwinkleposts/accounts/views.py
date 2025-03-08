@@ -3,11 +3,11 @@ from .forms import AuthorCreation, AvatarUpload, EditProfile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings
+from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings, Follow
 from .serializers import authorSerializer, CommentSerializer, LikeSerializer
 from django.http import QueryDict
 from api.follow_views import *
-from api.viewsets import FollowersViewSet, FollowRequestViewSet
+from api.viewsets import FollowersViewSet, FollowRequestViewSet, FolloweesViewSet
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
@@ -112,10 +112,19 @@ def profileView(request, row_id):
     for post in posts:
         if post.contentType == "text/markdown":
             post.content = markdown_to_html(post.content)
-    
+    isFollowee = Follow.objects.filter(followee=author, follower=request.user).exists()
+    isPending = FollowRequest.objects.filter(requestee=author, requester=request.user).exists()
+    isFriend = (
+        Follow.objects.filter(followee=author, follower=request.user).exists() and
+        Follow.objects.filter(followee=request.user, follower=author).exists()
+    )
+
     context = {
         "author": author,
         "ownProfile": ownProfile,
+        "isFollowee": isFollowee,
+        "isFriend": isFriend,
+        "isPending": isPending,
         "friends": friends,
         "followers": followers,
         "requesters": requesters,
@@ -150,6 +159,12 @@ def declineRequest(request, author_serial, fqid):
     response = declineFollowRequest(request, follow_request.id)
     print(response)
     return redirect("accounts:profile", row_id=requestee.row_id)
+
+def unfollow(request, author_serial, fqid):
+    followee = Authors.objects.get(id=fqid)
+    author = Authors.objects.get(row_id=uuid.UUID(hex=author_serial))
+    (FolloweesViewSet.as_view({'post':'unfollow'}))(request, author_serial, fqid)
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 
 def sendFollowRequest(request, fqid):

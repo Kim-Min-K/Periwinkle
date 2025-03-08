@@ -22,6 +22,7 @@ urlpatterns = [
     path(
         "authors/<path:fqid>/inbox", views.sendFollowRequest, name="sendFollowRequest"
     ),
+    path("authors/<str:author_serial>/followees/<path:fqid>/unfollow", views.unfollow, name="unfollow"),
     path("avatar/", views.uploadAvatar, name="avatar"),
     path("create-post/", create_post, name="create_post"),
     path("post/delete/<uuid:post_id>/", delete_post, name="delete_post"),
