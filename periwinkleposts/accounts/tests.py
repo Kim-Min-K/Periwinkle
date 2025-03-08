@@ -72,7 +72,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_2", password="my_password2")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.row_id])
 
         response = self.client.post(url)
 
@@ -86,7 +86,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_2", password="my_password2")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.row_id])
 
         response = self.client.post(url)
 
@@ -96,7 +96,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_1", password="my_password1")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id, self.test_author_2.id])
+        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id, self.test_author_2.row_id])
 
         response = self.client.post(url)
 
@@ -111,7 +111,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_2", password="my_password2")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.row_id])
 
         response = self.client.post(url)
 
@@ -121,7 +121,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_1", password="my_password1")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:declineRequest", args=[self.test_author_1.row_id, self.test_author_2.id])
+        url = reverse("accounts:declineRequest", args=[self.test_author_1.row_id, self.test_author_2.row_id])
 
         response = self.client.post(url)
 
@@ -135,7 +135,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_2", password="my_password2")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.row_id])
 
         response = self.client.post(url)
 
@@ -145,7 +145,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_1", password="my_password1")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id, self.test_author_2.id])
+        url = reverse("accounts:acceptRequest", args=[self.test_author_1.row_id, self.test_author_2.row_id])
 
         response = self.client.post(url)
 
@@ -153,7 +153,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         self.assertEqual(len(FollowRequest.objects.all()), 0)
         self.assertEqual(len(Follow.objects.all()), 1)
 
-        url = reverse("accounts:unfollow", args=[self.test_author_2.row_id, self.test_author_1.id])
+        url = reverse("accounts:unfollow", args=[self.test_author_2.row_id, self.test_author_1.row_id])
 
         response = self.client.post(url)
 
