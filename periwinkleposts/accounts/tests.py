@@ -237,6 +237,38 @@ class FollowAPITests(APITestCase):
 
         self.assertEqual(len(result["followees"]),2)
         self.assertEqual(response.status_code, 200)
+    
+
+class FriendsAPITests(APITestCase):
+    def test_get_friends(self):
+        test_author_1 = Authors.objects.create(username="test_author_1")
+        test_author_2 = Authors.objects.create(username="test_author_2")
+        test_author_3 = Authors.objects.create(username="test_author_3")
+
+        url = reverse("api:getFriends", args=[test_author_1.row_id])
+        response = self.client.get(url)
+        result = response.json()
+        expected = {
+            "type":"friends",
+            "authors": []
+        }
+        self.assertEqual(result, expected)
+
+        Follow.objects.create(followee=test_author_2, follower=test_author_1)
+        Follow.objects.create(followee=test_author_1, follower=test_author_2)
+
+        url = reverse("api:getFriends", args=[test_author_1.row_id])
+        response = self.client.get(url)
+        
+        result = response.json()
+        expected = {
+            "type":"friends",
+            "authors": [authorSerializer(test_author_2).data]
+        }
+        
+        self.assertEqual(result, expected)
+        self.assertEqual(len(result["authors"]),1)
+        self.assertEqual(response.status_code, 200)
 
 
 class CommentTest(APITestCase):

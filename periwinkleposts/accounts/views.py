@@ -7,7 +7,7 @@ from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings, F
 from .serializers import authorSerializer, CommentSerializer, LikeSerializer
 from django.http import QueryDict
 from api.follow_views import *
-from api.viewsets import FollowersViewSet, FollowRequestViewSet, FolloweesViewSet
+from api.viewsets import *
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
@@ -105,7 +105,7 @@ def profileView(request, row_id):
     ownProfile = request.user.is_authenticated and (request.user == author)
     posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     # Connections field
-    friends = getFriends(request, author.row_id).data["friends"]
+    friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["followers"]
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = getFollowRequests(request, author.row_id).data["requesters"]
