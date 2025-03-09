@@ -10,6 +10,47 @@ from urllib.parse import urlencode
 from django.contrib.staticfiles.testing import LiveServerTestCase
 from urllib.parse import quote
 
+from .seleniumtc import SeleniumTestCase
+import time
+from selenium.webdriver.common.by import By
+from django.contrib.auth.hashers import make_password
+
+class AuthenticationFormTest(SeleniumTestCase):
+    def test_authentication_form(self):
+
+        dummy_username = "dummy_username"
+        dummy_password = "12345"
+
+        hashed_password = make_password(dummy_password, salt="Pq4u8aT8JZMTQGQclF93ch", hasher="pbkdf2_sha256")
+
+        # Create a user to login with
+        user = Authors.objects.create(
+            username=dummy_username, email="test@user.com", password=hashed_password, is_approved=1
+        )
+
+        print(Authors.objects.all())
+
+        # Go to the login page
+        self.driver.get(self.live_server_url + "/")
+
+
+        username = self.driver.find_element(By.ID, "username")
+
+        username.send_keys(dummy_username) 
+
+        password = self.driver.find_element(By.ID, "password")
+
+        password.send_keys(dummy_password)
+
+        time.sleep(0.5)
+
+        login = self.driver.find_element(By.TAG_NAME, "button")
+
+        login.click()
+
+        self.assertEqual(self.driver.current_url, self.live_server_url + "/pages/home/")
+
+
 
 class IsOwnerOrPublic(permissions.BasePermission):
     """
