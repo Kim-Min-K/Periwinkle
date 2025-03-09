@@ -150,14 +150,11 @@ def acceptRequest(request, author_serial, requester_serial):
     return redirect("accounts:profile", row_id=request.user.row_id)
 
 
-def declineRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(id=fqid)
-    requestee = Authors.objects.get(row_id=author_serial)
-    follow_request = get_object_or_404(
-        FollowRequest, requester=requester, requestee=requestee
-    )
-    response = declineFollowRequest(request, follow_request.id)
-    return redirect("accounts:profile", row_id=requestee.row_id)
+def declineRequest(request, author_serial, requester_serial):
+    response = requests.post(request.user.host[:-5] + reverse("api:declineFollowRequest", args=[author_serial, requester_serial]))
+    if not response.ok:
+        raise Exception("Decline request failed")
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 def unfollow(request, author_serial, fqid):
     followee = Authors.objects.get(id=fqid)
@@ -166,8 +163,8 @@ def unfollow(request, author_serial, fqid):
     return redirect("accounts:profile", row_id=request.user.row_id)
 
 
-def sendFollowRequest(request, fqid):
-    requestee = Authors.objects.get(id=fqid)
+def sendFollowRequest(request, author_serial):
+    requestee = Authors.objects.get(row_id=author_serial)
     requester = Authors.objects.get(row_id=request.user.row_id)
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)

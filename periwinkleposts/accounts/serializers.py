@@ -224,10 +224,10 @@ class ActionSerializer(serializers.Serializer):
         self.object_instance = object
         self.action_type = action_type
         self.action_summary = action_summary
-        if self.action_summary != "action summary":
-            return
-        elif self.action_type == "accept-follow-request":
+        if self.action_type == "accept-follow-request":
             self.summary_text = str(actor) + " wants to accept " + str(object) + "'s follow request"
+        elif self.action_type == "decline-follow-request":
+            self.summary_text = str(actor) + " wants to decline " + str(object) + "'s follow request"
         elif self.action_type == "follow":
             self.summary_text = str(actor) + " wants to follow " + str(object)
 
@@ -250,6 +250,13 @@ class ActionSerializer(serializers.Serializer):
                 with transaction.atomic():
                     FollowRequest.objects.get(requestee=self.actor_instance, requester=self.object_instance).delete()
                     Follow.objects.create(followee=self.actor_instance, follower=self.object_instance)
+            except Exception as e:
+                # Return the validation error message
+                raise ValueError(e)
+        elif self.action_type == "decline-follow-request":
+            try:
+                with transaction.atomic():
+                    FollowRequest.objects.get(requestee=self.actor_instance, requester=self.object_instance).delete()
             except Exception as e:
                 # Return the validation error message
                 raise ValueError(e)

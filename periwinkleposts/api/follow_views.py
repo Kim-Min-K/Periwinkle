@@ -9,22 +9,6 @@ from django.db import transaction
 import uuid
 from api.serializers import AuthorSerializer
 
-# Create your views here.
-
-def acceptFollowRequest(request, request_id):
-    try:
-        with transaction.atomic():
-            request = get_object_or_404(FollowRequest, pk=request_id)
-            follow_serializer = FollowSerializer(data={"followee": request.requestee.row_id, "follower": request.requester.row_id})
-            if not follow_serializer.is_valid():
-                raise ValueError(follow_serializer.errors)
-            follow_serializer.save()
-            request.delete()
-    except ValueError as e:
-        # Return the validation error message
-        return Response({"error": str(e)}, status=400)
-    return Response({"message": "Follow request successfully accepted."}, status=200)
-
 def declineFollowRequest(request, request_id):
     try:
         with transaction.atomic():

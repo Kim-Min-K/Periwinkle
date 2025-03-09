@@ -15,12 +15,12 @@ urlpatterns = [
         name="acceptRequest",
     ),
     path(
-        "authors/<uuid:author_serial>/followers/<path:fqid>/decline",
+        "authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/decline",
         views.declineRequest,
         name="declineRequest",
     ),
     path(
-        "authors/<path:fqid>/inbox", views.sendFollowRequest, name="sendFollowRequest"
+        "authors/<uuid:author_serial>/follow-requests", views.sendFollowRequest, name="sendFollowRequest"
     ),
     path("authors/<uuid:author_serial>/followees/<path:fqid>/unfollow", views.unfollow, name="unfollow"),
     path("avatar/", views.uploadAvatar, name="avatar"),

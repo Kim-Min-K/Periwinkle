@@ -232,6 +232,25 @@ class FollowRequestViewSet(GenericViewSet):
             # Return the validation error message
             return Response({"error": str(e)}, status=400)
     
+    @action(detail=False, methods=["post"])
+    @swagger_auto_schema(
+        operation_description="Decline the incoming follow request from the author with uuid 'request_serial' to the author with the uuid 'author_serial'. ",
+        responses={
+            200: ActionSerializer()
+            }
+    )
+    def declineFollowRequest(self, request, author_serial, requester_serial):
+        try:
+            with transaction.atomic():
+                object = get_object_or_404(Authors, row_id=requester_serial)
+                actor = get_object_or_404(Authors, row_id=author_serial)
+                serializer = ActionSerializer(action_type="decline-follow-request", actor=actor, object=object)
+                serializer.save()
+                return Response(serializer.to_representation(), status=200)
+        except ValueError as e:
+            # Return the validation error message
+            return Response({"error": str(e)}, status=400)
+    
 class AuthorViewSet(GenericViewSet):
     serializer_class = AuthorsSerializer
     queryset = Authors.objects.all().order_by('id')
