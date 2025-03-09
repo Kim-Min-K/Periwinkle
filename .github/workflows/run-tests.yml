@@ -1,32 +1,38 @@
 name: Run Django Tests
-on: [push]  # Activates the workflow on push or pull request
+on: [push]
 
 jobs:
   test_project:
-    runs-on: ubuntu-latest  # Use Ubuntu as the runner
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4  # Ensure the latest checkout action version
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'  # Adjust based on your project
+          python-version: '3.10'
 
-      - name: Install Dependencies
+      - name: Install Google Chrome
         run: |
-          pip install -r requirements.txt  # Install Django and dependencies
           sudo apt-get update
-          sudo apt-get install -y google-chrome-stable xvfb  # Install Chrome and Xvfb
+          sudo apt-get install -y google-chrome-stable
 
       - name: Install ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
-        with:
-          chromedriver-version: 'latest'  # Ensure ChromeDriver matches Chrome
+        run: |
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1-3)
+          echo "Detected Chrome version: $CHROME_VERSION"
+          wget -q "https://chromedriver.storage.googleapis.com/$CHROME_VERSION/chromedriver_linux64.zip"
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
 
       - name: Run Tests with Headless Chrome
         run: |
-          cd periwinkleposts  # Change directory to project
-          Xvfb :99 -screen 0 1920x1080x24 &  # Start a virtual display for GUI-based tests
-          export DISPLAY=:99  # Set display for headless tests
-          python3 manage.py test  # Run Django tests
+          cd periwinkleposts
+          Xvfb :99 -screen 0 1920x1080x24 &
+          export DISPLAY=:99
+          python3 manage.py test
