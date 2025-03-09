@@ -9,10 +9,10 @@ class SeleniumTestCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # options = webdriver.ChromeOptions()
-        # options.add_argument("--start-maximized")
-        # service = Service(f"{settings.BASE_DIR}/chromedriver")
-        cls.driver = webdriver.Chrome()
+        options = webdriver.ChromeOptions()
+        options.add_argument("--no-sandbox")
+        options.add_argument("--headless")
+        cls.driver = webdriver.Chrome(options=options)
         cls.driver.implicitly_wait(10)
 
     @classmethod
