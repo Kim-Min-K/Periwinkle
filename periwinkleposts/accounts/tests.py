@@ -292,6 +292,22 @@ class FollowRequestAPITests(APITestCase):
         self.assertEqual(result, expected)
         self.assertEqual(len(result["authors"]),1)
         self.assertEqual(response.status_code, 200)
+    
+    def test_get_request_suggestions(self):
+        self.maxDiff = None
+        url = reverse("api:getRequestSuggestions", args=[self.test_author_2.row_id])
+        
+        response = self.client.get(url)
+
+        result = response.json()
+        expected = {
+            "type": "request-suggestions",
+            "authors": []
+        }
+
+        self.assertEqual(result, expected)
+        self.assertEqual(len(result["authors"]),0)
+        self.assertEqual(response.status_code, 200)
 
 class FriendsAPITests(APITestCase):
     def test_get_friends(self):
