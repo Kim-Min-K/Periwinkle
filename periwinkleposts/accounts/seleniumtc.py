@@ -25,6 +25,7 @@ class SeleniumTestCase(StaticLiveServerTestCase):
         # Initialize the WebDriver
         cls.driver = webdriver.Chrome(options=options)
         cls.driver.implicitly_wait(10)
+        
 
     @classmethod
     def tearDownClass(cls):
