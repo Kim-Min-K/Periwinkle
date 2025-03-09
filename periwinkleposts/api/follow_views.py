@@ -39,24 +39,6 @@ def followRequest(request, author_serial):
 
     return Response({"message":"Follow request successfuly sent."}, status=200)
 
-def getFollowees(request, author_serial):
-    try:
-        author_uuid = author_serial  # Convert string to UUID
-    except ValueError:
-        return Response({'error': 'Invalid UUID format'}, status=400)
-
-    followees = Follow.objects.filter(follower=author_uuid)  # Get all followers
-
-    # Get the list of followers by extracting the `follower` field from each Follow object
-    followee_ids = [connection.followee for connection in followees]
-
-    followee_serializer = AuthorSerializer(followee_ids, many=True, context={'request': request})  # Serialize multiple followers
-
-    return Response({
-        "type": "followees",
-        "followees": followee_serializer.data  # Include followers' data
-    }, status=200)
-
 def acceptFollowRequest(request, request_id):
     try:
         with transaction.atomic():

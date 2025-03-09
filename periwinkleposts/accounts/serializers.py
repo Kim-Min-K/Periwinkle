@@ -197,3 +197,7 @@ class UnfollowSerializer(serializers.Serializer):
         """Custom save logic for unfollowing."""
         follow_object = get_object_or_404(Follow, followee=self.object_instance, follower=self.actor_instance)
         follow_object.delete()
+
+class FolloweesSerializer(serializers.Serializer):
+    type = serializers.CharField(default="followees")
+    followees = authorSerializer(many=True)

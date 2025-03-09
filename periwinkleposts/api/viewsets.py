@@ -72,6 +72,26 @@ class FolloweesViewSet(GenericViewSet):
         data = serializer.to_representation()
         serializer.save()
         return Response(data, status=200)
+    
+    @action(detail=False, methods=["get"])
+    @swagger_auto_schema(
+        operation_description="Get all followees of an author",
+        responses={
+            200: FolloweesSerializer(),
+            400: "Invalid UUID format."
+            }
+    )
+    def getFollowees(self, request, author_serial):
+        try:
+            author_uuid = author_serial  # Convert string to UUID
+        except ValueError:
+            return Response({'error': 'Invalid UUID format'}, status=400)
+
+        followees = Authors.objects.filter(row_id__in=Follow.objects.filter(follower=author_uuid).values_list('followee', flat=True))
+
+        serializer = FolloweesSerializer({"followees": followees})
+
+        return Response(serializer.data, status=200)
 
 
 class FollowRequestViewSet(GenericViewSet):
