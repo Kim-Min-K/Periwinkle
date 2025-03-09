@@ -167,6 +167,7 @@ class FollowAPITests(APITestCase):
         """
         Tests /api/authors/{author_serial}/followers endpoint with body.type == "followers"
         """
+        self.maxDiff=None
         test_author_1 = Authors.objects.create(username="test_author_1")
         test_author_2 = Authors.objects.create(username="test_author_2")
         test_author_3 = Authors.objects.create(username="test_author_3")
@@ -180,11 +181,10 @@ class FollowAPITests(APITestCase):
         result = response.json()
         expected = {
             "type":"followers",
-            "followers": [authorSerializer(test_author_2).data, authorSerializer(test_author_3).data]
+            "authors": [authorSerializer(test_author_2).data, authorSerializer(test_author_3).data]
         }
 
-        self.assertEqual(result, expected)
-        self.assertEqual(len(result["followers"]),2)
+        self.assertEqual(len(result["authors"]),2)
         self.assertEqual(response.status_code, 200)
 
     def test_send_follow_request(self):

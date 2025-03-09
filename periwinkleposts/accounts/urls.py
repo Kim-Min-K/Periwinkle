@@ -9,6 +9,13 @@ urlpatterns = [
     path("register/", views.registerView, name="register"),
     path("login/", views.loginView, name="login"),
     path("profile/<uuid:row_id>", views.profileView, name="profile"),
+    path("avatar/", views.uploadAvatar, name="avatar"),
+    path("create-post/", create_post, name="create_post"),
+    path("post/delete/<uuid:post_id>/", delete_post, name="delete_post"),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
+    path('approval-pending/', views.approval_pending, name='approval_pending'),
+    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+    path('edit_post/<uuid:post_id>/', views.edit_post, name='edit_post'),
     path(
         "authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/accept",
         views.acceptRequest,
@@ -23,15 +30,6 @@ urlpatterns = [
         "authors/<uuid:author_serial>/follow-requests", views.sendFollowRequest, name="sendFollowRequest"
     ),
     path("authors/<uuid:author_serial>/followees/<path:fqid>/unfollow", views.unfollow, name="unfollow"),
-    path("avatar/", views.uploadAvatar, name="avatar"),
-    path("create-post/", create_post, name="create_post"),
-    path("post/delete/<uuid:post_id>/", delete_post, name="delete_post"),
-    path('profile/edit/', views.edit_profile, name='edit_profile'),
-    path('approval-pending/', views.approval_pending, name='approval_pending'),
-    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
-    path('edit_post/<uuid:post_id>/', views.edit_post, name='edit_post'),
-    
-    
    
 ]
 router = DefaultRouter()
