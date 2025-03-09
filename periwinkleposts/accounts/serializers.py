@@ -201,3 +201,11 @@ class UnfollowSerializer(serializers.Serializer):
 class FolloweesSerializer(serializers.Serializer):
     type = serializers.CharField(default="followees")
     followees = authorSerializer(many=True)
+
+class FriendsSerializer(serializers.Serializer):
+    type = serializers.CharField(default="friends")
+    friends = authorSerializer(many=True)
+
+class authorsSerializer(serializers.Serializer):
+    type = serializers.CharField(default="authors")
+    authors = authorSerializer(many=True)

@@ -89,9 +89,42 @@ class FolloweesViewSet(GenericViewSet):
 
         followees = Authors.objects.filter(row_id__in=Follow.objects.filter(follower=author_uuid).values_list('followee', flat=True))
 
-        serializer = FolloweesSerializer({"followees": followees})
+        serializer = FolloweesSerializer({"followees":followees})
 
         return Response(serializer.data, status=200)
+
+class FriendsViewSet(GenericViewSet):
+    @action(detail=False, methods=["get"])
+    @swagger_auto_schema(
+        operation_description="Get all friends of an author",
+        responses={
+            200: authorsSerializer(),
+            404: "The author does not exists."
+            }
+    )
+    def getFriends(self, request, author_serial):
+        print(author_serial)
+        author_uuid = author_serial
+
+        # Retrieve the author for whom we want to get friends
+        author = get_object_or_404(Authors, pk=author_uuid)
+
+        # Get all authors that this author follows (i.e., followees)
+        following_ids = Follow.objects.filter(follower=author).values_list('followee_id', flat=True)
+        
+        # Get all authors that follow this author (i.e., followers)
+        followers_ids = Follow.objects.filter(followee=author).values_list('follower_id', flat=True)
+
+        # The friends are the intersection of the two sets
+        friend_ids = list(set(following_ids).intersection(set(followers_ids)))
+
+        # Retrieve the friend Author objects
+        friends = Authors.objects.filter(row_id__in=friend_ids)
+
+        # Serialize the friend objects
+        serializer = authorsSerializer({"type": "friends", "authors":friends})
+
+        return Response(serializer.data)
 
 
 class FollowRequestViewSet(GenericViewSet):
