@@ -106,12 +106,10 @@ def profileView(request, row_id):
     posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     # Connections field
     friends = getFriends(request, author.row_id).data["friends"]
-    followers = (FollowersViewSet.as_view({"get": "list"}))(
-        request, author.row_id
-    ).data["followers"]
+    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["followers"]
+    followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = getFollowRequests(request, author.row_id).data["requesters"]
     suggestions = getSuggestions(request, author.row_id).data["suggestions"]
-    followees = getFollowees(request, author.row_id).data["followees"]
     sent_requests = getSentRequests(request, author.row_id).data["sent_requests"]
 
     for post in posts:
@@ -162,7 +160,6 @@ def declineRequest(request, author_serial, fqid):
         FollowRequest, requester=requester, requestee=requestee
     )
     response = declineFollowRequest(request, follow_request.id)
-    print(response)
     return redirect("accounts:profile", row_id=requestee.row_id)
 
 def unfollow(request, author_serial, fqid):

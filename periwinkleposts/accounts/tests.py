@@ -216,6 +216,27 @@ class FollowAPITests(APITestCase):
 
         follow = FollowRequest.objects.filter(requestee=test_author_1, requester=test_author_2)
         self.assertTrue(follow.exists())
+    
+    def test_get_followees(self):
+        test_author_1 = Authors.objects.create(username="test_author_1")
+        test_author_2 = Authors.objects.create(username="test_author_2")
+        test_author_3 = Authors.objects.create(username="test_author_3")
+
+        Follow.objects.create(followee=test_author_2, follower=test_author_1)
+        Follow.objects.create(followee=test_author_3, follower=test_author_1)
+
+        url = reverse("api:getFollowees", args=[test_author_1.row_id])
+        response = self.client.get(url)
+        
+        result = response.json()
+        expected = {
+            "type":"followees",
+            "followees": [authorSerializer(test_author_2).data, authorSerializer(test_author_3).data]
+        }
+
+        self.assertEqual(result, expected)
+        self.assertEqual(len(result["followees"]),2)
+        self.assertEqual(response.status_code, 200)
 
 
 class CommentTest(APITestCase):
@@ -359,7 +380,7 @@ class AuthorViewSetTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.data['id'],
-            f"http://testserver/api/authors/{author.row_id}/"  # Updated URL format
+            f"http://testserver/api/authors/{author.row_id}"  # Updated URL format
         )
 
     def test_404(self):
