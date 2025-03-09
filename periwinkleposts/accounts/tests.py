@@ -18,9 +18,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 class FollowUITests(SeleniumTestCase):
-    def wait(self, by, arg):
-        wait = WebDriverWait(self.driver, 10)
-        return wait.until(EC.element_to_be_clickable((by, arg)))
+    def clickAndWait(self, by, arg, timeout=0.5):
+        clickAndWait = WebDriverWait(self.driver, 10)
+        clickAndWait.until(EC.element_to_be_clickable((by, arg))).click()
+        time.sleep(timeout)
 
     def register_user(self, username, github_username, password):
         self.driver.get(self.live_server_url + "/accounts/register/")
@@ -30,8 +31,7 @@ class FollowUITests(SeleniumTestCase):
         self.driver.find_element(By.ID, "password1").send_keys(password)
         self.driver.find_element(By.ID, "password2").send_keys(password)
 
-        self.wait(By.TAG_NAME, "button").click()
-        time.sleep(1)
+        self.clickAndWait(By.TAG_NAME, "button", timeout=1)
 
     def approve_user(self, username):
         author = Authors.objects.get(username=username)
@@ -44,60 +44,78 @@ class FollowUITests(SeleniumTestCase):
         self.driver.find_element(By.ID, "username").send_keys(username)
         self.driver.find_element(By.ID, "password").send_keys(password)
 
-        self.wait(By.TAG_NAME, "button").click()
-        time.sleep(1)
+        self.clickAndWait(By.TAG_NAME, "button", timeout=1)
     
     # Click the profile button at home
     def home_profile_click(self):
-        self.wait(By.XPATH, "/html/body/nav/div/div/a[2]").click()
-
-    # Toggle the suggestions section
-    def suggestions_open(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button").click()
+        self.clickAndWait(By.XPATH, "/html/body/nav/div/div/a[2]")
     
     # Click the follow button of the first author under suggestions
     def suggestions_0_follow(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button").click()
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")
 
     # Accept the first request under Recieved Requests
     def request_0_accept(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a").click()
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
     
     # Click the username of the first author under suggestions
     def suggestions_0_username_click(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li[1]/span/a").click()
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li[1]/span/a")
     
     # Click the unfriend button next to the user name
     def profile_unfriend(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button").click()
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button")
     
     # Click the follow button next to the username
     def profile_follow(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button").click()
-
-    # Toggle the friends section
-    def friends_open(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/button").click()
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button")
     
     # Click the unfriend button of the first friend under Friends
     def friends_0_unfriend(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button").click()
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button")
     
     # Click username of the author under friends
     def friends_0_username_click(self):
-        self.wait(By.XPATH,"/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/a").click()
+        self.clickAndWait(By.XPATH,"/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/a")
     
     # Toggle the followees section
     def followees_open(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/button").click()
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/button")
+    
+    # Toggle the friends section
+    def friends_open(self):
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/button")
+
+    # Toggle the suggestions section
+    def suggestions_open(self):
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button")
+
+    # Toggle the suggestions section
+    def followers_open(self):
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/button")
 
     # Press the unfollow button on the first followee
     def followees_0_unfollow(self):
-        self.wait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button").click()
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")
 
-    # Return the number of authors under suggestions
-    def suggestions_count(self):
-        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button"))
+    # Return true if the first author under suggestions exists
+    def suggestions_0_exists(self):
+        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")) == 1
+    
+    def friends_0_exists(self):
+        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button")) == 1
+    
+    def followees_0_exists(self):
+        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")) == 1
+
+    def followers_0_exists(self):
+        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/div/ul/li/a")) == 1
+    
+    def requests_0_exists(self):
+        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")) == 1
+    
+    def sent_requests_0_exists(self):
+        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/a")) == 1
 
     def test_follow_functionality(self):
         dummy_username_1 = "username_1"
@@ -174,8 +192,16 @@ class FollowUITests(SeleniumTestCase):
         self.followees_0_unfollow()
 
         self.suggestions_open()
+        self.followees_open()
+        self.followers_open()
+        self.friends_open()
 
-        self.assertEqual(self.suggestions_count(), 1, "Suggestions counts is not 1.")
+        self.assertFalse(self.requests_0_exists(), "Remaining author in requests. ")
+        self.assertFalse(self.followers_0_exists(), "Remaining author in followers. ")
+        self.assertFalse(self.followees_0_exists(), "Remaining author in followees. ")
+        self.assertFalse(self.sent_requests_0_exists(), "Remaining author in sent requests. ")
+        self.assertFalse(self.friends_0_exists(), "Remaining author in friends. ")
+        self.assertTrue(self.suggestions_0_exists(), "No author in suggestions.")
 
 
 
