@@ -71,20 +71,3 @@ def getSuggestions(request, author_serial):
         "type":"suggestions",
         "suggestions": serializer.data
     }, status=200)
-
-def getSentRequests(request, author_serial):
-    try:
-        author_uuid = author_serial  # Convert string to UUID
-    except ValueError:
-        return Response({'error': 'Invalid UUID format'}, status=400)
-
-    requestees = FollowRequest.objects.filter(requester=author_uuid)
-
-    requestee_ids = [connection.requestee for connection in requestees]
-
-    requestee_serializer = AuthorSerializer(requestee_ids, many=True, context={'request': request})
-
-    return Response({
-        "type": "sent_requests",
-        "sent_requests": requestee_serializer.data  # Include followers' data
-    }, status=200)
