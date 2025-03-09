@@ -124,14 +124,22 @@
                     <div>
                         {{ post.description }}
                     </div>
-                    <div class="text-sm">
-                        {% if post.visibility == "PUBLIC" %}
-                        🌍 Public
-                        {% elif post.visibility == "UNLISTED" %}
-                        🔒 Unlisted
-                        {% elif post.visibility == "FRIENDS" %}
-                        👥 Friends-Only
-                        {% endif %}
+                    <div class="flex gap-4 items-center">
+                        <!-- Post Visibility -->
+                        <div class="text-sm">
+                            {% if post.visibility == "PUBLIC" %}
+                                🌍 Public
+                            {% elif post.visibility == "UNLISTED" %}
+                                🔒 Unlisted
+                            {% elif post.visibility == "FRIENDS" %}
+                                👥 Friends-Only
+                            {% endif %}
+                        </div>
+                        <!--View Post-->
+                        <a href="{% url 'accounts:view_post' post.id %}" 
+                            class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                            View
+                        </a>
                     </div>
                 </div>
 
@@ -151,11 +159,22 @@
                         </button>
                     </form>
 
+                    
+
                     <!-- Comments Toggle -->
                     <button onclick="toggleComments('{{ post.id }}')"
                         class="px-3 py-1 text-sm font-semibold text-[#CCCCFF] hover:text-[#8585e6] transition-colors duration-300">
                         Comments ({{ post.comments.count }})
                     </button>
+
+                    <!--Edit Post-->
+                    <!-- Logic: if the post belongs to the author, then the edit is there if not it does not show  -->
+                    {% if post.author == user %}
+                    <a href="{% url 'accounts:edit_post' post.id %}"
+                        class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                        Edit
+                    </a>
+                    {% endif %}
 
                     <!-- Delete Button -->
                     {% if ownProfile %}
@@ -171,14 +190,6 @@
 
                 </div>
 
-                <!--Edit Post-->
-                <!-- Logic: if the post belongs to the author, then the edit is there if not it does not show  -->
-                {% if post.author == user %}
-                <a href="{% url 'accounts:edit_post' post.id %}"
-                    class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
-                    Edit
-                </a>
-                {% endif %}
 
                 <div id="comments-{{ post.id }}" class="hidden mt-3">
                     <!-- Comment Form -->

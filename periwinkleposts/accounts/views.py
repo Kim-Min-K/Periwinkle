@@ -306,6 +306,17 @@ def edit_post(request, post_id):
         'visibility_choices': Post.VISIBILITY_CHOICES
     })
 
+def view_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    # Check visibility
+    if post.visibility == "FRIENDS" and request.user != post.author:
+        friends = post.author.friends.all()
+        if request.user not in friends:
+            return redirect('accounts:profile', row_id=request.user.row_id)
+    
+    return render(request, 'view_post.html', {'post': post})
+
 # --------------Comment----------------
 class CommentView(viewsets.ModelViewSet):
     serializer_class = CommentSerializer

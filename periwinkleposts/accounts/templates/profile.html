@@ -93,18 +93,28 @@
 
                 <!-- Description + Visibility -->
                 <div class="text-lg text-black mt-8 flex justify-between">
+                    <!-- Description -->
                     <div>
                         {{ post.description }}
                     </div>
-                    <div class="text-sm">
-                        {% if post.visibility == "PUBLIC" %}
-                            🌍 Public
-                        {% elif post.visibility == "UNLISTED" %}
-                            🔒 Unlisted
-                        {% elif post.visibility == "FRIENDS" %}
-                            👥 Friends-Only
-                        {% endif %}
+                    <div class="flex gap-4 items-center">
+                        <!-- Post Visibility -->
+                        <div class="text-sm">
+                            {% if post.visibility == "PUBLIC" %}
+                                🌍 Public
+                            {% elif post.visibility == "UNLISTED" %}
+                                🔒 Unlisted
+                            {% elif post.visibility == "FRIENDS" %}
+                                👥 Friends-Only
+                            {% endif %}
+                        </div>
+                        <!--View Post-->
+                        <a href="{% url 'accounts:view_post' post.id %}" 
+                            class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                            View
+                        </a>
                     </div>
+                    
                 </div>
 
                 <!-- Content -->
@@ -128,8 +138,14 @@
                         Comments ({{ post.comments.count }})
                     </button>
 
-                    <!-- Delete Button -->
+                    <!--Edit Post-->
                     {% if ownProfile %}
+                    <a href="{% url 'accounts:edit_post' post.id %}" 
+                        class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                        Edit
+                    </a>
+
+                    <!-- Delete Button -->
                     <form method="POST" action="{% url 'accounts:delete_post' post.id %}" class="m-0">
                         {% csrf_token %}
                         <button type="submit" class="px-3 py-1 text-sm font-semibold text-red-600 hover:text-red-800 transition-colors duration-300"
@@ -137,11 +153,7 @@
                             Delete
                         </button>
                     </form>
-                    <!--Edit Post-->
-                    <a href="{% url 'accounts:edit_post' post.id %}" 
-                        class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
-                        Edit
-                    </a>
+
                     {% endif %}
                 </div>
 

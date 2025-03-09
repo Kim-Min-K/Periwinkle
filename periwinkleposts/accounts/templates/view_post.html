@@ -1,0 +1,203 @@
+{% extends "skeleton.html" %}
+{% load static %}
+{% block title %}periwinkle Profile - {{ author.username }}{% endblock %}
+
+{% block page_content %}
+<!-- Main Container -->
+<div class="flex justify-center items-center mt-4">
+    <!-- Post Card -->
+    <div class="bg-white p-6 rounded-lg shadow-2xl max-w-6xl mb-8">
+
+        <!-- Profile Picture, Username, Published Date -->
+        <div class="flex items-center justify-between bg-[#CCCCFF] p-4 rounded-lg h-24">
+            <!-- Avatar -->
+            <img src="{% if post.author.avatar_display %}{{ post.author.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}"
+                alt="Profile Picture" class="w-10 h-10 rounded-full object-cover">
+            <span class="text-white">{{ post.author }}</span>
+            <span class="text-white">{{ post.published|date:"N d, Y. H:i" }}</span>
+        </div>
+
+        <!-- Post Title -->
+        <div class="flex justify-center items-center p-4 mt-4 mb-4">
+            <div class="border-[#CCCCFF] border-2 rounded-full px-8 py-2">
+                {{ post.title }}
+            </div>
+        </div>
+
+        <!-- Image/Video -->
+        <div class="media-container flex flex-col justify-center">
+            {% if post.image %}
+            <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 max-w-full h-auto rounded-lg shadow">
+            {% endif %}
+            {% if post.video %}
+            <video controls class="max-w-full h-auto rounded-lg shadow">
+                <source src="{{ post.video.url }}" type="video/mp4">
+            </video>
+            {% endif %}
+        </div>
+
+
+        <!-- Description + Visibility -->
+        <div class="text-lg text-black mt-8 flex justify-between">
+            <div>
+                {{ post.description }}
+            </div>
+            <div class="flex gap-4 items-center">
+                <!-- Post Visibility -->
+                <div class="text-sm">
+                    {% if post.visibility == "PUBLIC" %}
+                        🌍 Public
+                    {% elif post.visibility == "UNLISTED" %}
+                        🔒 Unlisted
+                    {% elif post.visibility == "FRIENDS" %}
+                        👥 Friends-Only
+                    {% endif %}
+                </div>
+                <!-- View Post -->
+                <a href="{% url 'accounts:view_post' post.id %}" 
+                    class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                    View
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="text-base text-gray-500 mt-4">{{ post.content }}</div>
+
+        <!-- Footer -->
+        <div class="flex justify-between mt-8">
+            <!-- Like Button -->
+            <form action="{% url 'api:likePost' author_serial=post.author.row_id post_serial=post.id %}
+            " method="POST" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit"
+                    class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                    Like ({{ post.likes.count }})
+                </button>
+            </form>
+
+            <!-- Comments Toggle -->
+            <button onclick="toggleComments('{{ post.id }}')"
+                class="px-3 py-1 text-sm font-semibold text-[#CCCCFF] hover:text-[#8585e6] transition-colors duration-300">
+                Comments ({{ post.comments.count }})
+            </button>
+
+            <!--Edit Post-->
+            <!-- Logic: if the post belongs to the author, then the edit is there if not it does not show  -->
+            {% if post.author == user %}
+            <a href="{% url 'accounts:edit_post' post.id %}"
+                class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                Edit
+            </a>
+            {% endif %}
+
+            <!-- Delete Button -->
+            {% if ownProfile %}
+            <form method="POST" action="{% url 'accounts:delete_post' post.id %}" class="m-0">
+                {% csrf_token %}
+                <button type="submit"
+                    class="px-3 py-1 text-sm font-semibold text-red-600 hover:text-red-800 transition-colors duration-300"
+                    onclick="return confirm('Confirm delete post?');">
+                    Delete
+                </button>
+            </form>
+            {% endif %}
+
+        </div>
+
+        
+
+        <div id="comments-{{ post.id }}" class="hidden mt-3">
+            <!-- Comment Form -->
+            <form method="POST" action="{% url 'api:createComment' author_serial=post.author.row_id  %}">
+
+                {% csrf_token %}
+                <textarea name="comment" placeholder="Write a comment..." class=" p-2 border rounded w-full"
+                    required></textarea>
+
+                <input type="hidden" name="post" value="{{ post.id }}">
+
+                <div class="flex w-full justify-between">
+                    <div class="flex">
+                        <label
+                            class="block text-sm px-4 py-1 font-medium text-white mt-2 bg-[#CCCCFF] rounded-lg">Content
+                            Type:</label>
+                        <select name="contentType"
+                            class="block mt-1 px-2 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="text/plain">Plain Text</option>
+                            <option value="text/markdown">Markdown</option>
+                        </select>
+                    </div>
+
+                    <button type="submit"
+                        class="mt-2 px-4 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                        Post Comment
+                    </button>
+                </div>
+            </form>
+
+            <!-- Comments List -->
+            <div class="mt-8 space-y-2">
+                {% for comment in post.comments.all %}
+                <div class="flex items-center justify-between bg-white p-2 rounded shadow-sm">
+                    <!-- Group for Avatar and Username -->
+                    <div class="flex items-center space-x-3">
+                        <img src="{% if comment.author.avatar_display %}{{ comment.author.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}"
+                            alt="{{ comment.author.username }}'s Profile Picture"
+                            class="w-10 h-10 rounded-full object-cover">
+                        <strong>{{ comment.author.username }}</strong>
+                    </div>
+
+                    <!-- Comment Text in the Middle -->
+                    <p class="flex-1 text-sm mx-4" style="margin-bottom: 0;">{{ comment.comment }}</p>
+
+                    <!-- Like Button on the Right -->
+                    <div class="flex items-center gap-2">
+                        <form method="POST"
+                            action="{% url 'api:likeComment' author_serial=comment.author.row_id comment_serial=comment.id %}"
+                            class="m-0">
+                            {% csrf_token %}
+                            <button type="submit"
+                                class="px-2 py-1 text-xs font-semibold text-white bg-[#CCCCFF] rounded hover:bg-[#8585e6] transition-colors duration-300">
+                                Like ({{ comment.likes.count }})
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-600 text-sm mt-2">No comments yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.toggleComments = function(postId) {
+        console.log("Toggling comments for post:", postId);
+        var commentSection = document.getElementById("comments-" + postId);
+        if (commentSection) {
+            commentSection.classList.toggle("hidden");
+            if (!commentSection.classList.contains("hidden")) {
+                commentSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        } else {
+            console.error("Comment section not found for postId:", postId);
+        }
+    }
+
+    function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.classList.toggle('hidden');
+            const button = section.previousElementSibling;
+            const caret = button.querySelector('span:last-child');
+            caret.textContent = section.classList.contains('hidden') ? '▾' : '▴';
+        }
+    }
+</script>
+
+
+{% endblock %}
+
