@@ -105,7 +105,7 @@ def profileView(request, row_id):
     posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     # Connections field
     friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
-    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["followers"]
+    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["authors"]
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
     suggestions = requests.get(request.user.host[:-5] + reverse("api:getRequestSuggestions", args=[request.user.row_id])).json()["authors"]

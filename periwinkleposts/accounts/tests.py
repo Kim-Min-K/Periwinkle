@@ -15,32 +15,69 @@ import time
 from selenium.webdriver.common.by import By
 from django.contrib.auth.hashers import make_password
 
-class AuthenticationFormTest(SeleniumTestCase):
-    def test_authentication_form(self):
+# class AuthenticationFormTest(SeleniumTestCase):
+#     def test_login(self):
 
-        dummy_username = "dummy_username"
-        dummy_password = "12345"
+#         dummy_username = "dummy_username"
+#         dummy_password = "12345"
 
-        hashed_password = make_password(dummy_password, salt="Pq4u8aT8JZMTQGQclF93ch", hasher="pbkdf2_sha256")
+#         hashed_password = make_password(dummy_password, salt="Pq4u8aT8JZMTQGQclF93ch", hasher="pbkdf2_sha256")
 
-        # Create a user to login with
-        user = Authors.objects.create(
-            username=dummy_username, email="test@user.com", password=hashed_password, is_approved=1
-        )
+#         # Create a user to login with
+#         user = Authors.objects.create(
+#             username=dummy_username, email="test@user.com", password=hashed_password, is_approved=1
+#         )
 
-        print(Authors.objects.all())
+#         print(Authors.objects.all())
 
-        # Go to the login page
-        self.driver.get(self.live_server_url + "/")
+#         # Go to the login page
+#         self.driver.get(self.live_server_url + "/")
 
+
+#         username = self.driver.find_element(By.ID, "username")
+
+#         username.send_keys(dummy_username) 
+
+#         password = self.driver.find_element(By.ID, "password")
+
+#         password.send_keys(dummy_password)
+
+#         time.sleep(0.5)
+
+#         login = self.driver.find_element(By.TAG_NAME, "button")
+
+#         login.click()
+
+#         time.sleep(0.5)
+
+#         self.assertEqual(self.driver.current_url, self.live_server_url + "/pages/home/")
+
+class FollowUITests(SeleniumTestCase):
+    
+    def test_follow_functionality(self):
+
+        # Register user 1
+        self.dummy_username_1 = "username_1"
+        self.dummy_github_1 = "dummy_github_1"
+        self.dummy_password_1 = "114300Rom"
+
+        self.driver.get(self.live_server_url + "/accounts/register/")
 
         username = self.driver.find_element(By.ID, "username")
 
-        username.send_keys(dummy_username) 
+        username.send_keys(self.dummy_username_1) 
 
-        password = self.driver.find_element(By.ID, "password")
+        github_username = self.driver.find_element(By.ID, "github_username")
 
-        password.send_keys(dummy_password)
+        github_username.send_keys(self.dummy_github_1)
+
+        password1 = self.driver.find_element(By.ID, "password1")
+
+        password1.send_keys(self.dummy_password_1)
+
+        password2 = self.driver.find_element(By.ID, "password2")
+
+        password2.send_keys(self.dummy_password_1)
 
         time.sleep(0.5)
 
@@ -48,7 +85,352 @@ class AuthenticationFormTest(SeleniumTestCase):
 
         login.click()
 
+        time.sleep(1)
+
+        author = Authors.objects.get(username=self.dummy_username_1)
+        author.is_approved=1
+        author.save()
+
+        time.sleep(0.5)
+
+        # Register user 2
+        self.dummy_username_2 = "username_2"
+        self.dummy_github_2 = "dummy_github_2"
+        self.dummy_password_2 = "114300Rom"
+
+        self.driver.get(self.live_server_url + "/accounts/register/")
+
+        username = self.driver.find_element(By.ID, "username")
+
+        username.send_keys(self.dummy_username_2) 
+
+        github_username = self.driver.find_element(By.ID, "github_username")
+
+        github_username.send_keys(self.dummy_github_2)
+
+        password1 = self.driver.find_element(By.ID, "password1")
+
+        password1.send_keys(self.dummy_password_2)
+
+        password2 = self.driver.find_element(By.ID, "password2")
+
+        password2.send_keys(self.dummy_password_2)
+
+        time.sleep(0.5)
+
+        login = self.driver.find_element(By.TAG_NAME, "button")
+
+        login.click()
+
+        time.sleep(1)
+
+        author = Authors.objects.get(username=self.dummy_username_2)
+        author.is_approved=1
+        author.save()
+
+        time.sleep(0.5)
+
+        # Login as user 1
+
+        self.driver.get(self.live_server_url + "/")
+
+
+        username = self.driver.find_element(By.ID, "username")
+
+        username.send_keys(self.dummy_username_1) 
+
+        time.sleep(0.5)
+
+        password = self.driver.find_element(By.ID, "password")
+
+        password.send_keys(self.dummy_password_1)
+
+
+        time.sleep(0.5)
+
+        login = self.driver.find_element(By.TAG_NAME, "button")
+
+        login.click()
+
+        time.sleep(1)
+
         self.assertEqual(self.driver.current_url, self.live_server_url + "/pages/home/")
+
+        profile = self.driver.find_element(By.XPATH, "/html/body/nav/div/div/a[2]")
+
+        profile.click()
+
+        time.sleep(0.5)
+
+        suggestions = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button")
+        suggestions.click()
+
+        follow = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")
+        follow.click()
+
+        time.sleep(0.5)
+
+        # Check sent requests after following somebody
+        sent = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[2]/ul/li/a")
+        self.assertEqual(len(sent), 1, "Sent Requests does not have an item.")
+
+        time.sleep(0.5)
+
+        # Login as user 2
+
+        self.driver.get(self.live_server_url + "/")
+
+        username = self.driver.find_element(By.ID, "username")
+
+        username.send_keys(self.dummy_username_2) 
+
+        password = self.driver.find_element(By.ID, "password")
+
+        password.send_keys(self.dummy_password_2)
+
+        login = self.driver.find_element(By.TAG_NAME, "button")
+
+        login.click()
+
+        time.sleep(0.5)
+
+        self.assertEqual(self.driver.current_url, self.live_server_url + "/pages/home/")
+
+        profile = self.driver.find_element(By.XPATH, "/html/body/nav/div/div/a[2]")
+
+        profile.click()
+
+        time.sleep(0.5)
+
+        unfollow = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")
+        self.assertEqual(len(unfollow), 0, "followees is not 0.")
+
+        requests = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+        self.assertEqual(len(requests), 1, "Receive request is not 1.")
+
+        followers = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/div/ul/li/a")
+        self.assertEqual(len(followers), 0, "Followers is not 0.")
+
+        accept = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+        accept.click()
+
+        time.sleep(0.5)
+
+        requests = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li")
+        self.assertEqual(requests.text, "No received requests", "Receive request is not 0.")
+
+        # Check Followers after following somebody
+        followers = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/div/ul/li/a")
+        self.assertEqual(len(followers), 1, "Followers is empty after following somebody.")
+
+
+        suggestions = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button")
+        suggestions.click()
+
+        time.sleep(0.5)
+
+        profile_link = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li[1]/span/a")
+        profile_link.click()
+
+        time.sleep(0.5)
+
+        follow = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button")
+        follow.click()
+
+        time.sleep(0.5)
+
+        # Check sent requests after following user 1 using profile page
+        sent = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[2]/ul/li/a")
+        self.assertEqual(len(sent), 1, "Sent Requests is empty after following using profile page.")
+
+        # Login again user 1
+
+        self.driver.get(self.live_server_url + "/")
+
+
+        username = self.driver.find_element(By.ID, "username")
+
+        username.send_keys(self.dummy_username_1) 
+
+        time.sleep(0.5)
+
+        password = self.driver.find_element(By.ID, "password")
+
+        password.send_keys(self.dummy_password_1)
+
+
+        time.sleep(0.5)
+
+        login = self.driver.find_element(By.TAG_NAME, "button")
+
+        login.click()
+
+        time.sleep(1)
+
+        self.assertEqual(self.driver.current_url, self.live_server_url + "/pages/home/")
+
+        profile = self.driver.find_element(By.XPATH, "/html/body/nav/div/div/a[2]")
+
+        profile.click()
+
+        time.sleep(0.5)
+
+        # Accept request from user 2
+
+        requests = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+        self.assertEqual(len(requests), 1, "Receive request is not 1.")
+
+        followers = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/div/ul/li/a")
+        self.assertEqual(len(followers), 0, "Followers is not 0.")
+
+        accept = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+        accept.click()
+
+        time.sleep(0.5)
+
+
+        # Check if they move to friends
+
+        friends = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button")
+        self.assertEqual(len(friends), 1, "Did not move to friend after following.")
+
+        friends_toggle = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/button")
+        friends_toggle.click()
+
+        time.sleep(0.5)
+
+        unfriend = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button")
+        unfriend.click()
+
+        time.sleep(0.5)
+
+        # Check suggestions after unfriending
+        suggestions = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button")
+        suggestions.click()
+
+        time.sleep(0.5)
+
+        follow = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")
+        self.assertEqual(len(follow), 1, "Suggestions doesn't have an item after unfriending.")
+
+        follow = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")
+        follow.click()
+
+        time.sleep(0.5)
+
+
+        # Login again as user 2
+        self.driver.get(self.live_server_url + "/")
+
+        username = self.driver.find_element(By.ID, "username")
+
+        username.send_keys(self.dummy_username_2) 
+
+        password = self.driver.find_element(By.ID, "password")
+
+        password.send_keys(self.dummy_password_2)
+
+        login = self.driver.find_element(By.TAG_NAME, "button")
+
+        login.click()
+
+        time.sleep(0.5)
+
+        profile = self.driver.find_element(By.XPATH, "/html/body/nav/div/div/a[2]")
+
+        profile.click()
+
+        time.sleep(0.5)
+
+
+        # Accept request from user 1
+        requests = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+        self.assertEqual(len(requests), 1, "Received request does not have an item.")
+
+        accept = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+        accept.click()
+
+        time.sleep(0.5)
+
+
+        # Unfriend using profile page
+        friends_toggle = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/button")
+        friends_toggle.click()
+
+        time.sleep(0.5)
+
+        friend_profile_link = self.driver.find_element(By.XPATH,"/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/a")
+        friend_profile_link.click()
+
+        time.sleep(0.5)
+
+        unfriend = self.driver.find_element(By.XPATH,"/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button")
+        unfriend.click()
+
+        time.sleep(0.5)
+
+        followees = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")
+        self.assertEqual(len(followees), 0, "Followees is not 0 after unfriending.")
+
+        suggestions = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button")
+        suggestions.click()
+        time.sleep(0.5)
+
+        follow = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")
+        self.assertEqual(len(follow), 1, "Suggestions doesn't have an item after unfriending.")
+
+        # Login again as user 1
+        self.driver.get(self.live_server_url + "/")
+
+
+        username = self.driver.find_element(By.ID, "username")
+
+        username.send_keys(self.dummy_username_1) 
+
+        time.sleep(0.5)
+
+        password = self.driver.find_element(By.ID, "password")
+
+        password.send_keys(self.dummy_password_1)
+
+
+        time.sleep(0.5)
+
+        login = self.driver.find_element(By.TAG_NAME, "button")
+
+        login.click()
+        time.sleep(0.5)
+
+        time.sleep(1)
+
+        self.assertEqual(self.driver.current_url, self.live_server_url + "/pages/home/")
+
+        profile = self.driver.find_element(By.XPATH, "/html/body/nav/div/div/a[2]")
+
+        profile.click()
+
+        time.sleep(0.5)
+
+        # Unfollow user 2
+        followees_toggle = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/button")
+
+        followees_toggle.click()
+
+        time.sleep(0.5)
+
+        unfollow = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")
+
+        unfollow.click()
+
+        time.sleep(0.5)
+
+        suggestions = self.driver.find_element(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button")
+        suggestions.click()
+        time.sleep(0.5)
+        follow = self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")
+        
+        # Check if they move to suggestions
+        self.assertEqual(len(follow), 1, "Suggestions doesn't have an item after unfollowing.")
 
 
 
