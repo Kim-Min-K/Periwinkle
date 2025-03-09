@@ -108,7 +108,7 @@ def profileView(request, row_id):
     friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["followers"]
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
-    requesters = getFollowRequests(request, author.row_id).data["requesters"]
+    requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
     suggestions = getSuggestions(request, author.row_id).data["suggestions"]
     sent_requests = getSentRequests(request, author.row_id).data["sent_requests"]
 

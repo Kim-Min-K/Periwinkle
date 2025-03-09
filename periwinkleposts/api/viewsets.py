@@ -93,6 +93,7 @@ class FolloweesViewSet(GenericViewSet):
 
         return Response(serializer.data, status=200)
 
+
 class FriendsViewSet(GenericViewSet):
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
@@ -128,11 +129,10 @@ class FriendsViewSet(GenericViewSet):
 
 
 class FollowRequestViewSet(GenericViewSet):
-    serializer_class=FollowRequestSerializerRaw
-
     @action(detail=False, methods=["post"])
     @swagger_auto_schema(
         operation_description="Send a follow request to an author.",
+        request_body=FollowRequestSerializerRaw,
         responses={
             201: "Follow request successfully sent.",
             400: "Serializer errors. "
@@ -165,6 +165,28 @@ class FollowRequestViewSet(GenericViewSet):
             return Response({"error": str(e)}, status=400)
 
         return Response({"message":"Follow request successfuly sent."}, status=200)
+    
+    @action(detail=False, methods=["get"])
+    @swagger_auto_schema(
+        operation_description="Get all follow requests of an author",
+        responses={
+            200: authorsSerializer(),
+            404: "The author does not exists."
+            }
+    )
+    def getFollowRequests(self, request, author_serial):
+        author_uuid = author_serial
+
+        author = get_object_or_404(Authors, pk=author_uuid)
+
+        requesters_ids = FollowRequest.objects.filter(requestee=author).values_list('requester_id', flat=True)
+
+        requesters = Authors.objects.filter(row_id__in=requesters_ids)
+
+        # Serialize the friend objects
+        serializer = authorsSerializer({"type":"follow-requests", "authors": requesters})
+        
+        return Response(serializer.data, status=200)
     
     
 class AuthorViewSet(GenericViewSet):

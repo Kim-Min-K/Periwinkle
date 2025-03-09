@@ -237,7 +237,45 @@ class FollowAPITests(APITestCase):
 
         self.assertEqual(len(result["followees"]),2)
         self.assertEqual(response.status_code, 200)
-    
+
+class FollowRequestAPITests(APITestCase):
+    def test_get_follow_requests(self):
+        # Create test authors
+        test_author_1 = Authors.objects.create(username="test_author_1")
+        test_author_2 = Authors.objects.create(username="test_author_2")
+
+        # URL for sending the follow request
+        url = reverse("api:followRequest", args=[test_author_1.row_id])
+
+        # The request body for sending a follow request
+        data = {
+            "type": "follow",
+            "actor": authorSerializer(test_author_2).data,  # The author sending the request
+            "object": authorSerializer(test_author_1).data  # The author receiving the follow request
+        }
+
+        # Simulate sending a POST request
+        response = self.client.post(url, data, format="json")
+
+        # Assertions
+        self.assertEqual(response.status_code, 200)  # Expecting HTTP 201 Created
+
+        follow = FollowRequest.objects.filter(requestee=test_author_1, requester=test_author_2)
+        self.assertTrue(follow.exists())
+
+        url = reverse("api:getFollowRequests", args=[test_author_1.row_id])
+
+        response = self.client.get(url)
+
+        result = response.json()
+        expected = {
+            "type": "follow-requests",
+            "authors": [authorSerializer(test_author_2).data]
+        }
+
+        self.assertEqual(result, expected)
+        self.assertEqual(len(result["authors"]),1)
+        self.assertEqual(response.status_code, 200)
 
 class FriendsAPITests(APITestCase):
     def test_get_friends(self):
@@ -265,7 +303,7 @@ class FriendsAPITests(APITestCase):
             "type":"friends",
             "authors": [authorSerializer(test_author_2).data]
         }
-        
+
         self.assertEqual(result, expected)
         self.assertEqual(len(result["authors"]),1)
         self.assertEqual(response.status_code, 200)
