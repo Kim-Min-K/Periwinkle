@@ -1,5 +1,5 @@
 name: Run Django Tests
-on: [pull_request, push] # activates the workflow when there is a push or pull request in the repo
+on: [push] # activates the workflow when there is a push or pull request in the repo
 jobs:
   test_project:
     runs-on: ubuntu-latest # operating system your code will run on

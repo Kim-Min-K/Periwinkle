@@ -24,7 +24,7 @@
                                 <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Unfriend</button>
                             </form>
                         {% elif not ownProfile and not isFollowee and not isPending %}
-                            <form action="{% url 'accounts:sendFollowRequest' fqid=author.id %}" method="POST">
+                            <form action="{% url 'accounts:sendFollowRequest' author_serial=author.row_id %}" method="POST">
                                 {% csrf_token %}
                                 <input type="text" name="your_field" placeholder="Enter something" hidden>
                                 <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
@@ -215,7 +215,7 @@
                                         <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id requester_serial=requester.row_id %}">Accept</a>
                                     </button>
                                     <button class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
-                                        <a href="{% url 'accounts:declineRequest' author_serial=author.row_id fqid=requester.id %}">Decline</a>
+                                        <a href="{% url 'accounts:declineRequest' author_serial=author.row_id requester_serial=requester.row_id %}">Decline</a>
                                     </button>
                                 </div>
                             </li>
@@ -254,7 +254,7 @@
                                 {% for person in suggestions %}
                                 <li class="flex items-center justify-between bg-gray-100 p-2 rounded">
                                 <span><a href="{% url 'accounts:profile' row_id=person.row_id %}">{{ person.displayName }}</a></span>
-                                <form action="{% url 'accounts:sendFollowRequest' fqid=person.id %}" method="POST">
+                                <form action="{% url 'accounts:sendFollowRequest' author_serial=person.row_id %}" method="POST">
                                     {% csrf_token %}
                                     <input type="text" name="your_field" placeholder="Enter something" hidden>
                                     <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>

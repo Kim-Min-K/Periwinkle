@@ -69,7 +69,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_2", password="my_password2")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.row_id])
 
         response = self.client.post(url)
 
@@ -83,7 +83,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_2", password="my_password2")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.row_id])
 
         response = self.client.post(url)
 
@@ -108,7 +108,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_2", password="my_password2")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.row_id])
 
         response = self.client.post(url)
 
@@ -118,7 +118,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_1", password="my_password1")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:declineRequest", args=[self.test_author_1.row_id, self.test_author_2.id])
+        url = reverse("accounts:declineRequest", args=[self.test_author_1.row_id, self.test_author_2.row_id])
 
         response = self.client.post(url)
 
@@ -132,7 +132,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         success = self.client.login(username="test_author_2", password="my_password2")
         self.assertEqual(success, True)
 
-        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.id])
+        url = reverse("accounts:sendFollowRequest", args=[self.test_author_1.row_id])
 
         response = self.client.post(url)
 
