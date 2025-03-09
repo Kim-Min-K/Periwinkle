@@ -1,12 +1,16 @@
 name: Run Django Tests
-on: [push] # activates the workflow when there is a push or pull request in the repo
+on:
+  push:
+    branches:
+      - main  # Only run when pushing to the main branch
+
 jobs:
   test_project:
-    runs-on: ubuntu-latest # operating system your code will run on
+    runs-on: ubuntu-latest  # Operating system to run the tests on
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-      - run: pip install -r requirements.txt # install all our dependencies for the project
+      - run: pip install -r requirements.txt  # Install dependencies
       - run: |
-          cd periwinkleposts  # Change directory to the project folder
+          cd periwinkleposts  # Navigate to the project folder
           python3 manage.py test  # Run Django tests
