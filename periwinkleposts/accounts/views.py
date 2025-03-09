@@ -6,7 +6,6 @@ from django.contrib import messages
 from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings, Follow
 from .serializers import authorSerializer, CommentSerializer, LikeSerializer
 from django.http import QueryDict
-from api.follow_views import *
 from api.viewsets import *
 from django.shortcuts import redirect, render
 from django.http import HttpResponse

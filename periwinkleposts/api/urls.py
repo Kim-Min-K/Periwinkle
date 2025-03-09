@@ -1,5 +1,4 @@
-from django.urls import path
-from . import follow_views
+from django.urls import path, include
 from api.viewsets import *
 from accounts.views import CommentView, LikeView, InboxView
 from rest_framework.routers import DefaultRouter
@@ -13,11 +12,11 @@ urlpatterns = [
     path('authors/<uuid:author_serial>/followees/<path:fqid>/unfollow', FolloweesViewSet.as_view({'post': 'unfollow'}), name='unfollow'),
     path('authors/<uuid:author_serial>/followees', FolloweesViewSet.as_view({'get': 'getFollowees'}), name='getFollowees'),
     path('authors/<uuid:author_serial>/friends', FriendsViewSet.as_view({'get': 'getFriends'}), name='getFriends'),
-    path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
-    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
     path('authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/accept', FollowRequestViewSet.as_view({'post': 'acceptFollowRequest'}), name='acceptFollowRequest'),
     path('authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/decline', FollowRequestViewSet.as_view({'post': 'declineFollowRequest'}), name='declineFollowRequest'),
     path('authors/<uuid:author_serial>/follow-requests/suggestions', FollowRequestViewSet.as_view({'get': 'getRequestSuggestions'}), name='getRequestSuggestions'),
+    path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
+    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
