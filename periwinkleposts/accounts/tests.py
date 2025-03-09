@@ -218,6 +218,7 @@ class FollowAPITests(APITestCase):
         self.assertTrue(follow.exists())
     
     def test_get_followees(self):
+        self.maxDiff = None
         test_author_1 = Authors.objects.create(username="test_author_1")
         test_author_2 = Authors.objects.create(username="test_author_2")
         test_author_3 = Authors.objects.create(username="test_author_3")
@@ -233,6 +234,7 @@ class FollowAPITests(APITestCase):
             "type":"followees",
             "followees": [authorSerializer(test_author_2).data, authorSerializer(test_author_3).data]
         }
+
 
         self.assertEqual(result, expected)
         self.assertEqual(len(result["followees"]),2)
