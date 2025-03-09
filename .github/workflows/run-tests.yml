@@ -1,47 +1,12 @@
 name: Run Django Tests
-on: [push]
-
+on: [push] # activates the workflow when there is a push or pull request in the repo
 jobs:
   test_project:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # operating system your code will run on
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install Stable Google Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          google-chrome --version  # Debugging: Check installed version
-
-      - name: Install ChromeDriver with Matching Version
-        run: |
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1)
-          echo "Detected Chrome major version: $CHROME_VERSION"
-
-          # Find the latest compatible ChromeDriver for the detected version
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}")
-          echo "Matching ChromeDriver version: $CHROMEDRIVER_VERSION"
-
-          # Download and install ChromeDriver
-          wget -q "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/
-          sudo chmod +x /usr/local/bin/chromedriver
-          
-          chromedriver --version  # Debugging: Check installed version
-
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run Tests with Headless Chrome
-        run: |
-          cd periwinkleposts
-          Xvfb :99 -screen 0 1920x1080x24 &
-          export DISPLAY=:99
-          python3 manage.py test
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install -r requirements.txt # install all our dependencies for the project
+      - run: |
+          cd periwinkleposts  # Change directory to the project folder
+          python3 manage.py test  # Run Django tests
