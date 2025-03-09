@@ -15,7 +15,7 @@ import uuid
 import requests
 from pages.views import markdown_to_html
 from django.db.models import Q
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.views import LogoutView
 from rest_framework.views import APIView
 from urllib.parse import unquote
@@ -144,17 +144,18 @@ def profileView(request, row_id):
 
 
 def acceptRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(row_id=fqid)
+    requester = Authors.objects.get(id=fqid)
     requestee = Authors.objects.get(row_id=author_serial)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee
     )
     response = acceptFollowRequest(request, follow_request.id)
+    print(response.data)
     return redirect("accounts:profile", row_id=requestee.row_id)
 
 
 def declineRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(row_id=fqid)
+    requester = Authors.objects.get(id=fqid)
     requestee = Authors.objects.get(row_id=author_serial)
     follow_request = get_object_or_404(
         FollowRequest, requester=requester, requestee=requestee
@@ -170,7 +171,7 @@ def unfollow(request, author_serial, fqid):
 
 
 def sendFollowRequest(request, fqid):
-    requestee = Authors.objects.get(row_id=fqid)
+    requestee = Authors.objects.get(id=fqid)
     requester = Authors.objects.get(row_id=request.user.row_id)
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)
@@ -182,8 +183,10 @@ def sendFollowRequest(request, fqid):
         "object": requestee_serializer.data,
     }
 
+    url = requestee.host[:-5] + reverse("api:followRequest", args=[requestee.row_id])
+    
     response = requests.post(
-        f"{requestee.host}authors/{requestee.row_id}/inbox",
+        url,
         headers={"Content-Type": "application/json"},
         json=follow_request,
     )

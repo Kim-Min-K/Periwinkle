@@ -52,9 +52,11 @@ class FollowersViewSet(GenericViewSet):
         return Response(res)
 
 class FolloweesViewSet(GenericViewSet):
+    serializer_class = UnfollowSerializer
     @action(detail=False, methods=["post"])
     @swagger_auto_schema(
         operation_description="Unfollow a followee of an author",
+        request_body=None,
         responses={
             200: UnfollowSerializer(),
             404: "The author is not following the corresponding followee or one of the authors does not exist ."
@@ -76,6 +78,7 @@ class FolloweesViewSet(GenericViewSet):
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
         operation_description="Get all followees of an author",
+        request_body=None,
         responses={
             200: FolloweesSerializer(),
             400: "Invalid UUID format."
@@ -132,9 +135,9 @@ class FollowRequestViewSet(GenericViewSet):
     @action(detail=False, methods=["post"])
     @swagger_auto_schema(
         operation_description="Send a follow request to an author.",
-        request_body=FollowRequestSerializerRaw,
+        request_body=ActionSerializer,
         responses={
-            201: "Follow request successfully sent.",
+            201: ActionSerializer(),
             400: "Serializer errors. "
         }
     )
@@ -144,7 +147,6 @@ class FollowRequestViewSet(GenericViewSet):
 
                 requestee = get_object_or_404(Authors, pk=author_serial)
                 requester_json = request.data.get("actor")
-                print(requester_json)
 
                 # Use requester object in database if it exists otherwise create it
                 try:
@@ -155,10 +157,9 @@ class FollowRequestViewSet(GenericViewSet):
                         raise ValueError(requester_serializer.errors)
                     requester = requester_serializer.save()
                     
-                follow_request_serializer = FollowRequestSerializer(data={"requestee":requestee.row_id, "requester":requester.row_id}, partial=True)
-                if not follow_request_serializer.is_valid():
-                    raise ValueError(follow_request_serializer.errors)
-                follow_request_serializer.save()
+                serializer = ActionSerializer(action_type="follow", actor=requester, object=requestee)
+                serializer.save()
+                return Response(serializer.to_representation(), 200)
 
         except ValueError as e:
             # Return the validation error message
