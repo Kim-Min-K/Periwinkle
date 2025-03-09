@@ -16,7 +16,7 @@ class AuthorSerializer(serializers.Serializer):
     def get_id(self, obj):
         request = self.context.get('request')
         host = request.build_absolute_uri('/api/authors/')
-        return f"{host}{obj.row_id}/"
+        return f"{host}{obj.row_id}"
 
     def get_host(self, obj):
         request = self.context.get('request')

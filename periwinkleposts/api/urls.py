@@ -1,13 +1,10 @@
-from django.urls import path
-from . import follow_views
-from api.viewsets import FollowersViewSet, FollowRequestViewSet, AuthorViewSet, PostViewSet, FolloweesViewSet
+from django.urls import path, include
+from api.viewsets import *
 from accounts.views import CommentView, LikeView, InboxView
 from rest_framework.routers import DefaultRouter
 app_name = 'api'  
 
 urlpatterns = [
-    path('authors/<str:author_serial>/inbox', FollowRequestViewSet.as_view({'post': 'makeRequest'}), name='followRequest'),
-    path('authors/<str:author_serial>/followers', FollowersViewSet.as_view({'get': 'list'}), name='getFollowers'),
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
     #----------Comments API ---------------------------------
@@ -58,3 +55,30 @@ urlpatterns = [
         'get': 'get_by_fqid'
     }), name='post-by-fqid'),
 ]
+
+follow_request_patterns = [
+    path('authors/<uuid:author_serial>/follow-requests', FollowRequestViewSet.as_view({'post': 'makeRequest'}), name='followRequest'),
+    path('authors/<uuid:author_serial>/follow-requests/incoming', FollowRequestViewSet.as_view({'get': 'getFollowRequests'}), name='getFollowRequestIn'),
+    path('authors/<uuid:author_serial>/follow-requests/outgoing', FollowRequestViewSet.as_view({'get': 'getOutGoingFollowRequests'}), name='getFollowRequestOut'),
+    path('authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/accept', FollowRequestViewSet.as_view({'post': 'acceptFollowRequest'}), name='acceptFollowRequest'),
+    path('authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/decline', FollowRequestViewSet.as_view({'post': 'declineFollowRequest'}), name='declineFollowRequest'),
+    path('authors/<uuid:author_serial>/follow-requests/suggestions', FollowRequestViewSet.as_view({'get': 'getRequestSuggestions'}), name='getRequestSuggestions'),
+]
+
+followees_patterns = [
+    path('authors/<uuid:author_serial>/followees/<path:fqid>/unfollow', FolloweesViewSet.as_view({'post': 'unfollow'}), name='unfollow'),
+    path('authors/<uuid:author_serial>/followees', FolloweesViewSet.as_view({'get': 'getFollowees'}), name='getFollowees'),
+]
+
+followers_patterns = [
+    path('authors/<uuid:author_serial>/followers', FollowersViewSet.as_view({'get': 'list'}), name='getFollowers'),
+]
+
+friends_patterns = [
+    path('authors/<uuid:author_serial>/friends', FriendsViewSet.as_view({'get': 'getFriends'}), name='getFriends'),
+]
+
+urlpatterns += follow_request_patterns
+urlpatterns += followees_patterns
+urlpatterns += followers_patterns
+urlpatterns += friends_patterns
