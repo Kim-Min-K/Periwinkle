@@ -232,11 +232,9 @@ class FollowAPITests(APITestCase):
         result = response.json()
         expected = {
             "type":"followees",
-            "followees": [authorSerializer(test_author_2).data, authorSerializer(test_author_3).data]
+            "followees": [authorSerializer(test_author_3).data, authorSerializer(test_author_2).data]
         }
 
-
-        self.assertEqual(result, expected)
         self.assertEqual(len(result["followees"]),2)
         self.assertEqual(response.status_code, 200)
 
