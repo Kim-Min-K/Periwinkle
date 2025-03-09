@@ -7,3 +7,4 @@ drf-yasg==1.21.8
 python-dotenv==1.0.1
 commonmark==0.9.1
 requests
+selenium
