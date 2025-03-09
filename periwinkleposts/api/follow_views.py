@@ -11,34 +11,6 @@ from api.serializers import AuthorSerializer
 
 # Create your views here.
 
-@api_view(['POST'])
-def followRequest(request, author_serial):
-    try:
-        with transaction.atomic():
-
-            requestee = get_object_or_404(Authors, pk=author_serial)
-            requester_json = request.data.get("actor")
-
-            # Use requester object in database if it exists otherwise create it
-            try:
-                requester = Authors.objects.get(id=requester_json["id"])
-            except Authors.DoesNotExist:
-                requester_serializer = AuthorSerializer(data=requester_json)
-                if not requester_serializer.is_valid():
-                    raise ValueError(requester_serializer.errors)
-                requester = requester_serializer.save()
-                
-            follow_request_serializer = FollowRequestSerializer(data={"requestee":requestee.row_id, "requester":requester.row_id}, partial=True)
-            if not follow_request_serializer.is_valid():
-                raise ValueError(follow_request_serializer.errors)
-            follow_request_serializer.save()
-
-    except ValueError as e:
-        # Return the validation error message
-        return Response({"error": str(e)}, status=400)
-
-    return Response({"message":"Follow request successfuly sent."}, status=200)
-
 def acceptFollowRequest(request, request_id):
     try:
         with transaction.atomic():
@@ -62,27 +34,6 @@ def declineFollowRequest(request, request_id):
         # Return the validation error message
         return Response({"error": str(e)}, status=400)
     return Response({"message": "Follow request successfully accepted."}, status=200)
-
-@api_view(['GET'])
-def getFollowRequests(request, author_serial):
-    try:
-        author_uuid = author_serial
-    except ValueError:
-        return Response({'error': 'Invalid UUID format.'}, status=400)
-
-    author = get_object_or_404(Authors, pk=author_uuid)
-
-    requesters_ids = FollowRequest.objects.filter(requestee=author).values_list('requester_id', flat=True)
-
-    requesters = Authors.objects.filter(row_id__in=requesters_ids)
-
-    # Serialize the friend objects
-    serializer = AuthorSerializer(requesters, many=True, context={'request': request})
-    
-    return Response({
-        "type":"requesters",
-        "requesters": serializer.data
-    }, status=200)
 
 @api_view(['GET'])
 def getSuggestions(request, author_serial):

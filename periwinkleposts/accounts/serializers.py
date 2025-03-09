@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Authors, Follow, FollowRequest, Comment, Like
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+import django
 
 def required(value):
     if value is None or value == '':
@@ -209,3 +210,36 @@ class FriendsSerializer(serializers.Serializer):
 class authorsSerializer(serializers.Serializer):
     type = serializers.CharField(default="authors")
     authors = authorSerializer(many=True)
+
+
+class ActionSerializer(serializers.Serializer):
+    type = serializers.CharField(default="action")
+    summary = serializers.CharField(default="action summary")
+    actor = authorSerializer()
+    object = authorSerializer()
+
+    def __init__(self, *args, action_type="action", actor=None, object=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.actor_instance = actor
+        self.object_instance = object
+        self.action_type = action_type
+        self.action_summary = "action summary"
+        if self.action_type == "follow":
+            self.summary_text = str(actor) + " wants to follow " + str(object)
+
+    def to_representation(self, instance=None):
+        return {
+            "type": self.action_type,
+            "summary": self.action_summary,
+            "actor": authorSerializer(self.actor_instance).data if self.actor_instance else None,
+            "object": authorSerializer(self.object_instance).data if self.object_instance else None,
+        }
+    
+    def save(self, **kwargs):
+        if self.action_type == "follow":
+            try:
+                FollowRequest.objects.create(requestee=self.object_instance, requester=self.actor_instance)
+            except django.db.utils.IntegrityError:
+                raise ValueError("Request already exists in the database")
+        else:
+            raise Exception("Unknown action type")

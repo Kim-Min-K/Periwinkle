@@ -6,12 +6,11 @@ from rest_framework.routers import DefaultRouter
 app_name = 'api'  
 
 urlpatterns = [
-    path('authors/<uuid:author_serial>/inbox', FollowRequestViewSet.as_view({'post': 'makeRequest'}), name='followRequest'),
+    path('authors/<uuid:author_serial>/follow-requests', FollowRequestViewSet.as_view({'post': 'makeRequest','get': 'getFollowRequests'}), name='followRequest'),
     path('authors/<uuid:author_serial>/followers', FollowersViewSet.as_view({'get': 'list'}), name='getFollowers'),
     path('authors/<uuid:author_serial>/followees/<path:fqid>/unfollow', FolloweesViewSet.as_view({'post': 'unfollow'}), name='unfollow'),
     path('authors/<uuid:author_serial>/followees', FolloweesViewSet.as_view({'get': 'getFollowees'}), name='getFollowees'),
     path('authors/<uuid:author_serial>/friends', FriendsViewSet.as_view({'get': 'getFriends'}), name='getFriends'),
-    path('authors/<uuid:author_serial>/follow-requests', FollowRequestViewSet.as_view({'get': 'getFollowRequests'}), name='getFollowRequests'),
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
     #----------Comments API ---------------------------------
