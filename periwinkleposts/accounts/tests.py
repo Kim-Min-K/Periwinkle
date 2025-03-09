@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from .models import Authors, Follow, FollowRequest, Post, Comment, Like
-from .serializers import authorSerializer
+from .serializers import authorSerializer, CommentSerializer
 import uuid
 from rest_framework import status
 from rest_framework import permissions
@@ -204,7 +204,6 @@ class FollowUITests(SeleniumTestCase):
         self.assertTrue(self.suggestions_0_exists(), "No author in suggestions.")
 
 
-
 class IsOwnerOrPublic(permissions.BasePermission):
     """
     Custom permission:
@@ -215,6 +214,7 @@ class IsOwnerOrPublic(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return obj.visibility == 'PUBLIC'
         return obj.author == request.user
+
 
 class IsLocalAuthor(permissions.BasePermission):
     """
@@ -351,10 +351,6 @@ class FollowLiveServerTests(LiveServerTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(Follow.objects.all()), 0)
     
-
-
-    
-
 
 class FollowAPITests(APITestCase):
     def test_get_followers(self):
@@ -503,6 +499,7 @@ class FollowRequestAPITests(APITestCase):
         self.assertEqual(len(result["authors"]),0)
         self.assertEqual(response.status_code, 200)
 
+
 class FriendsAPITests(APITestCase):
     def test_get_friends(self):
         test_author_1 = Authors.objects.create(username="test_author_1")
@@ -614,6 +611,12 @@ class CommentTest(APITestCase):
         }
         response = self.client.post(url, comment_data, format="json")
         self.assertEqual(response.status_code, 201)  
+        created_comment_fqid = response.data.get("id")
+        created_comment_uuid = created_comment_fqid.split("/")[-1]
+        created_comment = Comment.objects.get(id=created_comment_uuid)
+        self.assertEqual(created_comment.comment, comment_data["comment"])
+        self.assertEqual(created_comment.post.id, self.post.id)
+        self.assertEqual(created_comment.author.id, self.author.id)
 
     #://service/api/authors/{AUTHOR_SERIAL}/commented GET
     def test_get_author_comments(self):
@@ -628,7 +631,28 @@ class CommentTest(APITestCase):
         self.assertIn("Comment 1", comments)
         self.assertNotIn('Comment 1 by author2', comments) # ensure comment made by author2 won't be included
     
-    
+    # //service/api/authors/{AUTHOR_SERIAL}/commented/{COMMENT_SERIAL} GET
+    def getComment(self):
+        url = reverse("api:getComment", kwargs={
+            "author_serial": str(self.author.row_id),
+            "comment_serial": str(self.comment1.id),
+        }) 
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)  
+        comment1 = Comment.objects.get(id=self.comment1.id)
+        self.assertEqual(comment1, response.data)
+
+    # //service/api/authors/{AUTHOR_FQID}/commented GET
+    def test_author_commented(self):
+        # print("Author ID is", self.author.row_id)
+        author_fqid = f"http://localhost:8000/api/authors/{self.author.row_id}"
+        encoded_author_fqid = quote(author_fqid, safe="")  
+        # print("\nTESTING URL:", encoded_author_fqid)
+        url = reverse("api:author_commented", kwargs={"author_fqid": encoded_author_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 3)
+
 class InboxTest(APITestCase):
     def setUp(self):
         self.author = Authors.objects.create(username="test_author")

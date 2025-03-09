@@ -384,6 +384,14 @@ class CommentView(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+    def author_commented(self, request, author_fqid):
+        decoded_author_fqid = unquote(author_fqid)  
+        author_id = decoded_author_fqid.split("/")[-1]  
+        # print("Extracted Author Id", author_id)
+        author = get_object_or_404(Authors, row_id=author_id)
+        comments = Comment.objects.filter(author=author).order_by("published")
+        serializer = self.get_serializer(comments, many=True)
+        return Response(serializer.data, status=200)
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
