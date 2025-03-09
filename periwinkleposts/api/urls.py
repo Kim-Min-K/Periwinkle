@@ -25,17 +25,17 @@ urlpatterns = [
     # ://service/api/authors/{AUTHOR_SERIAL}/commented 
     path("authors/<uuid:author_serial>/commented/",
         CommentView.as_view({'get': 'all_comments', 'post':'create'}), name = 'createComment'),
-    
     # ://service/api/authors/{AUTHOR_FQID}/commented 
     path("authors/<path:author_fqid>/commented/", 
         CommentView.as_view({'get': 'author_commented'}), name="author_commented"),
-
     # ://service/api/authors/{AUTHOR_SERIAL}/commented/{COMMENT_SERIAL} 
     path("authors/<uuid:author_serial>/commented/<uuid:comment_serial>/", 
-        CommentView.as_view({'get': 'retrieve'}), name="getComment"),
-    
+        CommentView.as_view({'get': 'retrieve'}), name="getComment"),   
+    #://service/api/commented/{COMMENT_FQID}
+    path("commented/<path:comment_fqid>/",
+        CommentView.as_view({'get': 'get_comment_by_fqid'}),name='get_comment_by_fqid'),
 
-    # Liking a Post
+    #----------LIKE API------------------------------
     path("authors/<uuid:author_serial>/posts/<str:post_serial>/like/", 
         LikeView.as_view({'post': 'like_post'}), name="likePost"),
 

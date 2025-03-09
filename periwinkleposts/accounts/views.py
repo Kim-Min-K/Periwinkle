@@ -393,6 +393,15 @@ class CommentView(viewsets.ModelViewSet):
         serializer = self.get_serializer(comments, many=True)
         return Response(serializer.data, status=200)
 
+    def get_comment_by_fqid(self, request, comment_fqid):
+        decoded_comment_fqid = unquote(comment_fqid)  
+        comment_id = decoded_comment_fqid.split("/")[-1] 
+        comment = Comment.objects.get(id=comment_id)
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data, status=200)
+
+    
+
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer
     queryset = Like.objects.all().order_by('published')

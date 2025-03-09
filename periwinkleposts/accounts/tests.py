@@ -631,6 +631,17 @@ class CommentTest(APITestCase):
         self.assertIn("Comment 1", comments)
         self.assertNotIn('Comment 1 by author2', comments) # ensure comment made by author2 won't be included
     
+    # //service/api/authors/{AUTHOR_FQID}/commented GET
+    def test_author_commented(self):
+        # print("Author ID is", self.author.row_id)
+        author_fqid = f"http://localhost:8000/api/authors/{self.author.row_id}"
+        encoded_author_fqid = quote(author_fqid, safe="")  
+        # print("\nTESTING URL:", encoded_author_fqid)
+        url = reverse("api:author_commented", kwargs={"author_fqid": encoded_author_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 3)
+
     # //service/api/authors/{AUTHOR_SERIAL}/commented/{COMMENT_SERIAL} GET
     def getComment(self):
         url = reverse("api:getComment", kwargs={
@@ -642,16 +653,14 @@ class CommentTest(APITestCase):
         comment1 = Comment.objects.get(id=self.comment1.id)
         self.assertEqual(comment1, response.data)
 
-    # //service/api/authors/{AUTHOR_FQID}/commented GET
-    def test_author_commented(self):
-        # print("Author ID is", self.author.row_id)
-        author_fqid = f"http://localhost:8000/api/authors/{self.author.row_id}"
-        encoded_author_fqid = quote(author_fqid, safe="")  
-        # print("\nTESTING URL:", encoded_author_fqid)
-        url = reverse("api:author_commented", kwargs={"author_fqid": encoded_author_fqid})
+    # ://service/api/commented/{COMMENT_FQID}
+    def test_get_comment_by_fqid(self):
+        comment_fqid = f"http://localhost:8000/api/commented/{self.comment1.id}"
+        encoded_comment_fqid = quote(comment_fqid, safe="")  
+        url = reverse("api:get_comment_by_fqid", kwargs={"comment_fqid": encoded_comment_fqid})
         response = self.client.get(url, format="json")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(response.data["comment"], "Comment 1")
 
 class InboxTest(APITestCase):
     def setUp(self):
