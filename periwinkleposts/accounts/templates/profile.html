@@ -108,11 +108,11 @@
                                 👥 Friends-Only
                             {% endif %}
                         </div>
-                        <!--View Post-->
-                        <a href="{% url 'accounts:view_post' post.id %}" 
-                            class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
-                            View
-                        </a>
+                        <!-- Share Button -->
+                        <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:view_post' post.id %}')"
+                            class="px-3 py-1 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-700 transition-colors duration-300">
+                            Share
+                        </button>
                     </div>
                     
                 </div>
@@ -379,6 +379,17 @@
             caret.textContent = section.classList.contains('hidden') ? '▾' : '▴';
         }
     }
+
+    function copyPostLink(url) {
+        navigator.clipboard.writeText(url)
+            .then(() => {
+                alert("Post link copied to clipboard!");
+            })
+            .catch(err => {
+                console.error("Failed to copy link:", err);
+            });
+    }
+
 </script>
 
 
