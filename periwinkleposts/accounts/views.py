@@ -6,8 +6,7 @@ from django.contrib import messages
 from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings, Follow
 from .serializers import authorSerializer, CommentSerializer, LikeSerializer
 from django.http import QueryDict
-from api.follow_views import *
-from api.viewsets import FollowersViewSet, FollowRequestViewSet, FolloweesViewSet
+from api.viewsets import *
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
@@ -15,7 +14,7 @@ import uuid
 import requests
 from pages.views import markdown_to_html
 from django.db.models import Q
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.views import LogoutView
 from rest_framework.views import APIView
 from urllib.parse import unquote
@@ -105,12 +104,12 @@ def profileView(request, row_id):
     ownProfile = request.user.is_authenticated and (request.user == author)
     posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     # Connections field
-    friends = getFriends(request, author.row_id).data["friends"]
-    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["followers"]
+    friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
+    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["authors"]
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
-    requesters = getFollowRequests(request, author.row_id).data["requesters"]
-    suggestions = getSuggestions(request, author.row_id).data["suggestions"]
-    sent_requests = getSentRequests(request, author.row_id).data["sent_requests"]
+    requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
+    suggestions = requests.get(request.user.host[:-5] + reverse("api:getRequestSuggestions", args=[request.user.row_id])).json()["authors"]
+    sent_requests = requests.get(request.user.host[:-5] + reverse("api:getFollowRequestOut", args=[author.row_id])).json()["authors"]
 
     for post in posts:
         if post.contentType == "text/markdown":
@@ -143,24 +142,18 @@ def profileView(request, row_id):
     return render(request, "profile.html", context)
 
 
-def acceptRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(row_id=fqid)
-    requestee = Authors.objects.get(row_id=author_serial)
-    follow_request = get_object_or_404(
-        FollowRequest, requester=requester, requestee=requestee
-    )
-    response = acceptFollowRequest(request, follow_request.id)
-    return redirect("accounts:profile", row_id=requestee.row_id)
+def acceptRequest(request, author_serial, requester_serial):
+    response = requests.post(request.user.host[:-5] + reverse("api:acceptFollowRequest", args=[author_serial, requester_serial]))
+    if not response.ok:
+        raise Exception("Accept request failed")
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 
-def declineRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(row_id=fqid)
-    requestee = Authors.objects.get(row_id=author_serial)
-    follow_request = get_object_or_404(
-        FollowRequest, requester=requester, requestee=requestee
-    )
-    response = declineFollowRequest(request, follow_request.id)
-    return redirect("accounts:profile", row_id=requestee.row_id)
+def declineRequest(request, author_serial, requester_serial):
+    response = requests.post(request.user.host[:-5] + reverse("api:declineFollowRequest", args=[author_serial, requester_serial]))
+    if not response.ok:
+        raise Exception("Decline request failed")
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 def unfollow(request, author_serial, fqid):
     followee = Authors.objects.get(id=fqid)
@@ -169,8 +162,8 @@ def unfollow(request, author_serial, fqid):
     return redirect("accounts:profile", row_id=request.user.row_id)
 
 
-def sendFollowRequest(request, fqid):
-    requestee = Authors.objects.get(row_id=fqid)
+def sendFollowRequest(request, author_serial):
+    requestee = Authors.objects.get(row_id=author_serial)
     requester = Authors.objects.get(row_id=request.user.row_id)
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)
@@ -182,8 +175,10 @@ def sendFollowRequest(request, fqid):
         "object": requestee_serializer.data,
     }
 
+    url = requestee.host[:-5] + reverse("api:followRequest", args=[requestee.row_id])
+    
     response = requests.post(
-        f"{requestee.host}authors/{requestee.row_id}/inbox",
+        url,
         headers={"Content-Type": "application/json"},
         json=follow_request,
     )
@@ -389,6 +384,23 @@ class CommentView(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+    def author_commented(self, request, author_fqid):
+        decoded_author_fqid = unquote(author_fqid)  
+        author_id = decoded_author_fqid.split("/")[-1]  
+        # print("Extracted Author Id", author_id)
+        author = get_object_or_404(Authors, row_id=author_id)
+        comments = Comment.objects.filter(author=author).order_by("published")
+        serializer = self.get_serializer(comments, many=True)
+        return Response(serializer.data, status=200)
+
+    def get_comment_by_fqid(self, request, comment_fqid):
+        decoded_comment_fqid = unquote(comment_fqid)  
+        comment_id = decoded_comment_fqid.split("/")[-1] 
+        comment = Comment.objects.get(id=comment_id)
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data, status=200)
+
+    
 
 class LikeView(viewsets.ModelViewSet):
     serializer_class = LikeSerializer

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Authors, Follow, FollowRequest, Comment, Like
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+import django
 
 def required(value):
     if value is None or value == '':
@@ -201,3 +202,63 @@ class UnfollowSerializer(serializers.Serializer):
 class FolloweesSerializer(serializers.Serializer):
     type = serializers.CharField(default="followees")
     followees = authorSerializer(many=True)
+
+class FriendsSerializer(serializers.Serializer):
+    type = serializers.CharField(default="friends")
+    friends = authorSerializer(many=True)
+
+class authorsSerializer(serializers.Serializer):
+    type = serializers.CharField(default="authors")
+    authors = authorSerializer(many=True)
+
+
+class ActionSerializer(serializers.Serializer):
+    type = serializers.CharField(default="action")
+    summary = serializers.CharField(default="action summary")
+    actor = authorSerializer()
+    object = authorSerializer()
+
+    def __init__(self, *args, action_type="action", action_summary="action summary", actor=None, object=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.actor_instance = actor
+        self.object_instance = object
+        self.action_type = action_type
+        self.action_summary = action_summary
+        if self.action_type == "accept-follow-request":
+            self.summary_text = str(actor) + " wants to accept " + str(object) + "'s follow request"
+        elif self.action_type == "decline-follow-request":
+            self.summary_text = str(actor) + " wants to decline " + str(object) + "'s follow request"
+        elif self.action_type == "follow":
+            self.summary_text = str(actor) + " wants to follow " + str(object)
+
+    def to_representation(self, instance=None):
+        return {
+            "type": self.action_type,
+            "summary": self.action_summary,
+            "actor": authorSerializer(self.actor_instance).data if self.actor_instance else None,
+            "object": authorSerializer(self.object_instance).data if self.object_instance else None,
+        }
+    
+    def save(self, **kwargs):
+        if self.action_type == "follow":
+            try:
+                FollowRequest.objects.create(requestee=self.object_instance, requester=self.actor_instance)
+            except django.db.utils.IntegrityError:
+                raise ValueError("Request already exists in the database")
+        elif self.action_type == "accept-follow-request":
+            try:
+                with transaction.atomic():
+                    FollowRequest.objects.get(requestee=self.actor_instance, requester=self.object_instance).delete()
+                    Follow.objects.create(followee=self.actor_instance, follower=self.object_instance)
+            except Exception as e:
+                # Return the validation error message
+                raise ValueError(e)
+        elif self.action_type == "decline-follow-request":
+            try:
+                with transaction.atomic():
+                    FollowRequest.objects.get(requestee=self.actor_instance, requester=self.object_instance).delete()
+            except Exception as e:
+                # Return the validation error message
+                raise ValueError(e)
+        else:
+            raise Exception("Unknown action type")
