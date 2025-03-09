@@ -17,6 +17,7 @@ urlpatterns = [
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
     path('authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/accept', FollowRequestViewSet.as_view({'post': 'acceptFollowRequest'}), name='acceptFollowRequest'),
     path('authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/decline', FollowRequestViewSet.as_view({'post': 'declineFollowRequest'}), name='declineFollowRequest'),
+    path('authors/<uuid:author_serial>/follow-requests/suggestions', FollowRequestViewSet.as_view({'get': 'getRequestSuggestions'}), name='getRequestSuggestions'),
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),

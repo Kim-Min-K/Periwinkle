@@ -251,6 +251,38 @@ class FollowRequestViewSet(GenericViewSet):
             # Return the validation error message
             return Response({"error": str(e)}, status=400)
     
+    @action(detail=False, methods=["get"])
+    @swagger_auto_schema(
+        operation_description="Get 5 author suggests that the Author with uuid 'author_serial' can send a follow request.",
+        responses={
+            200: authorsSerializer()
+            }
+    )
+    def getRequestSuggestions(self, request, author_serial):
+        author_uuid = author_serial
+
+        # Retrieve the current author
+        current_author = get_object_or_404(Authors, row_id=author_uuid)
+        
+        # Get a list of row_ids for authors that the current author is already following
+        followed_ids = Follow.objects.filter(follower=current_author)\
+                                    .values_list('followee__row_id', flat=True)
+
+        request_ids = FollowRequest.objects.filter(requester=current_author).values_list("requestee__row_id", flat=True)
+        
+        # Get 5 authors that the current author is NOT following
+        # Also, exclude the current author from the suggestions
+        suggestions = Authors.objects.exclude(row_id__in=followed_ids)\
+                                    .exclude(row_id=current_author.row_id)\
+                                    .exclude(row_id__in=request_ids)\
+                                    .exclude(is_staff=1)\
+                                    .order_by('?')[:5]
+        
+        serializer = authorsSerializer({"type":"request-suggestions", "authors": suggestions})
+
+        return Response(serializer.data, status=200)
+
+    
 class AuthorViewSet(GenericViewSet):
     serializer_class = AuthorsSerializer
     queryset = Authors.objects.all().order_by('id')

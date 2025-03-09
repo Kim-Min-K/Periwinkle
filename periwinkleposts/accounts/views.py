@@ -109,7 +109,7 @@ def profileView(request, row_id):
     followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["followers"]
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
-    suggestions = getSuggestions(request, author.row_id).data["suggestions"]
+    suggestions = requests.get(request.user.host[:-5] + reverse("api:getRequestSuggestions", args=[request.user.row_id])).json()["authors"]
     sent_requests = requests.get(request.user.host[:-5] + reverse("api:getFollowRequestOut", args=[author.row_id])).json()["authors"]
 
     for post in posts:

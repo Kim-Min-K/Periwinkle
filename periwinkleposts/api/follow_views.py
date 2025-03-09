@@ -9,16 +9,6 @@ from django.db import transaction
 import uuid
 from api.serializers import AuthorSerializer
 
-def declineFollowRequest(request, request_id):
-    try:
-        with transaction.atomic():
-            request = get_object_or_404(FollowRequest, pk=request_id)
-            request.delete()
-    except ValueError as e:
-        # Return the validation error message
-        return Response({"error": str(e)}, status=400)
-    return Response({"message": "Follow request successfully accepted."}, status=200)
-
 @api_view(['GET'])
 def getSuggestions(request, author_serial):
     try:
