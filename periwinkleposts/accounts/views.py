@@ -110,9 +110,7 @@ def profileView(request, row_id):
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
     suggestions = getSuggestions(request, author.row_id).data["suggestions"]
-    url = request.user.host[:-5] + reverse("api:getFollowRequestOut", args=[author.row_id])
-    print(url)
-    sent_requests = requests.get(url).json()["authors"]
+    sent_requests = requests.get(request.user.host[:-5] + reverse("api:getFollowRequestOut", args=[author.row_id])).json()["authors"]
 
     for post in posts:
         if post.contentType == "text/markdown":
@@ -145,15 +143,11 @@ def profileView(request, row_id):
     return render(request, "profile.html", context)
 
 
-def acceptRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(id=fqid)
-    requestee = Authors.objects.get(row_id=author_serial)
-    follow_request = get_object_or_404(
-        FollowRequest, requester=requester, requestee=requestee
-    )
-    response = acceptFollowRequest(request, follow_request.id)
-    print(response.data)
-    return redirect("accounts:profile", row_id=requestee.row_id)
+def acceptRequest(request, author_serial, requester_serial):
+    response = requests.post(request.user.host[:-5] + reverse("api:acceptFollowRequest", args=[author_serial, requester_serial]))
+    if not response.ok:
+        raise Exception("Accept request failed")
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 
 def declineRequest(request, author_serial, fqid):

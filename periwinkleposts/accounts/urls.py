@@ -10,7 +10,7 @@ urlpatterns = [
     path("login/", views.loginView, name="login"),
     path("profile/<uuid:row_id>", views.profileView, name="profile"),
     path(
-        "authors/<uuid:author_serial>/followers/<path:fqid>/accept",
+        "authors/<uuid:author_serial>/follow-requests/incoming/author/<uuid:requester_serial>/accept",
         views.acceptRequest,
         name="acceptRequest",
     ),

@@ -218,13 +218,17 @@ class ActionSerializer(serializers.Serializer):
     actor = authorSerializer()
     object = authorSerializer()
 
-    def __init__(self, *args, action_type="action", actor=None, object=None, **kwargs):
+    def __init__(self, *args, action_type="action", action_summary="action summary", actor=None, object=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.actor_instance = actor
         self.object_instance = object
         self.action_type = action_type
-        self.action_summary = "action summary"
-        if self.action_type == "follow":
+        self.action_summary = action_summary
+        if self.action_summary != "action summary":
+            return
+        elif self.action_type == "accept-follow-request":
+            self.summary_text = str(actor) + " wants to accept " + str(object) + "'s follow request"
+        elif self.action_type == "follow":
             self.summary_text = str(actor) + " wants to follow " + str(object)
 
     def to_representation(self, instance=None):
@@ -241,5 +245,13 @@ class ActionSerializer(serializers.Serializer):
                 FollowRequest.objects.create(requestee=self.object_instance, requester=self.actor_instance)
             except django.db.utils.IntegrityError:
                 raise ValueError("Request already exists in the database")
+        elif self.action_type == "accept-follow-request":
+            try:
+                with transaction.atomic():
+                    FollowRequest.objects.get(requestee=self.actor_instance, requester=self.object_instance).delete()
+                    Follow.objects.create(followee=self.actor_instance, follower=self.object_instance)
+            except Exception as e:
+                # Return the validation error message
+                raise ValueError(e)
         else:
             raise Exception("Unknown action type")
