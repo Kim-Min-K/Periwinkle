@@ -11,7 +11,7 @@ urlpatterns = [
     path('authors/<uuid:author_serial>/followees/<path:fqid>/unfollow', FolloweesViewSet.as_view({'post': 'unfollow'}), name='unfollow'),
     path('authors/<uuid:author_serial>/followees', FolloweesViewSet.as_view({'get': 'getFollowees'}), name='getFollowees'),
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
-    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
+    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve', 'put':'update'}), name='getAuthor'),
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
