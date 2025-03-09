@@ -32,9 +32,6 @@ class IsLocalAuthor(permissions.BasePermission):
 
 # Create your tests here.
 class FollowLiveServerTests(LiveServerTestCase):
-    """ 
-    This tests whether follow works on the frontend.
-    """
     def setUp(self):
         host = self.live_server_url+"/api/"
         url = reverse("accounts:register")
@@ -159,6 +156,7 @@ class FollowLiveServerTests(LiveServerTestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(Follow.objects.all()), 0)
+    
 
 
     
@@ -237,21 +235,22 @@ class FollowAPITests(APITestCase):
 
         self.assertEqual(len(result["followees"]),2)
         self.assertEqual(response.status_code, 200)
+        
 
 class FollowRequestAPITests(APITestCase):
-    def test_get_follow_requests(self):
+    def setUp(self):
         # Create test authors
-        test_author_1 = Authors.objects.create(username="test_author_1")
-        test_author_2 = Authors.objects.create(username="test_author_2")
+        self.test_author_1 = Authors.objects.create(username="test_author_1")
+        self.test_author_2 = Authors.objects.create(username="test_author_2")
 
         # URL for sending the follow request
-        url = reverse("api:followRequest", args=[test_author_1.row_id])
+        url = reverse("api:followRequest", args=[self.test_author_1.row_id])
 
         # The request body for sending a follow request
         data = {
             "type": "follow",
-            "actor": authorSerializer(test_author_2).data,  # The author sending the request
-            "object": authorSerializer(test_author_1).data  # The author receiving the follow request
+            "actor": authorSerializer(self.test_author_2).data,  # The author sending the request
+            "object": authorSerializer(self.test_author_1).data  # The author receiving the follow request
         }
 
         # Simulate sending a POST request
@@ -260,17 +259,34 @@ class FollowRequestAPITests(APITestCase):
         # Assertions
         self.assertEqual(response.status_code, 200)  # Expecting HTTP 201 Created
 
-        follow = FollowRequest.objects.filter(requestee=test_author_1, requester=test_author_2)
+        follow = FollowRequest.objects.filter(requestee=self.test_author_1, requester=self.test_author_2)
         self.assertTrue(follow.exists())
 
-        url = reverse("api:followRequest", args=[test_author_1.row_id])
+    def test_get_follow_requests(self):
+        url = reverse("api:getFollowRequestIn", args=[self.test_author_1.row_id])
         
         response = self.client.get(url)
 
         result = response.json()
         expected = {
-            "type": "follow-requests",
-            "authors": [authorSerializer(test_author_2).data]
+            "type": "incoming-follow-requests",
+            "authors": [authorSerializer(self.test_author_2).data]
+        }
+
+        self.assertEqual(result, expected)
+        self.assertEqual(len(result["authors"]),1)
+        self.assertEqual(response.status_code, 200)
+    
+    def test_get_outgoing_follow_requests(self):
+        self.maxDiff = None
+        url = reverse("api:getFollowRequestOut", args=[self.test_author_2.row_id])
+        
+        response = self.client.get(url)
+
+        result = response.json()
+        expected = {
+            "type": "outgoing-follow-requests",
+            "authors": [authorSerializer(self.test_author_1).data]
         }
 
         self.assertEqual(result, expected)

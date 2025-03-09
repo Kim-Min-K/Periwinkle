@@ -6,7 +6,9 @@ from rest_framework.routers import DefaultRouter
 app_name = 'api'  
 
 urlpatterns = [
-    path('authors/<uuid:author_serial>/follow-requests', FollowRequestViewSet.as_view({'post': 'makeRequest','get': 'getFollowRequests'}), name='followRequest'),
+    path('authors/<uuid:author_serial>/follow-requests', FollowRequestViewSet.as_view({'post': 'makeRequest'}), name='followRequest'),
+    path('authors/<uuid:author_serial>/follow-requests/incoming', FollowRequestViewSet.as_view({'get': 'getFollowRequests'}), name='getFollowRequestIn'),
+    path('authors/<uuid:author_serial>/follow-requests/outgoing', FollowRequestViewSet.as_view({'get': 'getOutGoingFollowRequests'}), name='getFollowRequestOut'),
     path('authors/<uuid:author_serial>/followers', FollowersViewSet.as_view({'get': 'list'}), name='getFollowers'),
     path('authors/<uuid:author_serial>/followees/<path:fqid>/unfollow', FolloweesViewSet.as_view({'post': 'unfollow'}), name='unfollow'),
     path('authors/<uuid:author_serial>/followees', FolloweesViewSet.as_view({'get': 'getFollowees'}), name='getFollowees'),
