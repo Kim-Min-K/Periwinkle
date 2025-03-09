@@ -212,7 +212,7 @@
                                 </span>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     <button class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
-                                        <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id fqid=requester.id %}">Accept</a>
+                                        <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id requester_serial=requester.row_id %}">Accept</a>
                                     </button>
                                     <button class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
                                         <a href="{% url 'accounts:declineRequest' author_serial=author.row_id fqid=requester.id %}">Decline</a>
