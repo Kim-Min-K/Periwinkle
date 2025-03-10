@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from .models import Authors, Follow, FollowRequest, Post, Comment, Like
-from .serializers import authorSerializer
+from .serializers import authorSerializer, CommentSerializer
 import uuid
 from rest_framework import status
 from rest_framework import permissions
@@ -204,7 +204,6 @@ class FollowUITests(SeleniumTestCase):
         self.assertTrue(self.suggestions_0_exists(), "No author in suggestions.")
 
 
-
 class IsOwnerOrPublic(permissions.BasePermission):
     """
     Custom permission:
@@ -215,6 +214,7 @@ class IsOwnerOrPublic(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return obj.visibility == 'PUBLIC'
         return obj.author == request.user
+
 
 class IsLocalAuthor(permissions.BasePermission):
     """
@@ -350,11 +350,71 @@ class FollowLiveServerTests(LiveServerTestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(Follow.objects.all()), 0)
+
+class AuthorsAPITests(APITestCase):
+    def setUp(self):
+        self.author1 = Authors.objects.create(username="john_doe", host="http://testserver/api/", displayName="John Doe", github_username="johndoe")
+        self.author2 = Authors.objects.create(username="jane_doe", host="http://testserver/api/", displayName="Jane Doe", github_username="janedoe")
+        self.author3 = Authors.objects.create(username="jim_doe", host="http://testserver/api/", displayName="Jim Doe", github_username="jimdoe")
+        self.author4 = Authors.objects.create(username="jill_doe", host="http://testserver/api/", displayName="Jill Doe", github_username="jilldoe")
+        self.author5 = Authors.objects.create(username="jack_doe", host="http://testserver/api/", displayName="Jack Doe", github_username="jackdoe")
+        self.author6 = Authors.objects.create(username="jess_doe", host="http://testserver/api/", displayName="Jess Doe", github_username="jessdoe")
+        self.author7 = Authors.objects.create(username="josh_doe", host="http://testserver/api/", displayName="Josh Doe", github_username="joshdoe")
+        self.author8 = Authors.objects.create(username="jenny_doe", host="http://testserver/api/", displayName="Jenny Doe", github_username="jennydoe")
+        self.author9 = Authors.objects.create(username="joe_doe", host="http://testserver/api/", displayName="Joe Doe", github_username="joedoe")
+
+        self.base_url = reverse("api:getAuthors")
+
+    def test_get_all_authors(self):
+        print("\nTesting get all authors ...")
+        response = self.client.get(self.base_url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()
+        
+        self.assertEqual(result["type"], "authors")
+        self.assertTrue("authors" in result)
+        self.assertEqual(len(result["authors"]), Authors.objects.count())
+
+    def test_get_all_authors_paginated(self):
+        print("\nTesting get all authors paginated ...")
+        url = f"{self.base_url}?page=1&size=5"
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()
+        
+        self.assertEqual(result["type"], "authors")
+        self.assertTrue("authors" in result)
+        self.assertLessEqual(len(result["authors"]), 5)
     
-
-
+    def test_get_single_author(self):
+        print("\nTesting get single author ...")
+        url = reverse("api:getAuthor", kwargs={"row_id": self.author1.row_id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()
+        
+        self.assertEqual(result["type"], "author")
+        self.assertEqual(result["id"], f"http://testserver/api/authors/{self.author1.row_id}")
+        self.assertEqual(result["displayName"], "john_doe") #in the serializer we currently set displayName to be the same as username....
+        self.assertEqual(result["github"], "https://github.com/johndoe")
     
-
+    def test_update_author_profile(self):
+        print("\nTesting update author profile ...")
+        url = reverse("api:getAuthor", args=[self.author2.row_id])
+        updated_data = {
+            "username": "jane_doe",
+            "displayName": "Jane Doe Updated",
+            "github": "https://github.com/janedoe",
+            "profileImage": "https://i.imgur.com/k7XVwpB.jpeg", #stole this from project page lol
+        }
+        response = self.client.put(url, updated_data, format="json")
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        updated_author = Authors.objects.get(row_id=self.author2.row_id)
+        self.assertEqual(updated_author.displayName, "Jane Doe Updated")
 
 class FollowAPITests(APITestCase):
     def test_get_followers(self):
@@ -503,6 +563,7 @@ class FollowRequestAPITests(APITestCase):
         self.assertEqual(len(result["authors"]),0)
         self.assertEqual(response.status_code, 200)
 
+
 class FriendsAPITests(APITestCase):
     def test_get_friends(self):
         test_author_1 = Authors.objects.create(username="test_author_1")
@@ -614,6 +675,12 @@ class CommentTest(APITestCase):
         }
         response = self.client.post(url, comment_data, format="json")
         self.assertEqual(response.status_code, 201)  
+        created_comment_fqid = response.data.get("id")
+        created_comment_uuid = created_comment_fqid.split("/")[-1]
+        created_comment = Comment.objects.get(id=created_comment_uuid)
+        self.assertEqual(created_comment.comment, comment_data["comment"])
+        self.assertEqual(created_comment.post.id, self.post.id)
+        self.assertEqual(created_comment.author.id, self.author.id)
 
     #://service/api/authors/{AUTHOR_SERIAL}/commented GET
     def test_get_author_comments(self):
@@ -628,7 +695,37 @@ class CommentTest(APITestCase):
         self.assertIn("Comment 1", comments)
         self.assertNotIn('Comment 1 by author2', comments) # ensure comment made by author2 won't be included
     
-    
+    # //service/api/authors/{AUTHOR_FQID}/commented GET
+    def test_author_commented(self):
+        # print("Author ID is", self.author.row_id)
+        author_fqid = f"http://localhost:8000/api/authors/{self.author.row_id}"
+        encoded_author_fqid = quote(author_fqid, safe="")  
+        # print("\nTESTING URL:", encoded_author_fqid)
+        url = reverse("api:author_commented", kwargs={"author_fqid": encoded_author_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 3)
+
+    # //service/api/authors/{AUTHOR_SERIAL}/commented/{COMMENT_SERIAL} GET
+    def getComment(self):
+        url = reverse("api:getComment", kwargs={
+            "author_serial": str(self.author.row_id),
+            "comment_serial": str(self.comment1.id),
+        }) 
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)  
+        comment1 = Comment.objects.get(id=self.comment1.id)
+        self.assertEqual(comment1, response.data)
+
+    # ://service/api/commented/{COMMENT_FQID}
+    def test_get_comment_by_fqid(self):
+        comment_fqid = f"http://localhost:8000/api/commented/{self.comment1.id}"
+        encoded_comment_fqid = quote(comment_fqid, safe="")  
+        url = reverse("api:get_comment_by_fqid", kwargs={"comment_fqid": encoded_comment_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["comment"], "Comment 1")
+
 class InboxTest(APITestCase):
     def setUp(self):
         self.author = Authors.objects.create(username="test_author")

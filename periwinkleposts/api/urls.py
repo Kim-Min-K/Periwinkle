@@ -6,7 +6,7 @@ app_name = 'api'
 
 urlpatterns = [
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
-    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
+    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve', 'put':'update'}), name='getAuthor'),
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
@@ -22,15 +22,20 @@ urlpatterns = [
     path("authors/<uuid:author_serial>/post/<uuid:post_serial>/comment/<str:remote_comment_fqid>/",
         CommentView.as_view({'get': 'get_comment'}), name="get_comment"),
     #----------Commented API------------------------------
-    # Create a comment, api tested 
+    # ://service/api/authors/{AUTHOR_SERIAL}/commented 
     path("authors/<uuid:author_serial>/commented/",
         CommentView.as_view({'get': 'all_comments', 'post':'create'}), name = 'createComment'),
-    # URL: ://service/api/authors/{AUTHOR_FQID}/commented
+    # ://service/api/authors/{AUTHOR_FQID}/commented 
+    path("authors/<path:author_fqid>/commented/", 
+        CommentView.as_view({'get': 'author_commented'}), name="author_commented"),
+    # ://service/api/authors/{AUTHOR_SERIAL}/commented/{COMMENT_SERIAL} 
     path("authors/<uuid:author_serial>/commented/<uuid:comment_serial>/", 
-        CommentView.as_view({'get': 'retrieve'}), name="getComment"),
-    
+        CommentView.as_view({'get': 'retrieve'}), name="getComment"),   
+    #://service/api/commented/{COMMENT_FQID}
+    path("commented/<path:comment_fqid>/",
+        CommentView.as_view({'get': 'get_comment_by_fqid'}),name='get_comment_by_fqid'),
 
-    # Liking a Post
+    #----------LIKE API------------------------------
     path("authors/<uuid:author_serial>/posts/<str:post_serial>/like/", 
         LikeView.as_view({'post': 'like_post'}), name="likePost"),
 

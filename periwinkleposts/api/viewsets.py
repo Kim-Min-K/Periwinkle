@@ -298,12 +298,12 @@ class FollowRequestViewSet(GenericViewSet):
 
     
 class AuthorViewSet(GenericViewSet):
-    serializer_class = AuthorsSerializer
+    serializer_class = AuthorSerializer
     queryset = Authors.objects.all().order_by('id')
 
     @swagger_auto_schema(
         operation_description="Get paginated list of authors",
-        responses={200: AuthorsSerializer()}
+        responses={200: AuthorSerializer()}
     )
     @action(detail=False, methods=['get'])
     def list(self, request):
@@ -335,7 +335,7 @@ class AuthorViewSet(GenericViewSet):
             many=True,
             context={'request': request}
         )
-
+        print({"type": "authors", "authors": serializer.data})
         return Response({
             "type": "authors",
             "authors": serializer.data
@@ -345,17 +345,63 @@ class AuthorViewSet(GenericViewSet):
         operation_description="Get a single author by ID",
         responses={200: AuthorSerializer()}
         )
-    
+
     @action(detail=True, methods=['get'])
     def retrieve(self, request, row_id):
         author = get_object_or_404(Authors, row_id = row_id)
         serializer = AuthorSerializer(author, context={'request': request})
+        print(serializer.data)
         return Response(serializer.data)
 
     
     def get_queryset(self):
         return Authors.objects.all().order_by('id')
     
+
+    @swagger_auto_schema(
+        operation_description="Update an author's profile", 
+        responses={200: AuthorSerializer()}
+        )
+    
+    @action(detail=True, methods=['put'])
+    def update(self, request, row_id=None):
+        author = get_object_or_404(Authors, row_id=row_id)
+        # get fields and update manually
+        username = request.data.get('username', None)
+        if username is not None:
+            author.username = username
+
+        display_name = request.data.get('displayName', None)
+        if display_name is not None:
+            author.displayName = display_name
+
+        github = request.data.get('github', None)
+        if github is not None:
+            # if not github.startswith("https://github.com/"):
+            #     github = "https://github.com/" + github
+            
+            # author.github_username = github
+            author.github_username = github.replace("https://github.com/", "") #workaround for continous github.com concatenation
+
+
+        email = request.data.get('email', None)
+        if email is not None:
+            author.email = email
+            
+        # avatar = request.data.get('avatar', None)
+        # if avatar is not None:
+        #     author.avatar = avatar
+        profile_image = request.data.get('profileImage', None)
+        if profile_image is not None:
+            author.avatar_url = profile_image
+
+        author.save()
+        
+        serializer = AuthorSerializer(author, context={'request': request})
+        print(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+        
 class IsOwnerOrPublic(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
