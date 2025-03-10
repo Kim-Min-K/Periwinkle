@@ -26,7 +26,7 @@ def homeView(request):
     unlisted_posts = Post.objects.filter(
         visibility="UNLISTED", 
         is_deleted=False, 
-        author__in=[author for author in User.objects.all() if is_friend(user, author)] + [user]
+        author__in=[author for author in User.objects.all() if is_following(user, author)] + [user]
     )
 
     # Combine the Posts and Order by Published Date
