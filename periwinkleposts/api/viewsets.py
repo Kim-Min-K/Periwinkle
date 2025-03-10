@@ -12,6 +12,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import permissions
 from django.urls import reverse
 from api.serializers import *
+from django.http import Http404
 
 class FollowersSerializer(serializers.Serializer):
     type = serializers.CharField(default="followers")
@@ -240,7 +241,11 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='posts/(?P<post_fqid>.+)')
     def get_by_fqid(self, request, post_fqid=None):
         post_id = post_fqid.split('/')[-1]
-        post = get_object_or_404(Post, id=post_id)
+        try:
+            post = Post.objects.get(id=post_id, is_deleted=False)
+        except Post.DoesNotExist:
+            raise Http404("Post does not exist or has been deleted")
+        
         serializer = self.get_serializer(post)
         return Response(serializer.data)
 
