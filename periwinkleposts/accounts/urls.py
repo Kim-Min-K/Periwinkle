@@ -30,6 +30,9 @@ urlpatterns = [
         "authors/<uuid:author_serial>/follow-requests", views.sendFollowRequest, name="sendFollowRequest"
     ),
     path("authors/<uuid:author_serial>/followees/<path:fqid>/unfollow", views.unfollow, name="unfollow"),
+
+    # View a Specific Post via URL
+    path('post/<uuid:post_id>/', views.view_post, name='view_post'),
    
 ]
 router = DefaultRouter()
