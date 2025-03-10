@@ -307,7 +307,11 @@ def edit_post(request, post_id):
     })
 
 # --------------Comment----------------
+class CommentSchema(SwaggerAutoSchema):
+    def  get_tags(self,operation_keys=None):
+        return ["Comment"]
 class CommentView(viewsets.ModelViewSet):
+    swagger_schema=CommentSchema
     serializer_class = CommentSerializer
     queryset = Comment.objects.all().order_by("published")
  
@@ -401,8 +405,11 @@ class CommentView(viewsets.ModelViewSet):
         return Response(serializer.data, status=200)
 
     
-
+class CommentSchema(SwaggerAutoSchema):
+    def  get_tags(self,operation_keys=None):
+        return ["Like"]
 class LikeView(viewsets.ModelViewSet):
+    swagger_schema=CommentSchema
     serializer_class = LikeSerializer
     queryset = Like.objects.all().order_by('published')
     
@@ -414,7 +421,6 @@ class LikeView(viewsets.ModelViewSet):
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
-
     @action(detail=True, methods=["post"])
     def like_comment(self, request, author_serial, comment_serial):
         comment = get_object_or_404(Comment, id=comment_serial)
@@ -422,27 +428,44 @@ class LikeView(viewsets.ModelViewSet):
         serializer = self.get_serializer(like)
         return redirect("pages:home")
     
+
 class InboxView(APIView):
     def post(self, request, author_serial):
+        
         author = get_object_or_404(Authors, row_id=author_serial)
         data_type = request.data.get("type")
         if data_type == "comment":
             return self.handle_comment(request, author)
         elif data_type == "like":
-            return Response({"message": "Like received"}, status=201)
+            return self.handle_like(request,author)
         elif data_type == "follow":
             return Response({"message": "Like received"}, status=201)
         return Response({"error": "Invalid type"}, status=400)
 
     def handle_comment(self, request, author):
         post_url = request.data.get("post")  
-        if post_url:
-            post_id = post_url.split("/")[-1]
-            post = get_object_or_404(Post, id=post_id) 
-        else:
-            return Response({"error": "Post URL is required"}, status=400)
+        post_id = post_url.split("/")[-1]
+        post = get_object_or_404(Post, id=post_id) 
         serializer = CommentSerializer(data=request.data, context={"request": request})  
         if serializer.is_valid():
             serializer.save(author=author, post=post)
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+
+    def handle_like(self, request, author): 
+        object_url = request.data.get("object")  
+        object_id = object_url.split("/")[-1] 
+        if "/posts/" in object_url:
+            liked_object = get_object_or_404(Post, id=object_id)
+        elif "/commented/" in object_url:
+            liked_object = get_object_or_404(Comment, id=object_id)
+        author_data = request.data.get("author", {})
+        author_id = author_data.get("id", "").split("/")[-1]  
+        liker = get_object_or_404(Authors, row_id=author_id)  
+        like, _ = Like.objects.get_or_create(
+            author=liker,
+            post=liked_object if isinstance(liked_object, Post) else None,
+            comment=liked_object if isinstance(liked_object, Comment) else None
+        )
+        serializer = LikeSerializer(like)
+        return Response(serializer.data, status=201)

@@ -10,7 +10,7 @@ urlpatterns = [
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
-    # ://service/api/authors/{AUTHOR_SERIAL}/inbox 
+    # ://service/api/authors/{AUTHOR_SERIAL}/inbox, for comment, follow and like
     path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
     path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/",
@@ -35,15 +35,15 @@ urlpatterns = [
     path("commented/<path:comment_fqid>/",
         CommentView.as_view({'get': 'get_comment_by_fqid'}),name='get_comment_by_fqid'),
 
-    #----------LIKE API------------------------------
-    path("authors/<uuid:author_serial>/posts/<str:post_serial>/like/", 
+    #----------For create like------------------------------
+    path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/like/", 
         LikeView.as_view({'post': 'like_post'}), name="likePost"),
-
     # Liking a Comment
-    path("authors/<uuid:author_serial>/comments/<str:comment_serial>/like/", 
+    path("authors/<uuid:author_serial>/comments/<uuid:comment_serial>/like/", 
         LikeView.as_view({'post': 'like_comment'}), name="likeComment"),
+    #----------Likes API------------------------------
+    # ://service/api/authors/{AUTHOR_SERIAL}/inbox
 
-    
     
     path('authors/<uuid:author_serial>/posts/', PostViewSet.as_view({
         'get': 'list',
@@ -60,6 +60,7 @@ urlpatterns = [
         'get': 'get_by_fqid'
     }), name='post-by-fqid'),
 ]
+
 
 follow_request_patterns = [
     path('authors/<uuid:author_serial>/follow-requests', FollowRequestViewSet.as_view({'post': 'makeRequest'}), name='followRequest'),

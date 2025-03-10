@@ -665,11 +665,15 @@ class CommentTest(APITestCase):
 class InboxTest(APITestCase):
     def setUp(self):
         self.author = Authors.objects.create(username="test_author")
+        self.author1 = Authors.objects.create(username="test_author1")
         self.post = Post.objects.create(author=self.author)
+        self.post1 = Post.objects.create(author=self.author1)
         self.author2 = Authors.objects.create(username="test_author2")
-
+        self.comment1 = Comment.objects.create(
+            author=self.author1, post = self.post1, comment = "Test comment", content_type = "text/plain")
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox POST
     def test_post_comment_to_inbox(self):
+        self.assertEqual(Comment.objects.count(), 1)  
         url = reverse("api:inbox", kwargs={"author_serial": str(self.author.row_id)})
         comment_data = {
             "type": "comment",
@@ -683,12 +687,57 @@ class InboxTest(APITestCase):
         }
         response = self.client.post(url, comment_data, format="json")
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Comment.objects.count(), 1)  
-        self.assertEqual(Comment.objects.first().comment, "Inbox comment")
+        self.assertEqual(Comment.objects.count(), 2)  
+        
+
+        # ://service/api/authors/{AUTHOR_SERIAL}/inbox
+    
+    def test_like_post(self):
+        post_url = f"http://localhost:8000/api/authors/{self.author1.row_id}/posts/{self.post1.id}"
+        url = reverse("api:inbox", kwargs={"author_serial": str(self.author1.row_id)})
+        like_data = {
+            "type": "like",  
+            "object": post_url,
+            "author": {  
+                "id": f"http://localhost:8000/api/authors/{self.author1.row_id}",  
+                "displayName": self.author1.username,  
+                "host": "http://localhost:8000/",  
+            },
+            "published": "2025-03-09T13:07:04+00:00",  
+        }
+        response = self.client.post(url, like_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Like.objects.count(), 1)
+        self.assertEqual(Like.objects.first().post, self.post1)
+    
+    def test_like_comment(self):
+        comment_url = f"http://localhost:8000/api/authors/{self.author1.row_id}/commented/{self.comment1.id}"
+        url = reverse("api:inbox", kwargs={"author_serial": str(self.author1.row_id)})
+        like_data = {
+            "type": "like",  
+            "object": comment_url, 
+            "author": {  
+                "id": f"http://localhost:8000/api/authors/{self.author1.row_id}",  
+                "displayName": self.author1.username,  
+                "host": "http://localhost:8000/",  
+            },
+            "published": "2025-03-09T13:07:04+00:00",  
+        }
+        response = self.client.post(url, like_data, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Like.objects.count(), 1)
+        self.assertEqual(Like.objects.first().comment, self.comment1)  
+
 
 class LikeTest(APITestCase):
-    def test_create_like(self):
-        pass
+    def setUp(self):
+        self.author1 = Authors.objects.create(username = 'test_author1')
+        self.post1 = Post.objects.create(author=self.author1)
+        self.comment1 = Comment.objects.create(
+            author=self.author1, post=self.post1, comment="Test comment", content_type="text/plain"
+        )
+
+    
 
 class AuthorViewSetTests(APITestCase):
     def setUp(self):
