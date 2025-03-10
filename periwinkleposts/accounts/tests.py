@@ -57,6 +57,10 @@ class FollowUITests(SeleniumTestCase):
     # Accept the first request under Recieved Requests
     def request_0_accept(self):
         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+
+    # Decline the first request under Received Requests
+    def request_0_decline(self):
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[2]/a")
     
     # Click the username of the first author under suggestions
     def suggestions_0_username_click(self):
@@ -118,6 +122,9 @@ class FollowUITests(SeleniumTestCase):
         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/a")) == 1
 
     def test_follow_functionality(self):
+
+        # Set up
+        
         dummy_username_1 = "username_1"
         dummy_github_1 = "dummy_github_1"
         dummy_password_1 = "114300Rom"
@@ -134,14 +141,17 @@ class FollowUITests(SeleniumTestCase):
 
         self.approve_user(dummy_username_2)
 
+        # Test follow using suggestions section
+
         self.login_user(dummy_username_1, dummy_password_1)
 
         self.home_profile_click()
 
-
         self.suggestions_open()
 
         self.suggestions_0_follow()
+
+        # Test follow using foreign page
 
         self.login_user(dummy_username_2, dummy_password_2)
 
@@ -154,6 +164,8 @@ class FollowUITests(SeleniumTestCase):
         self.suggestions_0_username_click()
 
         self.profile_follow()
+
+        # Test unfriend using foreign page
 
         self.login_user(dummy_username_1, dummy_password_1)
 
@@ -169,6 +181,8 @@ class FollowUITests(SeleniumTestCase):
 
         self.suggestions_0_follow()
 
+        # Test unfriend using friends section
+
         self.login_user(dummy_username_2, dummy_password_2)
 
         self.home_profile_click()
@@ -181,7 +195,7 @@ class FollowUITests(SeleniumTestCase):
 
         self.profile_unfriend()
 
-        self.suggestions_open()
+        # Test unfollow using followees section
 
         self.login_user(dummy_username_1, dummy_password_1)
 
@@ -190,6 +204,18 @@ class FollowUITests(SeleniumTestCase):
         self.followees_open()
 
         self.followees_0_unfollow()
+
+        # Test decline
+
+        self.suggestions_open()
+        
+        self.suggestions_0_follow()
+
+        self.login_user(dummy_username_2, dummy_password_2)
+
+        self.home_profile_click()
+
+        self.request_0_decline()
 
         self.suggestions_open()
         self.followees_open()
@@ -719,7 +745,7 @@ class CommentTest(APITestCase):
 
     # ://service/api/commented/{COMMENT_FQID}
     def test_get_comment_by_fqid(self):
-        comment_fqid = f"http://localhost:8000/api/commented/{self.comment1.id}"
+        comment_fqid = f"http://localhost:8000/api/authors/{self.author.row_id}/commented/{self.comment1.id}"
         encoded_comment_fqid = quote(comment_fqid, safe="")  
         url = reverse("api:get_comment_by_fqid", kwargs={"comment_fqid": encoded_comment_fqid})
         response = self.client.get(url, format="json")
@@ -729,11 +755,15 @@ class CommentTest(APITestCase):
 class InboxTest(APITestCase):
     def setUp(self):
         self.author = Authors.objects.create(username="test_author")
+        self.author1 = Authors.objects.create(username="test_author1")
         self.post = Post.objects.create(author=self.author)
+        self.post1 = Post.objects.create(author=self.author1)
         self.author2 = Authors.objects.create(username="test_author2")
-
+        self.comment1 = Comment.objects.create(
+            author=self.author1, post = self.post1, comment = "Test comment", content_type = "text/plain")
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox POST
     def test_post_comment_to_inbox(self):
+        self.assertEqual(Comment.objects.count(), 1)  
         url = reverse("api:inbox", kwargs={"author_serial": str(self.author.row_id)})
         comment_data = {
             "type": "comment",
@@ -747,13 +777,140 @@ class InboxTest(APITestCase):
         }
         response = self.client.post(url, comment_data, format="json")
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Comment.objects.count(), 1)  
-        self.assertEqual(Comment.objects.first().comment, "Inbox comment")
+        self.assertEqual(Comment.objects.count(), 2)  
+        
+
+        # ://service/api/authors/{AUTHOR_SERIAL}/inbox
+    
+    def test_like_post(self):
+        post_url = f"http://localhost:8000/api/authors/{self.author1.row_id}/posts/{self.post1.id}"
+        url = reverse("api:inbox", kwargs={"author_serial": str(self.author1.row_id)})
+        like_data = {
+            "type": "like",  
+            "object": post_url,
+            "author": {  
+                "id": f"http://localhost:8000/api/authors/{self.author1.row_id}",  
+                "displayName": self.author1.username,  
+                "host": "http://localhost:8000/",  
+            },
+            "published": "2025-03-09T13:07:04+00:00",  
+        }
+        response = self.client.post(url, like_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Like.objects.count(), 1)
+        self.assertEqual(Like.objects.first().post, self.post1)
+    
+    def test_like_comment(self):
+        comment_url = f"http://localhost:8000/api/authors/{self.author1.row_id}/commented/{self.comment1.id}"
+        url = reverse("api:inbox", kwargs={"author_serial": str(self.author1.row_id)})
+        like_data = {
+            "type": "like",  
+            "object": comment_url, 
+            "author": {  
+                "id": f"http://localhost:8000/api/authors/{self.author1.row_id}",  
+                "displayName": self.author1.username,  
+                "host": "http://localhost:8000/",  
+            },
+            "published": "2025-03-09T13:07:04+00:00",  
+        }
+        response = self.client.post(url, like_data, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Like.objects.count(), 1)
+        self.assertEqual(Like.objects.first().comment, self.comment1)  
+
 
 class LikeTest(APITestCase):
-    def test_create_like(self):
-        pass
+    def setUp(self):
+        self.author1 = Authors.objects.create(username = 'test_author1')
+        self.author2 = Authors.objects.create(username = 'test_author2')
+        self.post1 = Post.objects.create(author=self.author1)
+        self.post2 = Post.objects.create(author=self.author2)
+        self.comment1 = Comment.objects.create(
+            author=self.author1, post=self.post1, comment="Test comment", content_type="text/plain"
+        )
+        self.like1 = Like.objects.create(author = self.author1, post=self.post1)
+        self.like2 = Like.objects.create(author = self.author2, post=self.post1)
+        self.like_comment1 = Like.objects.create(author = self.author1, comment = self.comment1)
+        self.like_comment2 = Like.objects.create(author = self.author2, comment = self.comment1)
+    # ://service/api/posts/{POST_FQID}/likes GET
+    def test_get_post_likes(self):
+        url = reverse("api:get_post_likes", kwargs={"author_serial": str(self.author1.row_id), "post_serial": str(self.post1.id)})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)
+        
+    # ://service/api/posts/{POST_FQID}/likes
+    def test_get_all_post_likes(self):
+        post_fqid = f"http://localhost:8000/api/authors/{self.author1.row_id}/posts/{self.post1.id}"
+        encoded_post_fqid = quote(post_fqid, safe="")  
+        url = reverse("api:get_all_post_likes", kwargs={"post_fqid": encoded_post_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2 )
+        self.assertEqual(response.data[0]["author"]["id"], str(self.author1.id))
+        self.assertEqual(response.data[1]["author"]["id"], str(self.author2.id))
+    
+    # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments/{COMMENT_FQID}/likes
+    def test_get_comment_likes(self):
+        comment_fqid = f"http://localhost:8000/api/authors/{self.author1.row_id}/commented/{self.comment1.id}"
+        encoded_comment_fqid = quote(comment_fqid, safe="")
+        url = reverse(
+            "api:get_comment_likes",
+            kwargs={
+                "author_serial": str(self.author1.row_id),
+                "post_serial": str(self.post1.id),
+                "comment_fqid": encoded_comment_fqid,
+            },
+        )
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["author"]["id"], str(self.author1.id))
+        self.assertEqual(response.data[1]["author"]["id"], str(self.author2.id))
 
+    # URL: ://service/api/authors/{AUTHOR_SERIAL}/liked
+    def test_get_author_like(self):
+        url = reverse("api:get_author_likes", kwargs={"author_serial": str(self.author1.row_id)})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)  
+        like1 = response.data[0]
+        like2 = response.data[1]
+        self.assertEqual(like1["author"]["id"],str(self.author1.id))
+        self.assertEqual(like2["author"]["id"],str(self.author1.id))
+
+    # ://service/api/authors/{AUTHOR_SERIAL}/liked/{LIKE_SERIAL}
+    def test_get_single_like(self):
+        url =  reverse("api:get_single_like", kwargs={
+            "author_serial": str(self.author1.row_id),
+            "like_serial": str(self.like1.id)
+        })
+        expected_id = f"authors/{self.author1.row_id}/liked/{self.like1.id}"
+        response = self.client.get(url, format = "json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["id"], expected_id)
+        self.assertEqual(response.data["author"]["id"], str(self.author1.id))
+
+    # ://service/api/authors/{AUTHOR_FQID}/liked
+    def test_get_like_by_author_fqid(self):
+        author_fqid = f"http://localhost:8000/api/authors/{self.author1.row_id}"
+        author_fqid = quote(author_fqid, safe="")  
+        url = reverse("api:get_like_by_author_fqid", kwargs={"author_fqid": author_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)  
+        self.assertEqual(response.data[0]["author"]["row_id"], str(self.author1.row_id))
+        self.assertEqual(response.data[1]["author"]["row_id"], str(self.author1.row_id))
+    
+    # ://service/api/liked/{LIKE_FQID}
+    def test_get_a_single_like(self):
+        like_fqid = f"http://localhost:8000/api/authors/{self.author1.row_id}/liked/{self.like1.id}"
+        encoded_like_fqid = quote(like_fqid, safe="")  
+        url = reverse("api:a_single_like", kwargs={"like_fqid": encoded_like_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["author"]["row_id"], str(self.author1.row_id))
+        
 class AuthorViewSetTests(APITestCase):
     def setUp(self):
         for i in range(15):
