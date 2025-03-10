@@ -43,8 +43,29 @@ urlpatterns = [
         LikeView.as_view({'post': 'like_comment'}), name="likeComment"),
     #----------Likes API------------------------------
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox
+    path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/likes/", 
+        LikeView.as_view({'get': 'get_post_likes'}), name="get_post_likes"),
+    # ://service/api/posts/{POST_FQID}/likes
+    path("posts/<path:post_fqid>/likes/", 
+        LikeView.as_view({'get': 'get_all_post_likes'}), name="get_all_post_likes"),
+    # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments/{COMMENT_FQID}/likes
+    path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/<path:comment_fqid>/likes/",
+        LikeView.as_view({'get': 'get_comment_likes'}), name = "get_comment_likes"),
 
-    
+    #----------Liked API------------------------------
+    # ://service/api/authors/{AUTHOR_SERIAL}/liked
+    path("authors/<uuid:author_serial>/liked",
+        LikeView.as_view({'get': 'get_author_likes'}), name = 'get_author_likes'),
+    # ://service/api/authors/{AUTHOR_SERIAL}/liked/{LIKE_SERIAL}
+    path("authors/<uuid:author_serial>/liked/<like_serial>/",
+        LikeView.as_view({'get':'get_single_like'}), name = 'get_single_like'),
+    # ://service/api/authors/{AUTHOR_FQID}/liked
+    path("authors/<path:author_fqid>.liked/",
+        LikeView.as_view({'get': 'get_like_by_author_fqid'}), name="get_like_by_author_fqid"),
+    # ://service/api/liked/{LIKE_FQID}
+    path('liked/<path:like_fqid>/',
+        LikeView.as_view({'get': 'a_single_like'}), name = 'a_single_like'),
+    #-----------POST API--------------------------------
     path('authors/<uuid:author_serial>/posts/', PostViewSet.as_view({
         'get': 'list',
         'post': 'create'

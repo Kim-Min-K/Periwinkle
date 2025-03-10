@@ -745,7 +745,7 @@ class CommentTest(APITestCase):
 
     # ://service/api/commented/{COMMENT_FQID}
     def test_get_comment_by_fqid(self):
-        comment_fqid = f"http://localhost:8000/api/commented/{self.comment1.id}"
+        comment_fqid = f"http://localhost:8000/api/authors/{self.author.row_id}/commented/{self.comment1.id}"
         encoded_comment_fqid = quote(comment_fqid, safe="")  
         url = reverse("api:get_comment_by_fqid", kwargs={"comment_fqid": encoded_comment_fqid})
         response = self.client.get(url, format="json")
@@ -822,13 +822,95 @@ class InboxTest(APITestCase):
 class LikeTest(APITestCase):
     def setUp(self):
         self.author1 = Authors.objects.create(username = 'test_author1')
+        self.author2 = Authors.objects.create(username = 'test_author2')
         self.post1 = Post.objects.create(author=self.author1)
+        self.post2 = Post.objects.create(author=self.author2)
         self.comment1 = Comment.objects.create(
             author=self.author1, post=self.post1, comment="Test comment", content_type="text/plain"
         )
-
+        self.like1 = Like.objects.create(author = self.author1, post=self.post1)
+        self.like2 = Like.objects.create(author = self.author2, post=self.post1)
+        self.like_comment1 = Like.objects.create(author = self.author1, comment = self.comment1)
+        self.like_comment2 = Like.objects.create(author = self.author2, comment = self.comment1)
+    # ://service/api/posts/{POST_FQID}/likes GET
+    def test_get_post_likes(self):
+        url = reverse("api:get_post_likes", kwargs={"author_serial": str(self.author1.row_id), "post_serial": str(self.post1.id)})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)
+        
+    # ://service/api/posts/{POST_FQID}/likes
+    def test_get_all_post_likes(self):
+        post_fqid = f"http://localhost:8000/api/authors/{self.author1.row_id}/posts/{self.post1.id}"
+        encoded_post_fqid = quote(post_fqid, safe="")  
+        url = reverse("api:get_all_post_likes", kwargs={"post_fqid": encoded_post_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2 )
+        self.assertEqual(response.data[0]["author"]["id"], str(self.author1.id))
+        self.assertEqual(response.data[1]["author"]["id"], str(self.author2.id))
     
+    # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments/{COMMENT_FQID}/likes
+    def test_get_comment_likes(self):
+        comment_fqid = f"http://localhost:8000/api/authors/{self.author1.row_id}/commented/{self.comment1.id}"
+        encoded_comment_fqid = quote(comment_fqid, safe="")
+        url = reverse(
+            "api:get_comment_likes",
+            kwargs={
+                "author_serial": str(self.author1.row_id),
+                "post_serial": str(self.post1.id),
+                "comment_fqid": encoded_comment_fqid,
+            },
+        )
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["author"]["id"], str(self.author1.id))
+        self.assertEqual(response.data[1]["author"]["id"], str(self.author2.id))
 
+    # URL: ://service/api/authors/{AUTHOR_SERIAL}/liked
+    def test_get_author_like(self):
+        url = reverse("api:get_author_likes", kwargs={"author_serial": str(self.author1.row_id)})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)  
+        like1 = response.data[0]
+        like2 = response.data[1]
+        self.assertEqual(like1["author"]["id"],str(self.author1.id))
+        self.assertEqual(like2["author"]["id"],str(self.author1.id))
+
+    # ://service/api/authors/{AUTHOR_SERIAL}/liked/{LIKE_SERIAL}
+    def test_get_single_like(self):
+        url =  reverse("api:get_single_like", kwargs={
+            "author_serial": str(self.author1.row_id),
+            "like_serial": str(self.like1.id)
+        })
+        expected_id = f"authors/{self.author1.row_id}/liked/{self.like1.id}"
+        response = self.client.get(url, format = "json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["id"], expected_id)
+        self.assertEqual(response.data["author"]["id"], str(self.author1.id))
+
+    # ://service/api/authors/{AUTHOR_FQID}/liked
+    def test_get_like_by_author_fqid(self):
+        author_fqid = f"http://localhost:8000/api/authors/{self.author1.row_id}"
+        author_fqid = quote(author_fqid, safe="")  
+        url = reverse("api:get_like_by_author_fqid", kwargs={"author_fqid": author_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)  
+        self.assertEqual(response.data[0]["author"]["row_id"], str(self.author1.row_id))
+        self.assertEqual(response.data[1]["author"]["row_id"], str(self.author1.row_id))
+    
+    # ://service/api/liked/{LIKE_FQID}
+    def test_get_a_single_like(self):
+        like_fqid = f"http://localhost:8000/api/authors/{self.author1.row_id}/liked/{self.like1.id}"
+        encoded_like_fqid = quote(like_fqid, safe="")  
+        url = reverse("api:a_single_like", kwargs={"like_fqid": encoded_like_fqid})
+        response = self.client.get(url, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["author"]["row_id"], str(self.author1.row_id))
+        
 class AuthorViewSetTests(APITestCase):
     def setUp(self):
         for i in range(15):
