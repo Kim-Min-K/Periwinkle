@@ -102,7 +102,10 @@ def profileView(request, row_id):
         author = request.user
 
     ownProfile = request.user.is_authenticated and (request.user == author)
-    posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
+    if not ownProfile:
+        posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
+    else:
+        posts = author.posts.filter(is_deleted=False).order_by("-published")
     # Connections field
     friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["authors"]
@@ -308,14 +311,18 @@ def edit_post(request, post_id):
 
 def view_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    author = post.author
 
     # Check visibility
-    if post.visibility == "FRIENDS" and request.user != post.author:
-        friends = post.author.friends.all()
-        if request.user not in friends:
-            return redirect('accounts:profile', row_id=request.user.row_id)
+    if post.visibility == "FRIENDS" and request.user != author:
+        if not is_friend(request.user, author):
+            return render(request, 'error.html', status=403)
     
     return render(request, 'view_post.html', {'post': post})
+
+def is_friend(user, author):
+    return Follow.objects.filter(follower=user, followee=author).exists() and \
+               Follow.objects.filter(follower=author, followee=user).exists()
 
 # --------------Comment----------------
 class CommentView(viewsets.ModelViewSet):

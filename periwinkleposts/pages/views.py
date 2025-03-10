@@ -11,10 +11,6 @@ def homeView(request):
     # Get all posts that match visibility criteria
     posts = Post.objects.filter(is_deleted=False).order_by("-published")
 
-    posts = posts.filter(
-        Q(visibility="PUBLIC")
-    )
-
     #convert content in posts where contentType == "text/markdown"
     for post in posts:
         if post.contentType == "text/markdown":
