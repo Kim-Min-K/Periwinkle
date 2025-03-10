@@ -8,7 +8,7 @@ class AuthorSerializer(serializers.Serializer):
     row_id = serializers.UUIDField(default="row.id")
     id = serializers.SerializerMethodField()
     host = serializers.SerializerMethodField()
-    displayName = serializers.CharField(source="username")
+    displayName = serializers.CharField(source="username") #do we want to keep username and display seperate?
     github = serializers.SerializerMethodField()
     profileImage = serializers.SerializerMethodField()
     page = serializers.SerializerMethodField()
@@ -16,7 +16,7 @@ class AuthorSerializer(serializers.Serializer):
     def get_id(self, obj):
         request = self.context.get('request')
         host = request.build_absolute_uri('/api/authors/')
-        return f"{host}{obj.row_id}/"
+        return f"{host}{obj.row_id}"
 
     def get_host(self, obj):
         request = self.context.get('request')
@@ -32,7 +32,7 @@ class AuthorSerializer(serializers.Serializer):
         return obj.avatar_url
 
     def get_page(self, obj):
-        return self.context['request'].build_absolute_uri(f'/accounts/profile/{obj.username}')
+        return self.context['request'].build_absolute_uri(f'/accounts/profile/{obj.username}') # this should be changed to UUID
     
 class AuthorsSerializer(serializers.Serializer):
     type = serializers.CharField(default="authors")

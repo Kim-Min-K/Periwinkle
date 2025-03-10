@@ -6,8 +6,7 @@ from django.contrib import messages
 from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings, Follow
 from .serializers import authorSerializer, CommentSerializer, LikeSerializer
 from django.http import QueryDict
-from api.follow_views import *
-from api.viewsets import FollowersViewSet, FollowRequestViewSet, FolloweesViewSet
+from api.viewsets import *
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
@@ -15,7 +14,7 @@ import uuid
 import requests
 from pages.views import markdown_to_html
 from django.db.models import Q
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.views import LogoutView
 from rest_framework.views import APIView
 from urllib.parse import unquote
@@ -103,16 +102,17 @@ def profileView(request, row_id):
         author = request.user
 
     ownProfile = request.user.is_authenticated and (request.user == author)
-    posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
+    if not ownProfile:
+        posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
+    else:
+        posts = author.posts.filter(is_deleted=False).order_by("-published")
     # Connections field
-    friends = getFriends(request, author.row_id).data["friends"]
-    followers = (FollowersViewSet.as_view({"get": "list"}))(
-        request, author.row_id
-    ).data["followers"]
-    requesters = getFollowRequests(request, author.row_id).data["requesters"]
-    suggestions = getSuggestions(request, author.row_id).data["suggestions"]
-    followees = getFollowees(request, author.row_id).data["followees"]
-    sent_requests = getSentRequests(request, author.row_id).data["sent_requests"]
+    friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
+    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["authors"]
+    followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
+    requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
+    suggestions = requests.get(request.user.host[:-5] + reverse("api:getRequestSuggestions", args=[request.user.row_id])).json()["authors"]
+    sent_requests = requests.get(request.user.host[:-5] + reverse("api:getFollowRequestOut", args=[author.row_id])).json()["authors"]
 
     for post in posts:
         if post.contentType == "text/markdown":
@@ -145,25 +145,18 @@ def profileView(request, row_id):
     return render(request, "profile.html", context)
 
 
-def acceptRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(row_id=fqid)
-    requestee = Authors.objects.get(row_id=author_serial)
-    follow_request = get_object_or_404(
-        FollowRequest, requester=requester, requestee=requestee
-    )
-    response = acceptFollowRequest(request, follow_request.id)
-    return redirect("accounts:profile", row_id=requestee.row_id)
+def acceptRequest(request, author_serial, requester_serial):
+    response = requests.post(request.user.host[:-5] + reverse("api:acceptFollowRequest", args=[author_serial, requester_serial]))
+    if not response.ok:
+        raise Exception("Accept request failed")
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 
-def declineRequest(request, author_serial, fqid):
-    requester = Authors.objects.get(row_id=fqid)
-    requestee = Authors.objects.get(row_id=author_serial)
-    follow_request = get_object_or_404(
-        FollowRequest, requester=requester, requestee=requestee
-    )
-    response = declineFollowRequest(request, follow_request.id)
-    print(response)
-    return redirect("accounts:profile", row_id=requestee.row_id)
+def declineRequest(request, author_serial, requester_serial):
+    response = requests.post(request.user.host[:-5] + reverse("api:declineFollowRequest", args=[author_serial, requester_serial]))
+    if not response.ok:
+        raise Exception("Decline request failed")
+    return redirect("accounts:profile", row_id=request.user.row_id)
 
 def unfollow(request, author_serial, fqid):
     followee = Authors.objects.get(id=fqid)
@@ -172,8 +165,8 @@ def unfollow(request, author_serial, fqid):
     return redirect("accounts:profile", row_id=request.user.row_id)
 
 
-def sendFollowRequest(request, fqid):
-    requestee = Authors.objects.get(row_id=fqid)
+def sendFollowRequest(request, author_serial):
+    requestee = Authors.objects.get(row_id=author_serial)
     requester = Authors.objects.get(row_id=request.user.row_id)
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)
@@ -185,8 +178,10 @@ def sendFollowRequest(request, fqid):
         "object": requestee_serializer.data,
     }
 
+    url = requestee.host[:-5] + reverse("api:followRequest", args=[requestee.row_id])
+    
     response = requests.post(
-        f"{requestee.host}authors/{requestee.row_id}/inbox",
+        url,
         headers={"Content-Type": "application/json"},
         json=follow_request,
     )
@@ -314,8 +309,20 @@ def edit_post(request, post_id):
         'visibility_choices': Post.VISIBILITY_CHOICES
     })
 
+def view_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    return render(request, 'view_post.html', {'post': post})
+
+def is_friend(user, author):
+    return Follow.objects.filter(follower=user, followee=author).exists() and \
+               Follow.objects.filter(follower=author, followee=user).exists()
+
 # --------------Comment----------------
+class CommentSchema(SwaggerAutoSchema):
+    def  get_tags(self,operation_keys=None):
+        return ["Comment"]
 class CommentView(viewsets.ModelViewSet):
+    swagger_schema=CommentSchema
     serializer_class = CommentSerializer
     queryset = Comment.objects.all().order_by("published")
  
@@ -392,8 +399,28 @@ class CommentView(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+    def author_commented(self, request, author_fqid):
+        decoded_author_fqid = unquote(author_fqid)  
+        author_id = decoded_author_fqid.split("/")[-1]  
+        # print("Extracted Author Id", author_id)
+        author = get_object_or_404(Authors, row_id=author_id)
+        comments = Comment.objects.filter(author=author).order_by("published")
+        serializer = self.get_serializer(comments, many=True)
+        return Response(serializer.data, status=200)
 
+    def get_comment_by_fqid(self, request, comment_fqid):
+        decoded_comment_fqid = unquote(comment_fqid)  
+        comment_id = decoded_comment_fqid.split("/")[-1] 
+        comment = Comment.objects.get(id=comment_id)
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data, status=200)
+
+    
+class CommentSchema(SwaggerAutoSchema):
+    def  get_tags(self,operation_keys=None):
+        return ["Like"]
 class LikeView(viewsets.ModelViewSet):
+    swagger_schema=CommentSchema
     serializer_class = LikeSerializer
     queryset = Like.objects.all().order_by('published')
     
@@ -405,7 +432,6 @@ class LikeView(viewsets.ModelViewSet):
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
-
     @action(detail=True, methods=["post"])
     def like_comment(self, request, author_serial, comment_serial):
         comment = get_object_or_404(Comment, id=comment_serial)
@@ -413,27 +439,91 @@ class LikeView(viewsets.ModelViewSet):
         serializer = self.get_serializer(like)
         return redirect("pages:home")
     
+    def get_post_likes(self, request, author_serial, post_serial):
+        post = get_object_or_404(Post, id=post_serial, author__row_id=author_serial)
+        likes = Like.objects.filter(post=post)
+        serializer = LikeSerializer(likes, many=True)
+        return Response(serializer.data, status=200)
+    
+    def get_all_post_likes(self, request, post_fqid):
+        decoded_post_fqid = unquote(post_fqid)  
+        post_id = decoded_post_fqid.split("/")[-1]
+        post = get_object_or_404(Post, id=post_id)  
+        likes = Like.objects.filter(post=post)  
+        serializer = LikeSerializer(likes, many=True)  
+        return Response(serializer.data, status=200)
+
+    def get_comment_likes(self, request, author_serial, post_serial, comment_fqid):
+        decoded_comment_fqid = unquote(comment_fqid)
+        comment_id = decoded_comment_fqid.split("/")[-1]
+        comment = get_object_or_404(Comment, id=comment_id)
+        likes = Like.objects.filter(comment=comment)
+        serializer = LikeSerializer(likes, many=True)
+        return Response(serializer.data, status=200)
+
+    def get_author_likes(self, request, author_serial):
+        author = get_object_or_404(Authors, row_id = author_serial)
+        likes = Like.objects.filter(author = author)
+        serializer = LikeSerializer(likes, many=True)
+        return Response(serializer.data, status=200)
+
+    def get_single_like(self, request,author_serial,like_serial):
+        author = get_object_or_404(Authors, row_id = author_serial)
+        like = get_object_or_404(Like, id = like_serial, author = author)
+        serializer = LikeSerializer(like)
+        return Response(serializer.data,status = 200)
+
+    def get_like_by_author_fqid(self, request, author_fqid):
+        decoded_author_fqid = unquote(author_fqid)  
+        author = get_object_or_404(Authors, row_id=decoded_author_fqid.split("/")[-1])  
+        likes = Like.objects.filter(author=author) 
+        serializer = LikeSerializer(likes, many=True)
+        return Response(serializer.data, status=200)
+    
+    def a_single_like(self,request,like_fqid):
+        decoded_like_fqid = unquote(like_fqid)  
+        like_uuid = decoded_like_fqid.split("/")[-1]  
+        like = get_object_or_404(Like, id=like_uuid)  
+        serializer = LikeSerializer(like)
+        return Response(serializer.data, status=200)
+    
 class InboxView(APIView):
     def post(self, request, author_serial):
+        
         author = get_object_or_404(Authors, row_id=author_serial)
         data_type = request.data.get("type")
         if data_type == "comment":
             return self.handle_comment(request, author)
         elif data_type == "like":
-            return Response({"message": "Like received"}, status=201)
+            return self.handle_like(request,author)
         elif data_type == "follow":
             return Response({"message": "Like received"}, status=201)
         return Response({"error": "Invalid type"}, status=400)
 
     def handle_comment(self, request, author):
         post_url = request.data.get("post")  
-        if post_url:
-            post_id = post_url.split("/")[-1]
-            post = get_object_or_404(Post, id=post_id) 
-        else:
-            return Response({"error": "Post URL is required"}, status=400)
+        post_id = post_url.split("/")[-1]
+        post = get_object_or_404(Post, id=post_id) 
         serializer = CommentSerializer(data=request.data, context={"request": request})  
         if serializer.is_valid():
             serializer.save(author=author, post=post)
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+
+    def handle_like(self, request, author): 
+        object_url = request.data.get("object")  
+        object_id = object_url.split("/")[-1] 
+        if "/posts/" in object_url:
+            liked_object = get_object_or_404(Post, id=object_id)
+        elif "/commented/" in object_url:
+            liked_object = get_object_or_404(Comment, id=object_id)
+        author_data = request.data.get("author", {})
+        author_id = author_data.get("id", "").split("/")[-1]  
+        liker = get_object_or_404(Authors, row_id=author_id)  
+        like, _ = Like.objects.get_or_create(
+            author=liker,
+            post=liked_object if isinstance(liked_object, Post) else None,
+            comment=liked_object if isinstance(liked_object, Comment) else None
+        )
+        serializer = LikeSerializer(like)
+        return Response(serializer.data, status=201)
