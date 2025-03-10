@@ -311,13 +311,6 @@ def edit_post(request, post_id):
 
 def view_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    author = post.author
-
-    # Check visibility
-    if post.visibility == "FRIENDS" and request.user != author:
-        if not is_friend(request.user, author):
-            return render(request, 'error.html', status=403)
-    
     return render(request, 'view_post.html', {'post': post})
 
 def is_friend(user, author):
