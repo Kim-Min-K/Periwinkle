@@ -57,6 +57,10 @@ class FollowUITests(SeleniumTestCase):
     # Accept the first request under Recieved Requests
     def request_0_accept(self):
         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+
+    # Decline the first request under Received Requests
+    def request_0_decline(self):
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[2]/a")
     
     # Click the username of the first author under suggestions
     def suggestions_0_username_click(self):
@@ -118,6 +122,9 @@ class FollowUITests(SeleniumTestCase):
         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/a")) == 1
 
     def test_follow_functionality(self):
+
+        # Set up
+        
         dummy_username_1 = "username_1"
         dummy_github_1 = "dummy_github_1"
         dummy_password_1 = "114300Rom"
@@ -134,14 +141,17 @@ class FollowUITests(SeleniumTestCase):
 
         self.approve_user(dummy_username_2)
 
+        # Test follow using suggestions section
+
         self.login_user(dummy_username_1, dummy_password_1)
 
         self.home_profile_click()
 
-
         self.suggestions_open()
 
         self.suggestions_0_follow()
+
+        # Test follow using foreign page
 
         self.login_user(dummy_username_2, dummy_password_2)
 
@@ -154,6 +164,8 @@ class FollowUITests(SeleniumTestCase):
         self.suggestions_0_username_click()
 
         self.profile_follow()
+
+        # Test unfriend using foreign page
 
         self.login_user(dummy_username_1, dummy_password_1)
 
@@ -169,6 +181,8 @@ class FollowUITests(SeleniumTestCase):
 
         self.suggestions_0_follow()
 
+        # Test unfriend using friends section
+
         self.login_user(dummy_username_2, dummy_password_2)
 
         self.home_profile_click()
@@ -181,7 +195,7 @@ class FollowUITests(SeleniumTestCase):
 
         self.profile_unfriend()
 
-        self.suggestions_open()
+        # Test unfollow using followees section
 
         self.login_user(dummy_username_1, dummy_password_1)
 
@@ -190,6 +204,18 @@ class FollowUITests(SeleniumTestCase):
         self.followees_open()
 
         self.followees_0_unfollow()
+
+        # Test decline
+
+        self.suggestions_open()
+        
+        self.suggestions_0_follow()
+
+        self.login_user(dummy_username_2, dummy_password_2)
+
+        self.home_profile_click()
+
+        self.request_0_decline()
 
         self.suggestions_open()
         self.followees_open()
@@ -350,7 +376,71 @@ class FollowLiveServerTests(LiveServerTestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(Follow.objects.all()), 0)
+
+class AuthorsAPITests(APITestCase):
+    def setUp(self):
+        self.author1 = Authors.objects.create(username="john_doe", host="http://testserver/api/", displayName="John Doe", github_username="johndoe")
+        self.author2 = Authors.objects.create(username="jane_doe", host="http://testserver/api/", displayName="Jane Doe", github_username="janedoe")
+        self.author3 = Authors.objects.create(username="jim_doe", host="http://testserver/api/", displayName="Jim Doe", github_username="jimdoe")
+        self.author4 = Authors.objects.create(username="jill_doe", host="http://testserver/api/", displayName="Jill Doe", github_username="jilldoe")
+        self.author5 = Authors.objects.create(username="jack_doe", host="http://testserver/api/", displayName="Jack Doe", github_username="jackdoe")
+        self.author6 = Authors.objects.create(username="jess_doe", host="http://testserver/api/", displayName="Jess Doe", github_username="jessdoe")
+        self.author7 = Authors.objects.create(username="josh_doe", host="http://testserver/api/", displayName="Josh Doe", github_username="joshdoe")
+        self.author8 = Authors.objects.create(username="jenny_doe", host="http://testserver/api/", displayName="Jenny Doe", github_username="jennydoe")
+        self.author9 = Authors.objects.create(username="joe_doe", host="http://testserver/api/", displayName="Joe Doe", github_username="joedoe")
+
+        self.base_url = reverse("api:getAuthors")
+
+    def test_get_all_authors(self):
+        print("\nTesting get all authors ...")
+        response = self.client.get(self.base_url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()
+        
+        self.assertEqual(result["type"], "authors")
+        self.assertTrue("authors" in result)
+        self.assertEqual(len(result["authors"]), Authors.objects.count())
+
+    def test_get_all_authors_paginated(self):
+        print("\nTesting get all authors paginated ...")
+        url = f"{self.base_url}?page=1&size=5"
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()
+        
+        self.assertEqual(result["type"], "authors")
+        self.assertTrue("authors" in result)
+        self.assertLessEqual(len(result["authors"]), 5)
     
+    def test_get_single_author(self):
+        print("\nTesting get single author ...")
+        url = reverse("api:getAuthor", kwargs={"row_id": self.author1.row_id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.json()
+        
+        self.assertEqual(result["type"], "author")
+        self.assertEqual(result["id"], f"http://testserver/api/authors/{self.author1.row_id}")
+        self.assertEqual(result["displayName"], "john_doe") #in the serializer we currently set displayName to be the same as username....
+        self.assertEqual(result["github"], "https://github.com/johndoe")
+    
+    def test_update_author_profile(self):
+        print("\nTesting update author profile ...")
+        url = reverse("api:getAuthor", args=[self.author2.row_id])
+        updated_data = {
+            "username": "jane_doe",
+            "displayName": "Jane Doe Updated",
+            "github": "https://github.com/janedoe",
+            "profileImage": "https://i.imgur.com/k7XVwpB.jpeg", #stole this from project page lol
+        }
+        response = self.client.put(url, updated_data, format="json")
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        updated_author = Authors.objects.get(row_id=self.author2.row_id)
+        self.assertEqual(updated_author.displayName, "Jane Doe Updated")
 
 class FollowAPITests(APITestCase):
     def test_get_followers(self):

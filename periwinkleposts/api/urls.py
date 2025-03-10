@@ -6,7 +6,7 @@ app_name = 'api'
 
 urlpatterns = [
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
-    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve'}), name='getAuthor'),
+    path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve', 'put':'update'}), name='getAuthor'),
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
