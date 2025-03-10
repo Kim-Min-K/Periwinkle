@@ -108,12 +108,20 @@
                                 👥 Friends-Only
                             {% endif %}
                         </div>
-                        {% if post.visibility == "PUBLIC" or post.visibility == "UNLISTED" %}
+                        {% if post.visibility == "PUBLIC" %}
                             <!-- Share Button -->
                             <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:view_post' post.id %}')"
                                 class="px-3 py-1 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-700 transition-colors duration-300">
                                 Share
                             </button>
+                        {% elif post.visibility == "UNLISTED" %}
+                            {% if post.author == request.user %}
+                                <!-- Share Button -->
+                                <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:view_post' post.id %}')"
+                                    class="px-3 py-1 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-700 transition-colors duration-300">
+                                    Share
+                                </button>
+                            {% endif %}
                         {% endif %}
                     </div>
                     
