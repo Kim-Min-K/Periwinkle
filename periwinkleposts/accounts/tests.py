@@ -57,6 +57,10 @@ class FollowUITests(SeleniumTestCase):
     # Accept the first request under Recieved Requests
     def request_0_accept(self):
         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+
+    # Decline the first request under Received Requests
+    def request_0_decline(self):
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[2]/a")
     
     # Click the username of the first author under suggestions
     def suggestions_0_username_click(self):
@@ -118,6 +122,9 @@ class FollowUITests(SeleniumTestCase):
         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/a")) == 1
 
     def test_follow_functionality(self):
+
+        # Set up
+        
         dummy_username_1 = "username_1"
         dummy_github_1 = "dummy_github_1"
         dummy_password_1 = "114300Rom"
@@ -134,14 +141,17 @@ class FollowUITests(SeleniumTestCase):
 
         self.approve_user(dummy_username_2)
 
+        # Test follow using suggestions section
+
         self.login_user(dummy_username_1, dummy_password_1)
 
         self.home_profile_click()
 
-
         self.suggestions_open()
 
         self.suggestions_0_follow()
+
+        # Test follow using foreign page
 
         self.login_user(dummy_username_2, dummy_password_2)
 
@@ -154,6 +164,8 @@ class FollowUITests(SeleniumTestCase):
         self.suggestions_0_username_click()
 
         self.profile_follow()
+
+        # Test unfriend using foreign page
 
         self.login_user(dummy_username_1, dummy_password_1)
 
@@ -169,6 +181,8 @@ class FollowUITests(SeleniumTestCase):
 
         self.suggestions_0_follow()
 
+        # Test unfriend using friends section
+
         self.login_user(dummy_username_2, dummy_password_2)
 
         self.home_profile_click()
@@ -181,7 +195,7 @@ class FollowUITests(SeleniumTestCase):
 
         self.profile_unfriend()
 
-        self.suggestions_open()
+        # Test unfollow using followees section
 
         self.login_user(dummy_username_1, dummy_password_1)
 
@@ -190,6 +204,18 @@ class FollowUITests(SeleniumTestCase):
         self.followees_open()
 
         self.followees_0_unfollow()
+
+        # Test decline
+
+        self.suggestions_open()
+        
+        self.suggestions_0_follow()
+
+        self.login_user(dummy_username_2, dummy_password_2)
+
+        self.home_profile_click()
+
+        self.request_0_decline()
 
         self.suggestions_open()
         self.followees_open()
