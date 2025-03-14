@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Post{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 bg-white rounded-lg shadow-lg p-8">
+    
+    <!-- Close Button -->
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Edit Post</h2>
+        <a href="{% url 'accounts:profile' post.author.row_id %}" class="text-4xl text-gray-500 hover:text-gray-700" style="text-decoration: none;">&times;</a>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Title -->
+        <div class="mb-4">
+            <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+            <input type="text" id="title" name="title" value="{{ post.title }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+
+        <!-- Description -->
+        <div class="mb-4">
+            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea id="description" name="description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ post.description }}</textarea>
+        </div>
+
+        <!-- Content -->
+        <div class="mb-4">
+            <label for="content" class="block text-sm font-medium text-gray-700">Content</label>
+            <textarea id="content" name="content" rows="5" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ post.content }}</textarea>
+        </div>
+
+        <!-- Visibility -->
+        <div class="mb-6">
+            <label for="visibility" class="block text-sm font-medium text-gray-700">Visibility</label>
+            <select id="visibility" name="visibility" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                {% for value, label in visibility_choices %}
+                <option value="{{ value }}" {% if post.visibility == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div class="mb-4">
+            <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+            <input type="file" id="image" name="image" accept="image/*" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+
+            {% if post.image %}
+                <img id="imagePreview" src="{{ post.image.url }}" alt="Current Image" class="mt-2 rounded-md shadow-sm max-w-[100px] max-h-[100px]">
+            {% else %}
+                <img id="imagePreview" src="#" alt="No Current Image" class="mt-2 rounded-md shadow-sm max-w-[100px] max-h-[100px] hidden">
+            {% endif %}
+        </div>
+
+        <!-- Video Upload -->
+        <div class="mb-4">
+            <label for="videoInput" class="block text-sm font-medium text-gray-700">Video</label>
+            <input type="file" id="videoInput" name="video" accept="video/*" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <video id="videoPreview" controls style="width: 100%; max-width: 500px; height: auto;" class="mt-2 {% if not post.video %}hidden{% endif %}">
+                {% if post.video %}
+                <source src="{{ post.video.url }}" type="video/mp4">
+                {% else %}
+                <source src="#" type="video/mp4">
+                {% endif %}
+            </video>
+        </div>
+
+
+
+        <!-- Submit Button -->
+        <div class="flex justify-end gap-4">
+            <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                Save Changes
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+    // This is changing the image view when uploading a new image
+    document.getElementById('image').addEventListener('change', function(event) {
+        const [file] = event.target.files;
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block'; 
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // <!--This is for the video input to see if the video is valid (less the 4 seconds) if not it will alert user-->
+
+    document.getElementById('videoInput').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            const videoPreview = document.getElementById('videoPreview');
+
+            video.onloadedmetadata = function () {
+                window.URL.revokeObjectURL(video.src);
+                if (video.duration > 4) {
+                    alert('Video must be 4 seconds or less');
+                    event.target.value = '';  // Clear the file input
+                    videoPreview.classList.add('hidden');
+                } else {
+                    videoPreview.src = URL.createObjectURL(file);
+                    videoPreview.classList.remove('hidden');
+                }
+            };
+
+            video.src = URL.createObjectURL(file);
+        }
+    });
+
+    document.querySelector('form').onsubmit = function (event) {
+        const videoInput = document.getElementById('videoInput');
+        if (videoInput.files.length > 0) {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.src = URL.createObjectURL(videoInput.files[0]);
+            
+            video.onloadedmetadata = function () {
+                window.URL.revokeObjectURL(video.src);
+                if (video.duration > 4) {
+                    event.preventDefault();  // Stop form submission
+                    alert('Please upload a video that is 4 seconds or less.');
+                }
+            };
+        }
+    };
+
+</script>
+{% endblock %}

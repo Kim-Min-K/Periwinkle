@@ -1,19 +1,36 @@
 from django.shortcuts import render
-from accounts.models import Post
+from accounts.models import Post, Follow
 import commonmark
 from django.utils.safestring import mark_safe
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
+@login_required
 def homeView(request):
     user = request.user
     
-    # Get all posts that match visibility criteria
-    posts = Post.objects.filter(is_deleted=False).order_by("-published")
+    # Fetch Public Posts
+    public_posts = Post.objects.filter(visibility="PUBLIC", is_deleted=False)
 
-    posts = posts.filter(
-        Q(visibility="PUBLIC")
+    # Fetch Friends-Only Posts
+    friends_posts = Post.objects.filter(
+        visibility="FRIENDS", 
+        is_deleted=False, 
+        author__in=[author for author in User.objects.all() if is_friend(user, author)] + [user]
     )
+
+    # Fetch Unlisted Posts
+    unlisted_posts = Post.objects.filter(
+        visibility="UNLISTED", 
+        is_deleted=False, 
+        author__in=[author for author in User.objects.all() if is_following(user, author)] + [user]
+    )
+
+    # Combine the Posts and Order by Published Date
+    posts = (public_posts | friends_posts | unlisted_posts).distinct().order_by("-published")
 
     #convert content in posts where contentType == "text/markdown"
     for post in posts:
@@ -33,3 +50,10 @@ def markdown_to_html(md_text):
     parser = commonmark.Parser()
     renderer = commonmark.HtmlRenderer()
     return mark_safe(renderer.render(parser.parse(md_text)))
+
+def is_friend(user, author):
+    return Follow.objects.filter(follower=user, followee=author).exists() and \
+           Follow.objects.filter(follower=author, followee=user).exists()
+
+def is_following(user, author):
+    return Follow.objects.filter(follower=user, followee=author).exists()
