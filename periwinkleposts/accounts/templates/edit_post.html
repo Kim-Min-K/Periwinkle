@@ -45,11 +45,10 @@
         <div class="mb-4">
             <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
             <input type="file" id="image" name="image" accept="image/*" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-
             {% if post.image %}
-                <img id="imagePreview" src="{{ post.image.url }}" alt="Current Image" class="mt-2 rounded-md shadow-sm max-w-[100px] max-h-[100px]">
+                <img id="imagePreview" src="{{ post.image.url }}" alt="Current Image" class="mt-2 rounded-md shadow-sm" style="width: 100%; max-width: 500px; height: auto;">
             {% else %}
-                <img id="imagePreview" src="#" alt="No Current Image" class="mt-2 rounded-md shadow-sm max-w-[100px] max-h-[100px] hidden">
+                <img id="imagePreview" src="#" alt="No Current Image" class="mt-2 rounded-md shadow-sm hidden" style="width: 100%; max-width: 500px; height: auto;">
             {% endif %}
         </div>
 
