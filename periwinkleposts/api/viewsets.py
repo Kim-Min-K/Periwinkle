@@ -14,6 +14,7 @@ from django.urls import reverse
 from api.serializers import *
 from django.http import Http404
 from drf_yasg.inspectors import SwaggerAutoSchema
+from urllib.parse import unquote
 
 class FollowersSchema(SwaggerAutoSchema):
     def get_tags(self, operation_keys=None):
@@ -41,6 +42,23 @@ class FollowersViewSet(GenericViewSet):
         serializer = self.serializer_class({"type":"followers", "authors": followers})
 
         return Response(serializer.data, 200)
+
+    @action(detail=False, methods=["get"])
+    @swagger_auto_schema(
+        operation_description="Check if foreign_author_fqidD is a follower of author_serial",
+        request_body=None,
+        responses={
+            200: "foreign_author_fqid is a follower of author_serial",
+            404: "foreign_author_fqid is not an author/follower"
+        }
+    )
+    def isFollower(self, request, author_serial, foreign_author_fqid):
+        decoded_fqid = unquote(foreign_author_fqid)
+        foreign_author = get_object_or_404(Authors, id=decoded_fqid)
+        get_object_or_404(Follow, followee=author_serial, follower=foreign_author.row_id)
+        return Response({"message": "foreign_author_fqid is a follower of author_serial"}, status=200)
+
+        
 
 class FolloweesSchema(SwaggerAutoSchema):
     def get_tags(self, operation_keys=None):

@@ -99,6 +99,7 @@ followees_patterns = [
 
 followers_patterns = [
     path('authors/<uuid:author_serial>/followers', FollowersViewSet.as_view({'get': 'list'}), name='getFollowers'),
+    path('authors/<uuid:author_serial>/followers/<path:foreign_author_fqid>', FollowersViewSet.as_view({'get': 'isFollower'}), name="isFollower")
 ]
 
 friends_patterns = [

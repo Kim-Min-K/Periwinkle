@@ -515,6 +515,25 @@ class FollowAPITests(APITestCase):
 
         self.assertEqual(len(result["followees"]),2)
         self.assertEqual(response.status_code, 200)
+    
+    def test_is_follower(self):
+        test_author_1 = Authors.objects.create(username="test_author_1")
+        test_author_2 = Authors.objects.create(username="test_author_2", id="http://nodebbbb/api/authors/222")
+        test_author_3 = Authors.objects.create(username="test_author_3", id="http://nodebbbb/api/authors/111")
+
+        Follow.objects.create(followee=test_author_1, follower=test_author_2)
+
+        url = reverse("api:isFollower", args=[test_author_1.row_id, "http%3A%2F%2Fnodebbbb%2Fapi%2Fauthors%2F222"])
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+
+        url = reverse("api:isFollower", args=[test_author_1.row_id, "http%3A%2F%2Fnodebbbb%2Fapi%2Fauthors%2F111"])
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 404)
+
+
         
 
 class FollowRequestAPITests(APITestCase):
