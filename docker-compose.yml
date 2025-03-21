@@ -1,11 +1,14 @@
 services:
   web:
     build: .
+    # command: >
+    #   sh -c "python periwinkleposts/manage.py migrate &&
+    #          gunicorn --workers=2 --bind 0.0.0.0:8000 periwinkleposts.wsgi:application"
     command: >
-      sh -c "python periwinkleposts/manage.py migrate &&
-             gunicorn --workers=1 --bind 0.0.0.0:8000 periwinkleposts.wsgi:application"
-    volumes:
-      - .:/app
+        sh -c "python periwinkleposts/manage.py migrate &&
+              gunicorn periwinkleposts.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 4 --timeout 120"
+
+
     ports:
       - "8000:8000"
     env_file:
