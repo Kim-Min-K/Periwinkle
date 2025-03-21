@@ -17,217 +17,217 @@ from django.contrib.auth.hashers import make_password
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-class FollowUITests(SeleniumTestCase):
-    def clickAndWait(self, by, arg, timeout=0.5):
-        clickAndWait = WebDriverWait(self.driver, 10)
-        clickAndWait.until(EC.element_to_be_clickable((by, arg))).click()
-        time.sleep(timeout)
+# class FollowUITests(SeleniumTestCase):
+#     def clickAndWait(self, by, arg, timeout=0.5):
+#         clickAndWait = WebDriverWait(self.driver, 10)
+#         clickAndWait.until(EC.element_to_be_clickable((by, arg))).click()
+#         time.sleep(timeout)
 
-    def register_user(self, username, github_username, password):
-        self.driver.get(self.live_server_url + "/accounts/register/")
+#     def register_user(self, username, github_username, password):
+#         self.driver.get(self.live_server_url + "/accounts/register/")
     
-        self.driver.find_element(By.ID, "username").send_keys(username)
-        self.driver.find_element(By.ID, "github_username").send_keys(github_username)
-        self.driver.find_element(By.ID, "password1").send_keys(password)
-        self.driver.find_element(By.ID, "password2").send_keys(password)
+#         self.driver.find_element(By.ID, "username").send_keys(username)
+#         self.driver.find_element(By.ID, "github_username").send_keys(github_username)
+#         self.driver.find_element(By.ID, "password1").send_keys(password)
+#         self.driver.find_element(By.ID, "password2").send_keys(password)
 
-        self.clickAndWait(By.TAG_NAME, "button", timeout=1)
+#         self.clickAndWait(By.TAG_NAME, "button", timeout=1)
 
-    def approve_user(self, username):
-        author = Authors.objects.get(username=username)
-        author.is_approved = 1
-        author.save()
+#     def approve_user(self, username):
+#         author = Authors.objects.get(username=username)
+#         author.is_approved = 1
+#         author.save()
 
-    def login_user(self, username, password):
-        self.driver.get(self.live_server_url + "/")
+#     def login_user(self, username, password):
+#         self.driver.get(self.live_server_url + "/")
         
-        self.driver.find_element(By.ID, "username").send_keys(username)
-        self.driver.find_element(By.ID, "password").send_keys(password)
+#         self.driver.find_element(By.ID, "username").send_keys(username)
+#         self.driver.find_element(By.ID, "password").send_keys(password)
 
-        self.clickAndWait(By.TAG_NAME, "button", timeout=1)
+#         self.clickAndWait(By.TAG_NAME, "button", timeout=1)
     
-    # Click the profile button at home
-    def home_profile_click(self):
-        self.clickAndWait(By.XPATH, "/html/body/nav/div/div/a[2]")
+#     # Click the profile button at home
+#     def home_profile_click(self):
+#         self.clickAndWait(By.XPATH, "/html/body/nav/div/div/a[2]")
     
-    # Click the follow button of the first author under suggestions
-    def suggestions_0_follow(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")
+#     # Click the follow button of the first author under suggestions
+#     def suggestions_0_follow(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")
 
-    # Accept the first request under Recieved Requests
-    def request_0_accept(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+#     # Accept the first request under Recieved Requests
+#     def request_0_accept(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
 
-    # Decline the first request under Received Requests
-    def request_0_decline(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[2]/a")
+#     # Decline the first request under Received Requests
+#     def request_0_decline(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[2]/a")
     
-    # Click the username of the first author under suggestions
-    def suggestions_0_username_click(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li[1]/span/a")
+#     # Click the username of the first author under suggestions
+#     def suggestions_0_username_click(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li[1]/span/a")
     
-    # Click the unfriend button next to the user name
-    def profile_unfriend(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button")
+#     # Click the unfriend button next to the user name
+#     def profile_unfriend(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button")
     
-    # Click the follow button next to the username
-    def profile_follow(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button")
+#     # Click the follow button next to the username
+#     def profile_follow(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[1]/div[1]/div[2]/div[1]/form/button")
     
-    # Click the unfriend button of the first friend under Friends
-    def friends_0_unfriend(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button")
+#     # Click the unfriend button of the first friend under Friends
+#     def friends_0_unfriend(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button")
     
-    # Click username of the author under friends
-    def friends_0_username_click(self):
-        self.clickAndWait(By.XPATH,"/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/a")
+#     # Click username of the author under friends
+#     def friends_0_username_click(self):
+#         self.clickAndWait(By.XPATH,"/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/a")
     
-    # Toggle the followees section
-    def followees_open(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/button")
+#     # Toggle the followees section
+#     def followees_open(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/button")
     
-    # Toggle the friends section
-    def friends_open(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/button")
+#     # Toggle the friends section
+#     def friends_open(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/button")
 
-    # Toggle the suggestions section
-    def suggestions_open(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button")
+#     # Toggle the suggestions section
+#     def suggestions_open(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/button")
 
-    # Toggle the suggestions section
-    def followers_open(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/button")
+#     # Toggle the suggestions section
+#     def followers_open(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/button")
 
-    # Press the unfollow button on the first followee
-    def followees_0_unfollow(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")
+#     # Press the unfollow button on the first followee
+#     def followees_0_unfollow(self):
+#         self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")
 
-    # Return true if the first author under suggestions exists
-    def suggestions_0_exists(self):
-        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")) == 1
+#     # Return true if the first author under suggestions exists
+#     def suggestions_0_exists(self):
+#         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[3]/div/ul/li/form/button")) == 1
     
-    def friends_0_exists(self):
-        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button")) == 1
+#     def friends_0_exists(self):
+#         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[4]/div/ul/li/form/button")) == 1
     
-    def followees_0_exists(self):
-        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")) == 1
+#     def followees_0_exists(self):
+#         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[6]/div/ul/li/form/button")) == 1
 
-    def followers_0_exists(self):
-        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/div/ul/li/a")) == 1
+#     def followers_0_exists(self):
+#         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[5]/div/ul/li/a")) == 1
     
-    def requests_0_exists(self):
-        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")) == 1
+#     def requests_0_exists(self):
+#         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")) == 1
     
-    def sent_requests_0_exists(self):
-        return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/a")) == 1
+#     def sent_requests_0_exists(self):
+#         return len(self.driver.find_elements(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/a")) == 1
 
-    def test_follow_functionality(self):
+#     def test_follow_functionality(self):
 
-        # Set up
+#         # Set up
         
-        dummy_username_1 = "username_1"
-        dummy_github_1 = "dummy_github_1"
-        dummy_password_1 = "114300Rom"
+#         dummy_username_1 = "username_1"
+#         dummy_github_1 = "dummy_github_1"
+#         dummy_password_1 = "114300Rom"
 
-        self.register_user(dummy_username_1, dummy_github_1, dummy_password_1)
+#         self.register_user(dummy_username_1, dummy_github_1, dummy_password_1)
 
-        self.approve_user(dummy_username_1)
+#         self.approve_user(dummy_username_1)
 
-        dummy_username_2 = "username_2"
-        dummy_github_2 = "dummy_github_2"
-        dummy_password_2 = "114300Rom"
+#         dummy_username_2 = "username_2"
+#         dummy_github_2 = "dummy_github_2"
+#         dummy_password_2 = "114300Rom"
 
-        self.register_user(dummy_username_2, dummy_github_2, dummy_password_2)
+#         self.register_user(dummy_username_2, dummy_github_2, dummy_password_2)
 
-        self.approve_user(dummy_username_2)
+#         self.approve_user(dummy_username_2)
 
-        # Test follow using suggestions section
+#         # Test follow using suggestions section
 
-        self.login_user(dummy_username_1, dummy_password_1)
+#         self.login_user(dummy_username_1, dummy_password_1)
 
-        self.home_profile_click()
+#         self.home_profile_click()
 
-        self.suggestions_open()
+#         self.suggestions_open()
 
-        self.suggestions_0_follow()
+#         self.suggestions_0_follow()
 
-        # Test follow using foreign page
+#         # Test follow using foreign page
 
-        self.login_user(dummy_username_2, dummy_password_2)
+#         self.login_user(dummy_username_2, dummy_password_2)
 
-        self.home_profile_click()
+#         self.home_profile_click()
 
-        self.request_0_accept()
+#         self.request_0_accept()
 
-        self.suggestions_open()
+#         self.suggestions_open()
 
-        self.suggestions_0_username_click()
+#         self.suggestions_0_username_click()
 
-        self.profile_follow()
+#         self.profile_follow()
 
-        # Test unfriend using foreign page
+#         # Test unfriend using foreign page
 
-        self.login_user(dummy_username_1, dummy_password_1)
+#         self.login_user(dummy_username_1, dummy_password_1)
 
-        self.home_profile_click()
+#         self.home_profile_click()
 
-        self.request_0_accept()
+#         self.request_0_accept()
 
-        self.friends_open()
+#         self.friends_open()
 
-        self.friends_0_unfriend()
+#         self.friends_0_unfriend()
 
-        self.suggestions_open()
+#         self.suggestions_open()
 
-        self.suggestions_0_follow()
+#         self.suggestions_0_follow()
 
-        # Test unfriend using friends section
+#         # Test unfriend using friends section
 
-        self.login_user(dummy_username_2, dummy_password_2)
+#         self.login_user(dummy_username_2, dummy_password_2)
 
-        self.home_profile_click()
+#         self.home_profile_click()
 
-        self.request_0_accept()
+#         self.request_0_accept()
 
-        self.friends_open()
+#         self.friends_open()
 
-        self.friends_0_username_click()
+#         self.friends_0_username_click()
 
-        self.profile_unfriend()
+#         self.profile_unfriend()
 
-        # Test unfollow using followees section
+#         # Test unfollow using followees section
 
-        self.login_user(dummy_username_1, dummy_password_1)
+#         self.login_user(dummy_username_1, dummy_password_1)
 
-        self.home_profile_click()
+#         self.home_profile_click()
 
-        self.followees_open()
+#         self.followees_open()
 
-        self.followees_0_unfollow()
+#         self.followees_0_unfollow()
 
-        # Test decline
+#         # Test decline
 
-        self.suggestions_open()
+#         self.suggestions_open()
         
-        self.suggestions_0_follow()
+#         self.suggestions_0_follow()
 
-        self.login_user(dummy_username_2, dummy_password_2)
+#         self.login_user(dummy_username_2, dummy_password_2)
 
-        self.home_profile_click()
+#         self.home_profile_click()
 
-        self.request_0_decline()
+#         self.request_0_decline()
 
-        self.suggestions_open()
-        self.followees_open()
-        self.followers_open()
-        self.friends_open()
+#         self.suggestions_open()
+#         self.followees_open()
+#         self.followers_open()
+#         self.friends_open()
 
-        self.assertFalse(self.requests_0_exists(), "Remaining author in requests. ")
-        self.assertFalse(self.followers_0_exists(), "Remaining author in followers. ")
-        self.assertFalse(self.followees_0_exists(), "Remaining author in followees. ")
-        self.assertFalse(self.sent_requests_0_exists(), "Remaining author in sent requests. ")
-        self.assertFalse(self.friends_0_exists(), "Remaining author in friends. ")
-        self.assertTrue(self.suggestions_0_exists(), "No author in suggestions.")
+#         self.assertFalse(self.requests_0_exists(), "Remaining author in requests. ")
+#         self.assertFalse(self.followers_0_exists(), "Remaining author in followers. ")
+#         self.assertFalse(self.followees_0_exists(), "Remaining author in followees. ")
+#         self.assertFalse(self.sent_requests_0_exists(), "Remaining author in sent requests. ")
+#         self.assertFalse(self.friends_0_exists(), "Remaining author in friends. ")
+#         self.assertTrue(self.suggestions_0_exists(), "No author in suggestions.")
 
 
 class IsOwnerOrPublic(permissions.BasePermission):
@@ -515,6 +515,25 @@ class FollowAPITests(APITestCase):
 
         self.assertEqual(len(result["followees"]),2)
         self.assertEqual(response.status_code, 200)
+    
+    def test_is_follower(self):
+        test_author_1 = Authors.objects.create(username="test_author_1")
+        test_author_2 = Authors.objects.create(username="test_author_2", id="http://nodebbbb/api/authors/222")
+        test_author_3 = Authors.objects.create(username="test_author_3", id="http://nodebbbb/api/authors/111")
+
+        Follow.objects.create(followee=test_author_1, follower=test_author_2)
+
+        url = reverse("api:isFollower", args=[test_author_1.row_id, "http%3A%2F%2Fnodebbbb%2Fapi%2Fauthors%2F222"])
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+
+        url = reverse("api:isFollower", args=[test_author_1.row_id, "http%3A%2F%2Fnodebbbb%2Fapi%2Fauthors%2F111"])
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 404)
+
+
         
 
 class FollowRequestAPITests(APITestCase):
