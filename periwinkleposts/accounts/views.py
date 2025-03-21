@@ -497,7 +497,7 @@ class InboxView(APIView):
         elif data_type == "like":
             return self.handle_like(request,author)
         elif data_type == "follow":
-            return Response({"message": "Like received"}, status=201)
+            return self.handle_follow(request, author_serial)
         return Response({"error": "Invalid type"}, status=400)
 
     def handle_comment(self, request, author):
@@ -527,3 +527,9 @@ class InboxView(APIView):
         )
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=201)
+
+    def handle_follow(self, request, author_serial):
+        makeRequest = FollowRequestViewSet.as_view({'post': "makeRequest"})
+        request._request.POST = QueryDict('', mutable=True)
+        request._request.POST.update(request.data)  
+        return makeRequest(request._request, author_serial)

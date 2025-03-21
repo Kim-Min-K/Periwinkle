@@ -524,7 +524,7 @@ class FollowRequestAPITests(APITestCase):
         self.test_author_2 = Authors.objects.create(username="test_author_2")
 
         # URL for sending the follow request
-        url = reverse("api:followRequest", args=[self.test_author_1.row_id])
+        url = reverse("api:inbox", args=[self.test_author_1.row_id])
 
         # The request body for sending a follow request
         data = {
@@ -761,6 +761,7 @@ class InboxTest(APITestCase):
         self.author2 = Authors.objects.create(username="test_author2")
         self.comment1 = Comment.objects.create(
             author=self.author1, post = self.post1, comment = "Test comment", content_type = "text/plain")
+
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox POST
     def test_post_comment_to_inbox(self):
         self.assertEqual(Comment.objects.count(), 1)  
