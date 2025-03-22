@@ -16,6 +16,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+    - ./periwinkleposts/media:/app/periwinkleposts/media  #keep media files around after restarts
 
   postgres:
     image: postgres:15
@@ -30,5 +32,18 @@ services:
       start_period: 30s
       timeout: 10s
 
+  caddy:
+      image: caddy:latest
+      container_name: caddy
+      ports:
+        - "80:80"
+        - "443:443"
+      depends_on:
+        - web
+      volumes:
+        - ./Caddyfile:/etc/caddy/Caddyfile
+
 volumes:
   postgres_data:
+
+
