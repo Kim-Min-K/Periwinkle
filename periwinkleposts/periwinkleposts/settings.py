@@ -30,9 +30,9 @@ STATICFILES_DIRS = [
 SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
-DEBUG = os.environ.get("DEBUG", "0") == "1"
+DEBUG = 1
 # ALLOWED_HOSTS = ["*"]
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(" ")
+ALLOWED_HOSTS = ["*"]
 # Application definition
 
 MEDIA_URL = "/media/"

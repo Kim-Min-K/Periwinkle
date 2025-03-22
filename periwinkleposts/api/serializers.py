@@ -2,6 +2,7 @@ from accounts.serializers import *
 from accounts.models import *
 from rest_framework.decorators import action
 from django.urls import reverse
+from .models import *
 
 class AuthorSerializer(serializers.Serializer):
     type = serializers.CharField(default="author")
@@ -100,3 +101,14 @@ class PostSerializer(serializers.ModelSerializer):
                 context={'request': request}
             ).data
         }
+
+class NodeSerializer(serializers.Serializer):
+    nodeURL = serializers.URLField()
+    username = serializers.CharField()
+    password = serializers.CharField()
+    team_name = serializers.CharField()
+    
+    class Meta:
+        model = ExternalNode
+        fields = ['nodeURL', 'username', 'password', 'team_name']
+    

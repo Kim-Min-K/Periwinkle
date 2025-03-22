@@ -111,8 +111,27 @@ def profileView(request, row_id):
     followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["authors"]
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
-    suggestions = requests.get(request.user.host[:-5] + reverse("api:getRequestSuggestions", args=[request.user.row_id])).json()["authors"]
-    sent_requests = requests.get(request.user.host[:-5] + reverse("api:getFollowRequestOut", args=[author.row_id])).json()["authors"]
+    try:
+        # Suggestions
+        suggestions_url = request.build_absolute_uri(
+            reverse("api:getRequestSuggestions", args=[request.user.row_id])
+        )
+        suggestions_response = requests.get(suggestions_url)
+        suggestions_response.raise_for_status()
+        suggestions = suggestions_response.json()["authors"]
+    except requests.exceptions.RequestException:
+        suggestions = []
+
+    try:
+        # Sent requests
+        sent_requests_url = request.build_absolute_uri(
+            reverse("api:getFollowRequestOut", args=[author.row_id])
+        )
+        sent_requests_response = requests.get(sent_requests_url)
+        sent_requests_response.raise_for_status()
+        sent_requests = sent_requests_response.json()["authors"]
+    except requests.exceptions.RequestException:
+        sent_requests = []
 
     for post in posts:
         if post.contentType == "text/markdown":

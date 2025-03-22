@@ -1,3 +1,6 @@
 from django.contrib import admin
+from api.models import *
 
-# Register your models here.
+@admin.register(ExternalNode)
+class NodeAdmin(admin.ModelAdmin):
+    list_display = ('nodeURL', 'username', 'team_name')

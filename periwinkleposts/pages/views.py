@@ -1,12 +1,32 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from accounts.models import Post, Follow
 import commonmark
 from django.utils.safestring import mark_safe
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.contrib.admin.views.decorators import staff_member_required
+import requests
+from rest_framework.exceptions import ValidationError
+from requests.auth import HTTPBasicAuth
+from .forms import *
 
 User = get_user_model()
+
+@staff_member_required
+def nodeView(request):
+    if request.method == "POST":
+        form = AddNode(request.POST)
+        if form.is_valid():
+            form.save()  
+            return redirect("pages:home")  
+        else:
+            print(form.errors)  # Debug form errors in the terminal
+    
+    else:
+        form = AddNode()
+
+    return render(request, "node.html", {"form": form})
 
 @login_required
 def homeView(request):

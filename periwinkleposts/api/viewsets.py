@@ -15,6 +15,7 @@ from api.serializers import *
 from django.http import Http404
 from drf_yasg.inspectors import SwaggerAutoSchema
 from urllib.parse import unquote
+from rest_framework.permissions import IsAdminUser
 
 class FollowersSchema(SwaggerAutoSchema):
     def get_tags(self, operation_keys=None):
@@ -508,3 +509,28 @@ class PostViewSet(viewsets.ModelViewSet):
             serializer.save()
 
 
+class NodeViewset(viewsets.ModelViewSet):
+    serializer_class = NodeSerializer
+    permission_classes = [IsAdminUser]
+    queryset = ExternalNode.objects.all()
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            try:
+                response = requests.get(
+                    validated_data["nodeURL"],
+                    auth=HTTPBasicAuth(validated_data["username"], validated_data["password"])
+                )
+                if response.status_code != 200:
+                    raise ValidationError("Invalid credentials")
+            except requests.exceptions.ConnectionError:
+                raise ValidationError("Node unreachable")
+
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+    
