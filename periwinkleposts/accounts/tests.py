@@ -56,11 +56,11 @@ class FollowUITests(SeleniumTestCase):
 
     # Accept the first request under Recieved Requests
     def request_0_accept(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[1]/a")
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/form[1]/button")
 
     # Decline the first request under Received Requests
     def request_0_decline(self):
-        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/button[2]/a")
+        self.clickAndWait(By.XPATH, "/html/body/div/div/div/div[2]/div/div[1]/ul/li/div/form[2]/button")
     
     # Click the username of the first author under suggestions
     def suggestions_0_username_click(self):
