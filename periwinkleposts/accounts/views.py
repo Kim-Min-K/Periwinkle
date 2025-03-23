@@ -172,6 +172,14 @@ def sendFollowRequest(request, author_serial):
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)
 
+    follow_request = {
+        "type": "follow",
+        "summary": f"{requester.username} wants to follow {requestee.username}",
+        "actor": requester_serializer.data,
+        "object": requestee_serializer.data,
+    }
+
+    request.data = follow_request
     response = (FollowRequestViewSet.as_view({'post': 'makeRequest'}))(request, requestee.row_id)
 
     if not response.ok:
