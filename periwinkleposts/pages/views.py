@@ -10,7 +10,8 @@ import requests
 from rest_framework.exceptions import ValidationError
 from requests.auth import HTTPBasicAuth
 from .forms import *
-import api.node_fetch as node_fetch
+#import api.node_fetch as node_fetch_utils
+from api import node_fetch
 
 User = get_user_model()
 
