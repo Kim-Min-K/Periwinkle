@@ -60,7 +60,8 @@ def fetch_author_posts(author_url, node):
     page = 1
     while True:
         url = f"{author_url}/posts/?page={page}&size=20"
-        response = requests.get(url, auth=(node.username, node.password))
+        #response = requests.get(url, auth=(node.username, node.password))
+        response = requests.get(url)
         if response.status_code != 200:
             break
             
@@ -78,7 +79,8 @@ def fetch_post_comments(post_url, node):
     page = 1
     while True:
         url = f"{post_url}/comments/?page={page}&size=20"
-        response = requests.get(url, auth=(node.username, node.password))
+        #response = requests.get(url, auth=(node.username, node.password))
+        response = requests.get(url)
         if response.status_code != 200:
             break
             
@@ -113,7 +115,8 @@ def fetch_post_likes(post_url, node):
     page = 1
     while True:
         url = f"{post_url}/likes/?page={page}&size=50"
-        response = requests.get(url, auth=(node.username, node.password))
+        #response = requests.get(url, auth=(node.username, node.password))
+        response = requests.get(url)
         if response.status_code != 200:
             break
             
@@ -124,6 +127,65 @@ def fetch_post_likes(post_url, node):
             break
         page += 1
     return likes
+
+def fetch_all_posts(node):
+    posts = []
+    page = 1
+    while True:
+        url = f"{node.nodeURL}/api/posts/?page={page}&size=20"
+        response = requests.get(url)
+        if response.status_code != 200:
+            break
+            
+        data = response.json()
+        posts.extend(data.get('src', []))
+        
+        if len(data.get('src', [])) < 20:
+            break
+        page += 1
+    return posts
+
+def process_post(posts_data, node):
+    for post in posts_data:
+        user_uuid = extract_uuid_from_url(post['author'])
+        if not user_uuid:
+            continue
+            
+        author = Authors.objects.filter(row_id=user_uuid).first()
+        if not author:
+            continue
+        
+        post_uuid = extract_uuid_from_url(post['id'])
+        if not post_uuid:
+            continue
+            
+        Post.objects.update_or_create(
+            id=post_uuid,
+            defaults={
+                'author': author,
+                'content': post.get('content'),
+                'content_type': post.get('contentType'),
+                'published': post.get('published'),
+                'visibility': post.get('visibility'),
+                'is_deleted': post.get('isDeleted', False)
+            }
+        )
+
+def process_likes(likes_data, post):
+    for like in likes_data:
+        try:
+            author = Authors.objects.get(id=like['author']['id'])
+        except Authors.DoesNotExist:
+            continue
+            
+        Like.objects.update_or_create(
+            id=like['id'],
+            defaults={
+                'author': author,
+                'post': post,
+                'published': like.get('published')
+            }
+        )
 
 def get_node_data(node):
     try:
