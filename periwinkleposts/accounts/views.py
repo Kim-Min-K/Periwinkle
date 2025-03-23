@@ -106,7 +106,7 @@ def profileView(request, row_id):
         posts = author.posts.filter(is_deleted=False, visibility="PUBLIC").order_by("-published")
     else:
         posts = author.posts.filter(is_deleted=False).order_by("-published")
-        
+
     # Connections field
     friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
     followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["authors"]
@@ -147,16 +147,16 @@ def profileView(request, row_id):
 
 
 def acceptRequest(request, author_serial, requester_serial):
-    response = requests.post(request.user.host[:-5] + reverse("api:acceptFollowRequest", args=[author_serial, requester_serial]))
+    response = (FollowRequestViewSet.as_view({'post': 'acceptFollowRequest'}))(request, author_serial, requester_serial)
     if not response.ok:
         raise Exception("Accept request failed")
     return redirect("accounts:profile", row_id=request.user.row_id)
 
 
 def declineRequest(request, author_serial, requester_serial):
-    response = requests.post(request.user.host[:-5] + reverse("api:declineFollowRequest", args=[author_serial, requester_serial]))
+    response = (FollowRequestViewSet.as_view({'post': 'declineFollowRequest'}))(request, author_serial, requester_serial)
     if not response.ok:
-        raise Exception("Decline request failed")
+        raise Exception(response.data)
     return redirect("accounts:profile", row_id=request.user.row_id)
 
 def unfollow(request, author_serial, fqid):
@@ -172,23 +172,10 @@ def sendFollowRequest(request, author_serial):
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)
 
-    follow_request = {
-        "type": "follow",
-        "summary": f"{requester.username} wants to follow {requestee.username}",
-        "actor": requester_serializer.data,
-        "object": requestee_serializer.data,
-    }
-
-    url = requestee.host[:-5] + reverse("api:followRequest", args=[requestee.row_id])
-    
-    response = requests.post(
-        url,
-        headers={"Content-Type": "application/json"},
-        json=follow_request,
-    )
+    response = (FollowRequestViewSet.as_view({'post': 'makeRequest'}))(request, requestee.row_id)
 
     if not response.ok:
-        raise Exception(response.json().get("message"))
+        raise Exception(response.data)
 
     return redirect("accounts:profile", row_id=request.user.row_id)
 
