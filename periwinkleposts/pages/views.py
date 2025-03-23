@@ -10,6 +10,7 @@ import requests
 from rest_framework.exceptions import ValidationError
 from requests.auth import HTTPBasicAuth
 from .forms import *
+import api.node_fetch as node_fetch
 
 User = get_user_model()
 
@@ -17,7 +18,15 @@ User = get_user_model()
 def nodeView(request):
     if request.method == "POST":
         form = AddNode(request.POST)
-        if form.is_valid():
+        if form.is_valid(): #import node fetch funcs and call them and print their results 
+            node = ExternalNode(
+                nodeURL=form.cleaned_data["nodeURL"],
+                username=form.cleaned_data["username"],
+                password=form.cleaned_data["password"],
+            )
+            data = node_fetch.fetch_all_posts(node)
+            print(data)
+            node.save()
             form.save()  
             return redirect("pages:home")  
         else:
@@ -25,7 +34,6 @@ def nodeView(request):
     
     else:
         form = AddNode()
-
     return render(request, "node.html", {"form": form})
 
 @login_required
@@ -77,3 +85,4 @@ def is_friend(user, author):
 
 def is_following(user, author):
     return Follow.objects.filter(follower=user, followee=author).exists()
+

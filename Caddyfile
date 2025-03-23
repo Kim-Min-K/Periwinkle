@@ -1,3 +1,10 @@
 :80, :443 {
     reverse_proxy web:8000
 }
+
+http://[::]:80 {
+    reverse_proxy web:8000
+}
+https://[::]:443 {
+    reverse_proxy web:8000
+}

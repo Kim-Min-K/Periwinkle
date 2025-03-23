@@ -112,7 +112,6 @@ def profileView(request, row_id):
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
     try:
-        # Suggestions
         suggestions_url = request.build_absolute_uri(
             reverse("api:getRequestSuggestions", args=[request.user.row_id])
         )
@@ -123,7 +122,6 @@ def profileView(request, row_id):
         suggestions = []
 
     try:
-        # Sent requests
         sent_requests_url = request.build_absolute_uri(
             reverse("api:getFollowRequestOut", args=[author.row_id])
         )

@@ -1,14 +1,10 @@
+
 services:
   web:
     build: .
-    # command: >
-    #   sh -c "python periwinkleposts/manage.py migrate &&
-    #          gunicorn --workers=2 --bind 0.0.0.0:8000 periwinkleposts.wsgi:application"
     command: >
         sh -c "python periwinkleposts/manage.py migrate &&
-              gunicorn periwinkleposts.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 4 --timeout 120"
-
-
+              gunicorn periwinkleposts.wsgi:application --bind [::]:8000 --workers 2 --threads 4 --timeout 120"
     ports:
       - "8000:8000"
     env_file:
@@ -17,8 +13,9 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-    - ./periwinkleposts/media:/app/periwinkleposts/media  #keep media files around after restarts
-
+      - ./periwinkleposts/media:/app/periwinkleposts/media
+    networks:
+      - webnet
   postgres:
     image: postgres:15
     volumes:
@@ -31,19 +28,23 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
-
+    networks:
+      - webnet
   caddy:
-      image: caddy:latest
-      container_name: caddy
-      ports:
-        - "80:80"
-        - "443:443"
-      depends_on:
-        - web
-      volumes:
-        - ./Caddyfile:/etc/caddy/Caddyfile
-
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - webnet
 volumes:
   postgres_data:
-
-
+networks:
+  webnet:
+    driver: bridge
+    enable_ipv6: true

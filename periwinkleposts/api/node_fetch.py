@@ -23,7 +23,7 @@ def fetch_all_users(node):
     users = []
     page = 1
     while True:
-        url = f"{node.nodeURL}/api/authors/?page={page}&size=20"
+        url = "http://[2605:fd00:4:1001:f816:3eff:fe31:2dc6]:8000/api/authors"
         response = requests.get(url, auth=(node.username, node.password))
         if response.status_code != 200:
             break
