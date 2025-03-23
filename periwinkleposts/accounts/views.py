@@ -18,6 +18,8 @@ from django.urls import reverse_lazy, reverse
 from django.contrib.auth.views import LogoutView
 from rest_framework.views import APIView
 from urllib.parse import unquote
+from rest_framework.test import APIRequestFactory
+
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -148,14 +150,14 @@ def profileView(request, row_id):
 
 def acceptRequest(request, author_serial, requester_serial):
     response = (FollowRequestViewSet.as_view({'post': 'acceptFollowRequest'}))(request, author_serial, requester_serial)
-    if not response.ok:
+    if response.status_code != 200:
         raise Exception("Accept request failed")
     return redirect("accounts:profile", row_id=request.user.row_id)
 
 
 def declineRequest(request, author_serial, requester_serial):
     response = (FollowRequestViewSet.as_view({'post': 'declineFollowRequest'}))(request, author_serial, requester_serial)
-    if not response.ok:
+    if response.status_code != 200:
         raise Exception(response.data)
     return redirect("accounts:profile", row_id=request.user.row_id)
 
@@ -179,13 +181,18 @@ def sendFollowRequest(request, author_serial):
         "object": requestee_serializer.data,
     }
 
-    request.data = follow_request
-    response = (FollowRequestViewSet.as_view({'post': 'makeRequest'}))(request, requestee.row_id)
+    # Create a new request object with POST data
+    factory = APIRequestFactory()
+    new_request = factory.post("", follow_request, format="json")  # Empty URL since ViewSet is called directly
+    new_request.user = request.user  # Ensure authentication info is retained
 
-    if not response.ok:
-        raise Exception(response.data)
+    # Call the ViewSet action properly
+    response = FollowRequestViewSet.as_view({'post': 'makeRequest'})(new_request, requestee.row_id)
 
-    return redirect("accounts:profile", row_id=request.user.row_id)
+    if response.status_code != 200:
+        raise Exception(response.json().get("message"))
+
+    return redirect("accounts:profile", row_id=requester.row_id)
 
 
 @login_required  # ensures that this only works if user is logged in/authenticated, not sure if really needed???
