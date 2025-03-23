@@ -233,12 +233,19 @@
                                     <a href="{% url 'accounts:profile' row_id=requester.row_id %}">{{ requester.displayName }}</a>
                                 </span>
                                 <div class="flex items-center gap-2 flex-shrink-0">
-                                    <button class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
-                                        <a href="{% url 'accounts:acceptRequest' author_serial=author.row_id requester_serial=requester.row_id %}">Accept</a>
-                                    </button>
-                                    <button class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
-                                        <a href="{% url 'accounts:declineRequest' author_serial=author.row_id requester_serial=requester.row_id %}">Decline</a>
-                                    </button>
+                                    <form action="{% url 'accounts:acceptRequest' author_serial=author.row_id requester_serial=requester.row_id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
+                                            Accept
+                                        </button>
+                                    </form>
+                                    
+                                    <form action="{% url 'accounts:declineRequest' author_serial=author.row_id requester_serial=requester.row_id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="px-2 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90 whitespace-nowrap">
+                                            Decline
+                                        </button>
+                                    </form>
                                 </div>
                             </li>
                         {% empty %}
