@@ -77,6 +77,8 @@ urlpatterns = [
         'delete': 'destroy'
     }), name='post-detail'),
     
+    path('posts/', PostViewSet.as_view({'get': 'list_all'}), name='all-posts'),
+    
     path('posts/<path:post_fqid>', PostViewSet.as_view({
         'get': 'get_by_fqid'
     }), name='post-by-fqid'),

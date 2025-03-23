@@ -25,7 +25,7 @@ def nodeView(request):
                 username=form.cleaned_data["username"],
                 password=form.cleaned_data["password"],
             )
-            data = node_fetch.fetch_all_posts(node)
+            data = node_fetch.fetch_all_users(node)
             print(data)
             node.save()
             form.save()  

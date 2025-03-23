@@ -55,12 +55,11 @@ def process_users(users_data, node):
             }
         )
 
-# Post synchronization
-def fetch_all_posts(node):
+def fetch_author_posts(author_url, node):
     posts = []
     page = 1
     while True:
-        url = f"{node.nodeURL}/api/posts/?page={page}&size=20"
+        url = f"{author_url}/posts/?page={page}&size=20"
         response = requests.get(url, auth=(node.username, node.password))
         if response.status_code != 200:
             break
@@ -85,11 +84,28 @@ def fetch_post_comments(post_url, node):
             
         data = response.json()
         comments.extend(data.get('src', []))
-        
         if len(data.get('src', [])) < 20:
             break
         page += 1
     return comments
+
+def process_comments(comments_data, post):
+    for comment in comments_data:
+        try:
+            author = Authors.objects.get(id=comment['author']['id'])
+        except Authors.DoesNotExist:
+            continue
+            
+        Comment.objects.update_or_create(
+            id=comment['id'],
+            defaults={
+                'author': author,
+                'post': post,
+                'comment': comment.get('comment'),
+                'content_type': comment.get('contentType'),
+                'published': comment.get('published')
+            }
+        )
 
 # Like synchronization
 def fetch_post_likes(post_url, node):
@@ -111,22 +127,26 @@ def fetch_post_likes(post_url, node):
 
 def get_node_data(node):
     try:
-        # fetch and process users; idk if this works. Also, i only did the processing for users
+        # Sync users
         users = fetch_all_users(node)
         process_users(users, node)
         
-        # Sync Posts
-        posts = fetch_all_posts(node)
-        
-        for post_data in posts:
-            post_uuid = extract_uuid_from_url(post_data['id'])
-            post = Post.objects.filter(id=post_uuid).first()
-            if post:
-                # Comments
-                comments = fetch_post_comments(post_data['id'], node)
+        # Sync posts for each user
+        for user_data in users:
+            author_url = user_data['id']
+            posts = fetch_author_posts(author_url, node)
+            
+            for post_data in posts:
+                process_post(post_data, node)
+                post = Post.objects.get(id=post_data['id'])
                 
-                # Likes
+                # Sync comments
+                comments = fetch_post_comments(post_data['id'], node)
+                process_comments(comments, post)
+                
+                # Sync likes
                 likes = fetch_post_likes(post_data['id'], node)
+                process_likes(likes, post)
                 
     except Exception as e:
         print(f"Error syncing node {node.nodeURL}: {str(e)}")

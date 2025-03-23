@@ -16,6 +16,7 @@ from django.http import Http404
 from drf_yasg.inspectors import SwaggerAutoSchema
 from urllib.parse import unquote
 from rest_framework.permissions import IsAdminUser
+from rest_framework.pagination import PageNumberPagination
 
 class FollowersSchema(SwaggerAutoSchema):
     def get_tags(self, operation_keys=None):
@@ -440,13 +441,16 @@ class IsLocalAuthor(permissions.BasePermission):
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = [IsOwnerOrPublic]
+    pagination_class = PageNumberPagination  # Add pagination class
     lookup_field = 'id'
-    
+
     def get_queryset(self):
         author_serial = self.kwargs.get('author_serial')
+        queryset = Post.objects.filter(is_deleted=False)
+        
         if author_serial:
-            return Post.objects.filter(author__row_id=author_serial, is_deleted=False)
-        return Post.objects.filter(is_deleted=False)
+            queryset = queryset.filter(author__row_id=author_serial)
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -471,21 +475,26 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, author_serial=None):
-        author = get_object_or_404(Authors, row_id=author_serial)
+        # Get base queryset
         queryset = self.filter_queryset(self.get_queryset())
         
+        # Apply visibility filters
         if not request.user.is_authenticated:
             queryset = queryset.filter(visibility='PUBLIC')
-        elif request.user != author:
-            if request.user in author.followers.all():
-                queryset = queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
-            else:
+        elif author_serial and request.user.row_id != author_serial: 
+            author = Authors.objects.get(row_id=author_serial)
+            if request.user not in author.followers.all():
                 queryset = queryset.filter(visibility='PUBLIC')
-        
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
 
+        # Use DRF's built-in pagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
     @action(detail=False, methods=['get'], url_path='posts/(?P<post_fqid>.+)')
     def get_by_fqid(self, request, post_fqid=None):
         post_id = post_fqid.split('/')[-1]
@@ -507,6 +516,65 @@ class PostViewSet(viewsets.ModelViewSet):
             serializer.save(image=data)
         else:
             serializer.save()
+            
+    @swagger_auto_schema(
+        operation_description="Get paginated list of all posts",
+        responses={200: PostSerializer(many=True)}
+    )
+    @action(detail=False, methods=['get'])
+    def list_all(self, request):
+        """Get all posts across all authors with pagination"""
+        return self._paginated_posts_response(request)
+            
+    def _paginated_posts_response(self, request, author_serial=None):
+            page_number = request.GET.get('page', 1)
+            size = request.GET.get('size', 10)
+            
+            try:
+                page_number = int(page_number)
+                size = int(size)
+            except ValueError:
+                return Response({"error": "Invalid page or size parameters"}, status=400)
+
+            # Base queryset
+            queryset = Post.objects.filter(is_deleted=False)
+            
+            # Filter by author if specified
+            if author_serial:
+                queryset = queryset.filter(author__row_id=author_serial)
+
+            # Apply visibility filters
+            if not request.user.is_authenticated:
+                queryset = queryset.filter(visibility='PUBLIC')
+            elif not request.user.is_superuser:
+                queryset = queryset.filter(
+                    Q(visibility='PUBLIC') |
+                    Q(visibility='UNLISTED', author__followers=request.user) |
+                    Q(author=request.user)
+                ).distinct()
+
+            paginator = Paginator(queryset, size)
+            
+            try:
+                page = paginator.page(page_number)
+            except PageNotAnInteger:
+                page = paginator.page(1)
+            except EmptyPage:
+                return Response({
+                    "type": "posts",
+                    "posts": []
+                }, status=200)
+
+            serializer = PostSerializer(
+                page.object_list,
+                many=True,
+                context={'request': request}
+            )
+            
+            return Response({
+                "type": "posts",
+                "posts": serializer.data
+            })
 
 
 class NodeViewset(viewsets.ModelViewSet):
