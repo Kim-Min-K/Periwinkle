@@ -327,7 +327,7 @@ class FollowRequestViewSet(GenericViewSet):
                 for author_data in external_authors:
                     if len(suggestions) >= 5:
                         break
-                    if not Authors.objects.filter(id=author_data["id"]).exists():
+                    if not Authors.objects.filter(id=author_data["id"]).exists() and not Authors.objects.filter(github_username=author_data['github'].split("/")[-1]).exists():
                         github_username = author_data['github'].split("/")[-1]
                         author_data['github_username'] = github_username
                         serializer = authorSerializer(data=author_data)
