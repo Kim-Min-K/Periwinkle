@@ -19,6 +19,21 @@ def extract_uuid_from_url(url):
             continue
     return None  
 
+def extract_post_uuid_from_url(url):
+    path_segments = urlparse(url).path.split('/')
+    index = 0
+    for segment in path_segments:
+        try:
+            uuid.UUID(segment)
+            if index != 0:
+                return segment
+            else:
+                index += 1
+                continue
+        except ValueError:
+            continue
+    return None
+
 def fetch_all_users(node):
     users = []
     page = 1
@@ -120,29 +135,59 @@ def fetch_post_comments(post_url, node):
             break
             
         data = response.json()
-        comments.extend(data.get('src', []))
-        if len(data.get('src', [])) < 20:
+
+        if isinstance(data, dict) and 'results' in data:
+            page_comments = data['results']
+            total_pages = data['total_pages']
+        elif isinstance(data, dict) and 'src' in data:
+            page_comments = data['src']
+            total_pages = data['page_number']
+        elif isinstance(data, list):
+            page_comments = data
+            total_pages = 1
+        else:
+            page_comments = []
+            total_pages = 1
+        comments.extend(page_comments)
+
+        if page >= total_pages or len(page_comments) < 20:
             break
         page += 1
     return comments
 
 def process_comments(comments_data, post):
     for comment in comments_data:
-        try:
-            author = Authors.objects.get(id=comment['author']['id'])
-        except Authors.DoesNotExist:
+        if not isinstance(comment, dict):
             continue
-            
-        Comment.objects.update_or_create(
-            id=comment['id'],
-            defaults={
-                'author': author,
-                'post': post,
-                'comment': comment.get('comment'),
-                'content_type': comment.get('contentType'),
-                'published': comment.get('published')
-            }
-        )
+
+        try:
+            # Get the Author of the Comment
+            author_data = comment.get('author')
+            author_id = author_data.get('id')
+            author = Authors.objects.get(id=author_id)
+
+            # Get the Post that was commented on
+            post_url = comment.get('post')
+            post_uuid = extract_post_uuid_from_url(post_url)
+            print(post_uuid)
+            post = Post.objects.get(id=post_uuid)
+            print(post)
+
+            comment_uuid = extract_uuid_from_url(comment.get('id'))
+
+            Comment.objects.update_or_create(
+                id=comment_uuid,
+                defaults={
+                    'author': author,
+                    'post': post,
+                    'comment': comment.get('comment'),
+                    'content_type': comment.get('contentType'),
+                    'published': comment.get('published')
+                }
+            )
+        except Exception as e:
+            print(f"Error processing comment {comment}: {str(e)}")
+            continue
 
 # Like synchronization
 def fetch_post_likes(post_url, node):
@@ -170,15 +215,14 @@ def process_post(posts_data, author_uuid, node):
         
         post_id = posts_data.get('id', '')
         post_id = post_id.split("posts/")[1]
-        print(post_id)
         post_uuid = uuid.UUID(post_id)
-        print(post_uuid)
+        
         Post.objects.update_or_create(
             id=post_uuid,
             defaults={
                 'author': author,
-                'title': posts.get('title'),
-                'description': posts.get('description'),
+                'title': posts_data.get('title'),
+                'description': posts_data.get('description'),
                 'content': posts_data.get('content'),
                 'contentType': posts_data.get('contentType'),
                 'published': posts_data.get('published'),
@@ -187,6 +231,7 @@ def process_post(posts_data, author_uuid, node):
                 'is_deleted': posts_data.get('isDeleted', False)
             }
         )
+        return post_uuid
 
 def process_likes(likes_data, post):
     for like in likes_data:
@@ -203,6 +248,7 @@ def process_likes(likes_data, post):
                 'published': like.get('published')
             }
         )
+        print("Like Added")
 
 def get_node_data(node):
     try:
@@ -217,15 +263,17 @@ def get_node_data(node):
             author_uuid = extract_uuid_from_url(author_url)
             print("Posts Synced")
             for post_data in posts:
-                process_post(post_data, author_uuid, node)
-                
+                print("Post Data:", post_data)
+                post = process_post(post_data, author_uuid, node)
+                print("Post Done, Moving onto Comments")
                 # Sync comments
-               # comments = fetch_post_comments(post_data['id'], node)
-               # process_comments(comments, post)
-                
+                comments = fetch_post_comments(post_data['id'], node)
+                process_comments(comments, post)
+                print("Comments Done, Moving onto Likes")
+            
                 # Sync likes
-              #  likes = fetch_post_likes(post_data['id'], node)
-               # process_likes(likes, post)
+                likes = fetch_post_likes(post_data['id'], node)
+                process_likes(likes, post)
                 
     except Exception as e:
         print(f"Error syncing node {node.nodeURL}: {str(e)}")
