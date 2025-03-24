@@ -181,18 +181,31 @@ def sendFollowRequest(request, author_serial):
         "object": requestee_serializer.data,
     }
 
-    # Create a new request object with POST data
-    factory = APIRequestFactory()
-    new_request = factory.post("", follow_request, format="json")  # Empty URL since ViewSet is called directly
-    new_request.user = request.user  # Ensure authentication info is retained
+    if request.build_absolute_uri("/api/") == requestee.host:
+        # Create a new request object with POST data
+        factory = APIRequestFactory()
+        new_request = factory.post("", follow_request, format="json")  # Empty URL since ViewSet is called directly
+        new_request.user = request.user  # Ensure authentication info is retained
+        
+        # Call the ViewSet action properly
+        response = FollowRequestViewSet.as_view({'post': 'makeRequest'})(new_request, requestee.row_id)
 
-    # Call the ViewSet action properly
-    response = FollowRequestViewSet.as_view({'post': 'makeRequest'})(new_request, requestee.row_id)
+        if response.status_code != 200:
+            raise Exception(response.json().get("message"))
+        return redirect("accounts:profile", row_id=requester.row_id)
+    else:
+        url = f"{requestee.host}authors/{author_serial}/inbox/"
 
-    if response.status_code != 200:
-        raise Exception(response.json().get("message"))
+        try:
+            response = requests.post(url, json=follow_request)
+            if response.status_code not in [400, 200, 201]:  # Check for success statuses
+                raise Exception(response.json().get("message", "Failed to send follow request"))
+            Follow.objects.create(followee=requestee, follower=requester)
 
-    return redirect("accounts:profile", row_id=requester.row_id)
+        except requests.RequestException as e:
+            raise Exception(f"Error connecting to {requestee.host}: {str(e)}")
+
+        return redirect("accounts:profile", row_id=requester.row_id)
 
 
 @login_required  # ensures that this only works if user is logged in/authenticated, not sure if really needed???
