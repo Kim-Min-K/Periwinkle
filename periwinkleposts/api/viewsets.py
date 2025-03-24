@@ -340,7 +340,7 @@ class FollowRequestViewSet(GenericViewSet):
     
 class AuthorViewSet(GenericViewSet):
     serializer_class = AuthorSerializer
-    queryset = Authors.objects.all().order_by('id').exclude(is_staff=1)
+    queryset = Authors.objects.all().order_by('id')
 
     @swagger_auto_schema(
         operation_description="Get paginated list of authors",
@@ -396,7 +396,7 @@ class AuthorViewSet(GenericViewSet):
 
     
     def get_queryset(self):
-        return Authors.objects.all().order_by('id')
+        return Authors.objects.exclude(is_staff=1).order_by('id')
     
 
     @swagger_auto_schema(
