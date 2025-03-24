@@ -247,7 +247,6 @@ def process_post(posts_data, author_uuid, node):
                 'is_deleted': posts_data.get('isDeleted', False)
             }
         )
-        return post_uuid
 
 def process_likes(likes_data, post):
     for like in likes_data:
