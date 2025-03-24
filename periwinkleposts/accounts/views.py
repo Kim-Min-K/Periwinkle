@@ -21,6 +21,8 @@ from rest_framework.views import APIView
 from urllib.parse import unquote
 from rest_framework.test import APIRequestFactory
 from inbox.models import Inbox
+from api.serializers import PostSerializer
+
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -281,6 +283,11 @@ def create_post(request):
                 visibility=visibility,
             )
             post.save()
+            Inbox.objects.create(
+                author=request.user, 
+                type="comment",
+                content=PostSerializer(post, context={'request': request}).data
+            )
             return redirect("pages:home")
         except Exception as e:
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
