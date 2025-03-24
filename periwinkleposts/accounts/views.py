@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings, Follow
-from .serializers import authorSerializer, CommentSerializer, LikeSerializer
+from .serializers import *
 from inbox.serializers import InboxSerializer
 from django.http import QueryDict
 from api.viewsets import *
@@ -175,12 +175,9 @@ def sendFollowRequest(request, author_serial):
     requestee_serializer = authorSerializer(requestee)
     requester_serializer = authorSerializer(requester)
 
-    follow_request = {
-        "type": "follow",
-        "summary": f"{requester.username} wants to follow {requestee.username}",
-        "actor": requester_serializer.data,
-        "object": requestee_serializer.data,
-    }
+    serializer = ActionSerializer(action_type="follow", actor=requester, object=requestee)
+
+    follow_request = serializer.to_representation()
     
     if requester.host == requestee.host:
         # Create a new request object with POST data

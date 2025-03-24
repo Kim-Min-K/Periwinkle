@@ -232,6 +232,11 @@ class ActionSerializer(serializers.Serializer):
             self.summary_text = str(actor) + " wants to follow " + str(object)
 
     def to_representation(self, instance=None):
+        allowed_fields = {"type", "id", "host", "displayName", "page", "github", "profileImage"}  # Define fields you want to keep
+
+        actor_data = {k: v for k, v in authorSerializer(self.actor_instance).data.items() if k in allowed_fields} if self.actor_instance else None
+        object_data = {k: v for k, v in authorSerializer(self.object_instance).data.items() if k in allowed_fields} if self.object_instance else None
+        
         return {
             "type": self.action_type,
             "summary": self.action_summary,
