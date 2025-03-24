@@ -48,6 +48,7 @@ def process_users(users_data, node):
             defaults={
                 'host': user.get('host'),
                 'username': user.get('displayName'),
+                'displayName': user.get('displayName'),
                 'github_username': user.get('github', '').split('/')[-1],
                 'avatar_url': user.get('profileImage')
             }
@@ -176,9 +177,12 @@ def process_post(posts_data, author_uuid, node):
             id=post_uuid,
             defaults={
                 'author': author,
+                'title': posts.get('title'),
+                'description': posts.get('description'),
                 'content': posts_data.get('content'),
                 'contentType': posts_data.get('contentType'),
                 'published': posts_data.get('published'),
+                'page': posts_data.get('page'),
                 'visibility': posts_data.get('visibility'),
                 'is_deleted': posts_data.get('isDeleted', False)
             }
