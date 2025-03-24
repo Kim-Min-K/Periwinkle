@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Display JSON Data</title>
+   <title>{{ author.username }}'s Inbox</title>
 </head>
 <body>
-    <h1>Raw JSON Display</h1>
-
-    {% if data %}
-        <pre>
-{% for item in data %}
-{{ item | safe | pprint }}
-{% endfor %}
-        </pre>
-    {% else %}
-        <p>No data provided.</p>
-    {% endif %}
+   <h1>Inbox for {{ author.username }}</h1>
+   <ul>
+       {% for item in inbox_items %}
+           <li><strong>{{ item.type }}</strong> ({{ item.received }}):<br>
+               <pre>{{ item.content|safe }}</pre>
+           </li>
+       {% empty %}
+           <li>No inbox items found.</li>
+       {% endfor %}
+   </ul>
 </body>
 </html>

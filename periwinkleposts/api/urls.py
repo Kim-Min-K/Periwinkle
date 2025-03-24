@@ -10,8 +10,6 @@ urlpatterns = [
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
-    # ://service/api/authors/{AUTHOR_SERIAL}/inbox, for comment, follow and like
-    path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments
     path("authors/<uuid:author_serial>/posts/<uuid:post_serial>/comments/",
         CommentView.as_view({'get': 'get_post_comments'}), name='get_post_comments' ),
@@ -82,6 +80,10 @@ urlpatterns = [
     path('posts/<path:post_fqid>', PostViewSet.as_view({
         'get': 'get_by_fqid'
     }), name='post-by-fqid'),
+
+    #---------Inbox--------------
+    # ://service/api/authors/{AUTHOR_SERIAL}/inbox, for comment, follow and like
+    path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
 ]
 
 

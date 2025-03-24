@@ -18,6 +18,7 @@ from urllib.parse import unquote
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from .models import *
+from django.db.models import Q
 import requests
 
 class FollowersSchema(SwaggerAutoSchema):
@@ -569,9 +570,12 @@ class PostViewSet(viewsets.ModelViewSet):
             if not request.user.is_authenticated:
                 queryset = queryset.filter(visibility='PUBLIC')
             elif not request.user.is_superuser:
+                followee_ids = Follow.objects.filter(follower=request.user).values_list('followee_id', flat=True)
                 queryset = queryset.filter(
                     Q(visibility='PUBLIC') |
-                    Q(visibility='UNLISTED', author__followers=request.user) |
+                    # Q(visibility='UNLISTED', author__follower=request.user) |
+                    # Q(visibility='UNLISTED', author__followee=request.user) |
+                    Q(visibility='UNLISTED', author__row_id__in=followee_ids) |
                     Q(author=request.user)
                 ).distinct()
 

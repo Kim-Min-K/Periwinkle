@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Send to Inbox (Manual Test)</title>
+</head>
+<body>
+    <h1>Send Raw JSON to Inbox</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label>Inbox URL:</label><br>
+        <input type="text" name="inbox_url" size="100" placeholder="http://[::]/api/authors/{uuid}/inbox/"><br><br>
+
+        <label>Payload (JSON):</label><br>
+        <textarea name="payload" rows="20" cols="100" placeholder='{"type": "comment", ...}'></textarea><br><br>
+
+        <input type="submit" value="Send">
+    </form>
+
+    {% if response %}
+        <h3>Response:</h3>
+        <pre>{{ response }}</pre>
+    {% endif %}
+</body>
+</html>
