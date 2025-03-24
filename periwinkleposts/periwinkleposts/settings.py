@@ -155,5 +155,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGOUT_REDIRECT_URL = 'accounts:login'
 
 #node connection setup...
-NODE_USERNAME = os.environ.get("NODE_USERNAME", "admin")
-NODE_PASSWORD = os.environ.get("NODE_PASSWORD", "admin")
+# NODE_USERNAME = os.environ.get("NODE_USERNAME", "admin")
+# NODE_PASSWORD = os.environ.get("NODE_PASSWORD", "admin")
+NODE_USERNAME = "admin"
+NODE_PASSWORD = "password"

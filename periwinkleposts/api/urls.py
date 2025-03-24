@@ -2,6 +2,8 @@ from django.urls import path, include
 from api.viewsets import *
 from accounts.views import CommentView, LikeView, InboxView
 from rest_framework.routers import DefaultRouter
+from api.views import NodeAuthCheckView
+
 app_name = 'api'  
 
 urlpatterns = [
@@ -84,6 +86,8 @@ urlpatterns = [
     #---------Inbox--------------
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox, for comment, follow and like
     path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+    #-------Auth?--------
+    path("auth-check/", NodeAuthCheckView.as_view(), name="node-auth-check"),
 ]
 
 
