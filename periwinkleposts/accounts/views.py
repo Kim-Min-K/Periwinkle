@@ -152,7 +152,7 @@ def profileView(request, row_id):
 def acceptRequest(request, author_serial, requester_serial):
     response = (FollowRequestViewSet.as_view({'post': 'acceptFollowRequest'}))(request, author_serial, requester_serial)
     if response.status_code != 200:
-        raise Exception("Accept request failed")
+        raise Exception(response.data)
     return redirect("accounts:profile", row_id=request.user.row_id)
 
 
