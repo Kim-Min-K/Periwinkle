@@ -185,6 +185,7 @@ class FollowRequestViewSet(GenericViewSet):
                 try:
                     requester = Authors.objects.get(id=requester_json["id"])
                 except Authors.DoesNotExist:
+                    requester_json["row_id"] = requester_json["id"].split("/")[-1]
                     requester_serializer = authorSerializer(data=requester_json)
                     if not requester_serializer.is_valid():
                         raise ValueError(requester_serializer.errors)
@@ -328,14 +329,17 @@ class FollowRequestViewSet(GenericViewSet):
                     if len(suggestions) >= 5:
                         break
                     if not Authors.objects.filter(id=author_data["id"]).exists() and not Authors.objects.filter(github_username=author_data['github'].split("/")[-1]).exists():
+                        
+                        author_data['row_id'] = author_data['id'].split("/")[-1]
                         github_username = author_data['github'].split("/")[-1]
                         author_data['github_username'] = github_username
+
                         serializer = authorSerializer(data=author_data)
                         if not serializer.is_valid():
                             raise Exception("Error saving author suggestion because : " + str(serializer.errors))
                         author = serializer.save()
                         suggestions.append(author)
-        print(suggestions)
+        
         serializer = authorsSerializer({"type":"request-suggestions", "authors": suggestions})
 
         return Response(serializer.data, status=200)

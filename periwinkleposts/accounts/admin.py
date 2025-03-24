@@ -6,7 +6,7 @@ from django.utils.html import mark_safe
 
 # so the replaced users still shows up in the auth panel
 class AuthorsAdmin(UserAdmin):
-    list_display = ("username", "email", "is_staff", "displayName", "host", "is_active", "github_username", "is_approved")
+    list_display = ("row_id", "username", "email", "is_staff", "displayName", "host", "is_active", "github_username", "is_approved")
     list_filter = ("is_staff", "is_approved")
     fieldsets = UserAdmin.fieldsets + (
         (
