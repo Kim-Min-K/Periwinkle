@@ -322,6 +322,8 @@ def get_node_data(node):
                 likes = fetch_post_likes(post_data['id'], node)
                 process_likes(likes, post)
                 print("Likes Done!")
-                
+
+        print("Sync with Node successful")
+        
     except Exception as e:
         print(f"Error syncing node {node.nodeURL}: {str(e)}")
