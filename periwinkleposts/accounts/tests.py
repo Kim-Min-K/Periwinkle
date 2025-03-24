@@ -943,7 +943,7 @@ class AuthorViewSetTests(APITestCase):
                 username=f"author_{i}",
                 displayName=f"display_name_{i}",
                 github_username=f"github_{i}",
-                host="http://testserver",
+                host="http://testserver/api/",
                 avatar_url=f"http://example.com/avatar_{i}.jpg"
             )
 

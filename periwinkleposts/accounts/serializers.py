@@ -240,8 +240,8 @@ class ActionSerializer(serializers.Serializer):
         return {
             "type": self.action_type,
             "summary": self.action_summary,
-            "actor": authorSerializer(self.actor_instance).data if self.actor_instance else None,
-            "object": authorSerializer(self.object_instance).data if self.object_instance else None,
+            "actor": actor_data,
+            "object": object_data,
         }
     
     def save(self, **kwargs):

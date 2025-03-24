@@ -319,7 +319,8 @@ class FollowRequestViewSet(GenericViewSet):
         if len(suggestions) < 5:
             nodes = ExternalNode.objects.all()
             for node in nodes:
-                url = str(node.nodeURL)+"/api/authors/"
+                host = str(node.nodeURL) + "/api/"
+                url = host+"authors/"
                 response = requests.get(url)
                 if response.status_code != 200:
                     continue
@@ -365,7 +366,8 @@ class AuthorViewSet(GenericViewSet):
         except ValueError:
             return Response({"error": "Invalid page or size parameters"}, status=400)
 
-        paginator = Paginator(self.get_queryset(), size)
+        print(request.build_absolute_uri("/api/"))
+        paginator = Paginator(self.get_queryset().filter(host=request.build_absolute_uri("/api/")), size)
         
         try:
             page = paginator.page(page_number)
