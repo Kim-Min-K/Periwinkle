@@ -13,4 +13,6 @@ jobs:
       - run: pip install -r requirements.txt  # Install dependencies
       - run: |
           cd periwinkleposts  # Navigate to the project folder
+          python3 manage.py migrate
+          python3 manage.py makemigrations
           python3 manage.py test  # Run Django tests
