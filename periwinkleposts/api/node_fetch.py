@@ -49,15 +49,14 @@ def process_users(users_data, node):
                 'host': user.get('host'),
                 'username': user.get('displayName'),
                 'github_username': user.get('github', '').split('/')[-1],
-                'avatar_url': user.get('profileImage'),
-                'page_url': user.get('page'),
-                'is_local': False
+                'avatar_url': user.get('profileImage')
             }
         )
 
 def fetch_author_posts(author_url, node):
     posts = []
     page = 1
+    print(author_url)
     while True:
         url = f"{author_url}/posts/?page={page}&size=20"
         #response = requests.get(url, auth=(node.username, node.password))
