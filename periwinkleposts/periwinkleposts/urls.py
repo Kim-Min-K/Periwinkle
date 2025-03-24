@@ -33,11 +33,11 @@ schema_view = swagger_get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('inbox/', include('inbox.urls')),
     path('pages/', include('pages.urls', namespace ='pages')),
     path('accounts/', include('accounts.urls')),
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)), 
     path('api/', include('api.urls')),
+    path('api/', include('inbox.urls')),
     path('api/docs', schema_view.with_ui('swagger', cache_timeout=0), name="docs")
 ]
 

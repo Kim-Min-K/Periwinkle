@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Display JSON Data</title>
+</head>
+<body>
+    <h1>Raw JSON Display</h1>
+
+    {% if data %}
+        <pre>
+{% for item in data %}
+{{ item | safe | pprint }}
+{% endfor %}
+        </pre>
+    {% else %}
+        <p>No data provided.</p>
+    {% endif %}
+</body>
+</html>
