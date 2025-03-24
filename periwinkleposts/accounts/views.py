@@ -578,7 +578,7 @@ class InboxView(APIView):
         )
         serializer = LikeSerializer(like)
         Inbox.objects.create(
-            author=post.author,
+            author=receiver,
             type="like",
             content=serializer.data
         )
