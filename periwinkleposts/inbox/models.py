@@ -11,7 +11,7 @@ class Inbox(models.Model):
    ]
    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
    author = models.ForeignKey(Authors, on_delete=models.CASCADE, related_name='inbox_items')
-   type = models.CharField(choices=inbox_type)
+   type = models.CharField(max_length = 10, choices=inbox_type)
    content = models.JSONField()
    received = models.DateTimeField(auto_now_add=True)
 

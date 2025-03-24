@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Authors, FollowRequest, Comment, Like, Post, SiteSettings, Follow
 from .serializers import authorSerializer, CommentSerializer, LikeSerializer
+from inbox.serializers import InboxSerializer
 from django.http import QueryDict
 from api.viewsets import *
 from django.shortcuts import redirect, render
@@ -19,7 +20,7 @@ from django.contrib.auth.views import LogoutView
 from rest_framework.views import APIView
 from urllib.parse import unquote
 from rest_framework.test import APIRequestFactory
-
+from inbox.models import Inbox
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -342,6 +343,11 @@ class CommentView(viewsets.ModelViewSet):
             author, _ = Authors.objects.get_or_create(id=author_data["id"], defaults=author_data)
         if serializer.is_valid():
             serializer.save(author=author, post = post)
+            Inbox.objects.create(
+                author=post.author, 
+                type="comment",
+                content=serializer.data
+            )
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
             return Response(serializer.data, status=201)
         else:
@@ -491,6 +497,12 @@ class LikeView(viewsets.ModelViewSet):
         return Response(serializer.data, status=200)
     
 class InboxView(APIView):
+    def get(self, request, author_serial):
+        author = get_object_or_404(Authors, row_id=author_serial)
+        inbox_items = Inbox.objects.filter(author=author).order_by('-received')
+        serializer = InboxSerializer(inbox_items, many=True)
+        return Response(serializer.data, status=200)
+
     def post(self, request, author_serial):
         
         author = get_object_or_404(Authors, row_id=author_serial)
@@ -510,6 +522,11 @@ class InboxView(APIView):
         serializer = CommentSerializer(data=request.data, context={"request": request})  
         if serializer.is_valid():
             serializer.save(author=author, post=post)
+            Inbox.objects.create(
+                author=post.author, 
+                type="comment",
+                content=serializer.data
+            )
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
