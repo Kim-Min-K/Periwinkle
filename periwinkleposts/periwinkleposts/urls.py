@@ -37,7 +37,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('', RedirectView.as_view(url='/accounts/login/', permanent=False)), 
     path('api/', include('api.urls')),
-    path('api/', include('inbox.urls')),
+    path('inbox/', include('inbox.urls')),
     path('api/docs', schema_view.with_ui('swagger', cache_timeout=0), name="docs")
 ]
 
