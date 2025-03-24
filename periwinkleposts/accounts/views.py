@@ -21,8 +21,8 @@ from rest_framework.views import APIView
 from urllib.parse import unquote
 from rest_framework.test import APIRequestFactory
 from inbox.models import Inbox
-from api.serializers import PostSerializer
-
+from api.serializers import PostSerializer, AuthorSerializer
+from api.models import ExternalNode
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -367,6 +367,20 @@ class CommentView(viewsets.ModelViewSet):
                 type="comment",
                 content=serializer.data
             )
+            for node in ExternalNode.objects.all():
+                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+                try:
+                    response = requests.post(
+                        inbox_url,
+                        json={
+                            'type':'comment',
+                            **serializer.data
+                        },
+                        timeout = 5
+                    )
+                except Exception as e:
+                    print(f"Failed to send comment to {inbox_url}: {e}")
+                #path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
             return Response(serializer.data, status=201)
         else:
@@ -548,9 +562,12 @@ class InboxView(APIView):
         post_url = request.data.get("post")  
         post_id = post_url.split("/")[-1]
         post = get_object_or_404(Post, id=post_id) 
+        author_data = request.data.get('author',{})
+        author_id = author_data.get("id", "").split("/")[-1]
+        commenter = get_object_or_404(Authors, row_id=author_id)
         serializer = CommentSerializer(data=request.data, context={"request": request})  
         if serializer.is_valid():
-            serializer.save(author=author, post=post)
+            serializer.save(author=commenter, post=post)
             Inbox.objects.create(
                 author=post.author, 
                 type="comment",
