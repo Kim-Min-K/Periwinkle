@@ -23,9 +23,10 @@ class FollowUITests(SeleniumTestCase):
         clickAndWait.until(EC.element_to_be_clickable((by, arg))).click()
         time.sleep(timeout)
 
-    def register_user(self, username, github_username, password):
+    def register_user(self, username, github_username, password, displayName):
         self.driver.get(self.live_server_url + "/accounts/register/")
-    
+
+        self.driver.find_element(By.ID, "displayName").send_keys(displayName)
         self.driver.find_element(By.ID, "username").send_keys(username)
         self.driver.find_element(By.ID, "github_username").send_keys(github_username)
         self.driver.find_element(By.ID, "password1").send_keys(password)
@@ -128,16 +129,18 @@ class FollowUITests(SeleniumTestCase):
         dummy_username_1 = "username_1"
         dummy_github_1 = "dummy_github_1"
         dummy_password_1 = "114300Rom"
+        dummy_display_1 = "dummy_1"
 
-        self.register_user(dummy_username_1, dummy_github_1, dummy_password_1)
+        self.register_user(dummy_username_1, dummy_github_1, dummy_password_1, dummy_display_1)
 
         self.approve_user(dummy_username_1)
 
         dummy_username_2 = "username_2"
         dummy_github_2 = "dummy_github_2"
         dummy_password_2 = "114300Rom"
+        dummy_display_2 = "dummy_2"
 
-        self.register_user(dummy_username_2, dummy_github_2, dummy_password_2)
+        self.register_user(dummy_username_2, dummy_github_2, dummy_password_2, dummy_display_2)
 
         self.approve_user(dummy_username_2)
 
@@ -256,6 +259,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         host = self.live_server_url+"/api/"
         url = reverse("accounts:register")
         response = self.client.post(url, urlencode({
+            'displayName':'Test Author 1',
             'username': 'test_author_1', 
             'github_username':'test_author_1', 
             'host':host,
@@ -265,6 +269,7 @@ class FollowLiveServerTests(LiveServerTestCase):
         self.assertEqual(response.status_code, 302) 
 
         response = self.client.post(url, urlencode({
+            'displayName':'Test Author 2',
             'username': 'test_author_2', 
             'github_username':'test_author_2', 
             'host':host,

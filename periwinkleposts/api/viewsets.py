@@ -327,6 +327,8 @@ class FollowRequestViewSet(GenericViewSet):
                     if len(suggestions) >= 5:
                         break
                     if not Authors.objects.filter(id=author_data["id"]).exists():
+                        github_username = author_data['github'].split("/")[-1]
+                        author_data['github_username'] = github_username
                         serializer = authorSerializer(data=author_data)
                         if not serializer.is_valid():
                             raise Exception("Error saving author suggestion because : " + str(serializer.errors))
