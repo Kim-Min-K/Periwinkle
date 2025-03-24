@@ -283,11 +283,43 @@ def create_post(request):
                 visibility=visibility,
             )
             post.save()
+
+            serialized_post = PostSerializer(post, context={'request': request}).data
+
+            # Add to creator's inbox
             Inbox.objects.create(
                 author=request.user, 
-                type="comment",
-                content=PostSerializer(post, context={'request': request}).data
+                type="post",
+                content=serialized_post
             )
+
+            # Add to other inboxes
+            if visibility.upper() == "PUBLIC":
+                # Send to Every Author
+                for author in Authors.objects.all():
+                    Inbox.objects.create(
+                        author=author,
+                        type="post",
+                        content=serialized_post
+                    )
+            elif visibility.upper() == "UNLISTED":
+                # Send to Followers
+                for follower in request.user.followers.all():
+                    Inbox.objects.create(
+                        author=follower.follower, 
+                        type="post",
+                        content=serialized_post
+                    )
+            elif visibility.upper() == "FRIENDS":
+                # Send to Friends
+                for potential_friend in Authors.objects.exclude(row_id=request.user.row_id):
+                    if is_friend(request.user, potential_friend):
+                        Inbox.objects.create(
+                            author=potential_friend,
+                            type="post",
+                            content=serialized_post
+                        )
+
             return redirect("pages:home")
         except Exception as e:
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
@@ -332,7 +364,7 @@ def edit_post(request, post_id):
         'visibility_choices': Post.VISIBILITY_CHOICES
     })
 
-def view_post(request, post_id):
+def view_post(request, author_id, post_id):
     post = get_object_or_404(Post, id=post_id)
     return render(request, 'view_post.html', {'post': post})
 
