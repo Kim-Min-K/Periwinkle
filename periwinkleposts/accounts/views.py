@@ -178,6 +178,8 @@ def sendFollowRequest(request, author_serial):
     serializer = ActionSerializer(action_type="follow", actor=requester, object=requestee)
 
     follow_request = serializer.to_representation()
+
+    print(follow_request)
     
     if requester.host == requestee.host:
         # Create a new request object with POST data

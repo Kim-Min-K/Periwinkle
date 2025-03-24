@@ -941,6 +941,7 @@ class AuthorViewSetTests(APITestCase):
         for i in range(15):
             Authors.objects.create(
                 username=f"author_{i}",
+                displayName=f"display_name_{i}",
                 github_username=f"github_{i}",
                 host="http://testserver",
                 avatar_url=f"http://example.com/avatar_{i}.jpg"
@@ -975,7 +976,7 @@ class AuthorViewSetTests(APITestCase):
         first_author = Authors.objects.order_by('id').first()
         self.assertEqual(
             response.data['authors'][0]['displayName'],
-            first_author.username
+            first_author.displayName
         )
 
     def test_authors_cpag(self):
@@ -987,7 +988,7 @@ class AuthorViewSetTests(APITestCase):
         sixth_author = Authors.objects.order_by('id')[5]
         self.assertEqual(
             response.data['authors'][0]['displayName'],
-            sixth_author.username
+            sixth_author.displayName
         )
 
     def test_authors_ipag(self):

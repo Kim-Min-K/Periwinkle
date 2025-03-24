@@ -324,6 +324,7 @@ class FollowRequestViewSet(GenericViewSet):
                 if response.status_code != 200:
                     continue
                 external_authors = response.json()["authors"]
+                print(external_authors)
                 # Add external authors to suggestions
                 for author_data in external_authors:
                     if len(suggestions) >= 5:

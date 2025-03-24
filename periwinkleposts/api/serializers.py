@@ -40,7 +40,7 @@ class AuthorObjectToJSONSerializer(serializers.Serializer):
     row_id = serializers.UUIDField(default="row.id")
     id = serializers.SerializerMethodField()
     host = serializers.SerializerMethodField()
-    displayName = serializers.CharField(source="username") #do we want to keep username and display seperate?
+    displayName = serializers.CharField() #do we want to keep username and display seperate?
     github = serializers.SerializerMethodField()
     profileImage = serializers.SerializerMethodField()
     page = serializers.SerializerMethodField()
@@ -56,6 +56,9 @@ class AuthorObjectToJSONSerializer(serializers.Serializer):
 
     def get_profileImage(self, obj):
         return obj.avatar_url
+
+    def get_displayName(self, obj):
+        return obj.displayName
 
     def get_page(self, obj):
         return obj.host[:-5] + (f'/accounts/profile/{obj.row_id}') # this should be changed to UUID
