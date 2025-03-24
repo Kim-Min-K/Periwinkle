@@ -38,6 +38,10 @@ RUN npx tailwindcss -i periwinkleposts/static/main.css -o periwinkleposts/static
 # static stuff
 RUN python periwinkleposts/manage.py collectstatic --noinput
 
+# migrations
+RUN python periwinkleposts/manage.py migrate
+RUN python periwinkleposts/manage.py makemigrations
+
 #create directory for SQLite database
 RUN mkdir -p /app/db
 
