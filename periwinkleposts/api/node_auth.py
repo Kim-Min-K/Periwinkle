@@ -15,6 +15,8 @@ class NodeBasicAuthentication(BaseAuthentication):
             decoded_credentials = base64.b64decode(encoded_credentials).decode("utf-8")
             username, password = decoded_credentials.split(":", 1)
 
+            print(f"Received username: {username}, password: {password}")  # Debugging
+
             # Compare with settings credentials
             if username == settings.NODE_USERNAME and password == settings.NODE_PASSWORD:
                 return (username, None)  # Authentication successful
