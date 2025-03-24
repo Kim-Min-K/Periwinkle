@@ -147,23 +147,30 @@ class FriendsViewSet(GenericViewSet):
             }
     )
     def getFriends(self, request, author_serial):
-        print(author_serial)
         author_uuid = author_serial
 
         # Retrieve the author for whom we want to get friends
         author = get_object_or_404(Authors, pk=author_uuid)
 
+        from rest_framework.test import APIRequestFactory
+        factory = APIRequestFactory()
+        fake_request = factory.get(f"/authors/{author_serial}/followers/")  # Simulate a request
+
+        # Get active followers (mutual followers)
+        active_followers_fqid = {
+            author["id"] for author in (FollowersViewSet.as_view({"get": "list"}))(fake_request, author_serial).data["authors"]
+        }
+
         # Get all authors that this author follows (i.e., followees)
         following_ids = Follow.objects.filter(follower=author).values_list('followee_id', flat=True)
-        
-        # Get all authors that follow this author (i.e., followers)
-        followers_ids = Follow.objects.filter(followee=author).values_list('follower_id', flat=True)
 
-        # The friends are the intersection of the two sets
-        friend_ids = list(set(following_ids).intersection(set(followers_ids)))
+        following_fqids = set(Authors.objects.filter(row_id__in=following_ids).values_list('id', flat=True))
+
+        # Find mutual friends
+        friend_ids = list(following_fqids & active_followers_fqid)
 
         # Retrieve the friend Author objects
-        friends = Authors.objects.filter(row_id__in=friend_ids)
+        friends = Authors.objects.filter(id__in=friend_ids)
 
         # Serialize the friend objects
         serializer = authorsSerializer({"type": "friends", "authors":friends})
