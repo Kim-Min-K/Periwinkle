@@ -17,6 +17,8 @@ from drf_yasg.inspectors import SwaggerAutoSchema
 from urllib.parse import unquote
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination
+from .models import *
+import requests
 
 class FollowersSchema(SwaggerAutoSchema):
     def get_tags(self, operation_keys=None):
@@ -305,14 +307,32 @@ class FollowRequestViewSet(GenericViewSet):
 
         request_ids = FollowRequest.objects.filter(requester=current_author).values_list("requestee__row_id", flat=True)
         
-        # Get 5 authors that the current author is NOT following
-        # Also, exclude the current author from the suggestions
-        suggestions = Authors.objects.exclude(row_id__in=followed_ids)\
-                                    .exclude(row_id=current_author.row_id)\
-                                    .exclude(row_id__in=request_ids)\
-                                    .exclude(is_staff=1)\
-                                    .order_by('?')[:5]
-        
+        # Get up to 5 local authors
+        suggestions = list(Authors.objects.exclude(row_id__in=followed_ids)
+                                          .exclude(row_id=current_author.row_id)
+                                          .exclude(row_id__in=request_ids)
+                                          .exclude(is_staff=True)
+                                          .order_by('?')[:5])
+
+        if len(suggestions) < 5:
+            nodes = ExternalNode.objects.all()
+            for node in nodes:
+                url = str(node.nodeURL)+"/api/authors/"
+                response = requests.get(url)
+                if response.status_code != 200:
+                    continue
+                external_authors = response.json()["authors"]
+                # Add external authors to suggestions
+                for author_data in external_authors:
+                    if len(suggestions) >= 5:
+                        break
+                    if not Authors.objects.filter(id=author_data["id"]).exists():
+                        serializer = authorSerializer(data=author_data)
+                        if not serializer.is_valid():
+                            raise Exception("Error saving author suggestion because : " + str(serializer.errors))
+                        author = serializer.save()
+                        suggestions.append(author)
+        print(suggestions)
         serializer = authorsSerializer({"type":"request-suggestions", "authors": suggestions})
 
         return Response(serializer.data, status=200)
@@ -320,7 +340,7 @@ class FollowRequestViewSet(GenericViewSet):
     
 class AuthorViewSet(GenericViewSet):
     serializer_class = AuthorSerializer
-    queryset = Authors.objects.all().order_by('id')
+    queryset = Authors.objects.all().order_by('id').exclude(is_staff=1)
 
     @swagger_auto_schema(
         operation_description="Get paginated list of authors",

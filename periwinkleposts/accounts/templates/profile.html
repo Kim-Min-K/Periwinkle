@@ -16,7 +16,7 @@
                 </div>
                 <div>
                     <div class="flex items-center space-x-4">
-                        <h2 class="text-2xl font-semibold">{{ author.username }}</h2>
+                        <h2 class="text-2xl font-semibold">{{ author.displayName }}</h2>
                         {% if not ownProfile and isFriend %}
                             <form action="{% url 'accounts:unfollow' author_serial=user.row_id fqid=author.id %}" method="POST">
                                 {% csrf_token %}
@@ -216,6 +216,7 @@
             {% endfor %}
         </div>
         </div>
+        
         
         <!-- Right Column: Connections Sidebar -->
         <div class="md:w-1/3 md:pl-6 mt-6 md:mt-0">

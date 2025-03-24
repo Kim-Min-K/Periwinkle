@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime
 from django.utils import timezone
 class Authors(AbstractUser):
+    username = models.CharField(max_length=150, unique=True, blank=True, null=True)
     row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     host = models.CharField(max_length=200, blank=False, null=False)
     id = models.CharField(max_length=200, default=None, unique=True)
@@ -19,7 +20,7 @@ class Authors(AbstractUser):
     local = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.username
+        return self.displayName
 
     def save(self, *args, **kwargs):
         if self.id is None:
