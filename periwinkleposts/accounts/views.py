@@ -180,8 +180,8 @@ def sendFollowRequest(request, author_serial):
         "actor": requester_serializer.data,
         "object": requestee_serializer.data,
     }
-
-    if request.build_absolute_uri("/api/") == requestee.host:
+    
+    if requester.host == requestee.host:
         # Create a new request object with POST data
         factory = APIRequestFactory()
         new_request = factory.post("", follow_request, format="json")  # Empty URL since ViewSet is called directly
