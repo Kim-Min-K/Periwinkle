@@ -450,6 +450,11 @@ class LikeView(viewsets.ModelViewSet):
         post = get_object_or_404(Post, id=post_serial)
         like, created = Like.objects.get_or_create(author=request.user, post=post)
         serializer = self.get_serializer(like)
+        Inbox.objects.create(
+            author=post.author,
+            type="like",
+            content=serializer.data
+        )
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
@@ -458,6 +463,11 @@ class LikeView(viewsets.ModelViewSet):
         comment = get_object_or_404(Comment, id=comment_serial)
         like, created = Like.objects.get_or_create(author=request.user, comment=comment)
         serializer = self.get_serializer(like)
+        Inbox.objects.create(
+            author=comment.author,
+            type="like",
+            content=serializer.data
+        )
         return redirect("pages:home")
     
     def get_post_likes(self, request, author_serial, post_serial):
@@ -547,8 +557,10 @@ class InboxView(APIView):
         object_id = object_url.split("/")[-1] 
         if "/posts/" in object_url:
             liked_object = get_object_or_404(Post, id=object_id)
+            receiver = liked_object.author
         elif "/commented/" in object_url:
             liked_object = get_object_or_404(Comment, id=object_id)
+            receiver = liked_object.author
         author_data = request.data.get("author", {})
         author_id = author_data.get("id", "").split("/")[-1]  
         liker = get_object_or_404(Authors, row_id=author_id)  
@@ -558,6 +570,11 @@ class InboxView(APIView):
             comment=liked_object if isinstance(liked_object, Comment) else None
         )
         serializer = LikeSerializer(like)
+        Inbox.objects.create(
+            author=post.author,
+            type="like",
+            content=serializer.data
+        )
         return Response(serializer.data, status=201)
 
     def handle_follow(self, request, author_serial):
