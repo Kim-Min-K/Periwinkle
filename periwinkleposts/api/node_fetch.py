@@ -56,20 +56,55 @@ def process_users(users_data, node):
 def fetch_author_posts(author_url, node):
     posts = []
     page = 1
-    print(author_url)
+    session = requests.Session()
+    
+    # Mimic browser headers
+    headers = {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)',
+        'Referer': f'{node.nodeURL}/'
+    }
+
     while True:
         url = f"{author_url}/posts/?page={page}&size=20"
-        #response = requests.get(url, auth=(node.username, node.password))
-        response = requests.get(url)
-        if response.status_code != 200:
+        try:
+            response = session.get(
+                url,
+                headers=headers
+            )
+            
+            if response.status_code == 403:
+                print(f"Access forbidden. Trying without authentication...")
+                response = session.get(url, headers=headers)
+                
+            if response.status_code != 200:
+                break
+
+            data = response.json()
+            
+            if isinstance(data, dict) and 'results' in data:
+                page_posts = data['results']
+                total_pages = data['total_pages']
+            elif isinstance(data, dict) and 'src' in data:
+                page_posts = data['src']
+                total_pages = data['page_number']
+            elif isinstance(data, list):
+                page_posts = data
+                total_pages = 1
+            else:
+                page_posts = []
+                total_pages = 1
+            posts.extend(page_posts)
+            
+            if page >= total_pages or len(page_posts) < 20:
+                break
+                
+            page += 1
+            
+        except Exception as e:
+            print(f"Error fetching posts: {str(e)}")
             break
             
-        data = response.json()
-        posts.extend(data.get('src', []))
-        
-        if len(data.get('src', [])) < 20:
-            break
-        page += 1
     return posts
 
 # Comment synchronization
@@ -127,46 +162,25 @@ def fetch_post_likes(post_url, node):
         page += 1
     return likes
 
-def fetch_all_posts(node):
-    posts = []
-    page = 1
-    while True:
-        url = f"{node.nodeURL}/api/posts/?page={page}&size=20"
-        response = requests.get(url)
-        if response.status_code != 200:
-            break
-            
-        data = response.json()
-        posts.extend(data.get('src', []))
-        
-        if len(data.get('src', [])) < 20:
-            break
-        page += 1
-    return posts
-
-def process_post(posts_data, node):
-    for post in posts_data:
-        user_uuid = extract_uuid_from_url(post['author'])
-        if not user_uuid:
-            continue
-            
-        author = Authors.objects.filter(row_id=user_uuid).first()
+def process_post(posts_data, author_uuid, node):
+        author = Authors.objects.filter(row_id=author_uuid).first()
         if not author:
-            continue
+            return
         
-        post_uuid = extract_uuid_from_url(post['id'])
-        if not post_uuid:
-            continue
-            
+        post_id = posts_data.get('id', '')
+        post_id = post_id.split("posts/")[1]
+        print(post_id)
+        post_uuid = uuid.UUID(post_id)
+        print(post_uuid)
         Post.objects.update_or_create(
             id=post_uuid,
             defaults={
                 'author': author,
-                'content': post.get('content'),
-                'content_type': post.get('contentType'),
-                'published': post.get('published'),
-                'visibility': post.get('visibility'),
-                'is_deleted': post.get('isDeleted', False)
+                'content': posts_data.get('content'),
+                'contentType': posts_data.get('contentType'),
+                'published': posts_data.get('published'),
+                'visibility': posts_data.get('visibility'),
+                'is_deleted': posts_data.get('isDeleted', False)
             }
         )
 
@@ -191,23 +205,23 @@ def get_node_data(node):
         # Sync users
         users = fetch_all_users(node)
         process_users(users, node)
-        
+        print("Users Synced")
         # Sync posts for each user
         for user_data in users:
             author_url = user_data['id']
             posts = fetch_author_posts(author_url, node)
-            
+            author_uuid = extract_uuid_from_url(author_url)
+            print("Posts Synced")
             for post_data in posts:
-                process_post(post_data, node)
-                post = Post.objects.get(id=post_data['id'])
+                process_post(post_data, author_uuid, node)
                 
                 # Sync comments
-                comments = fetch_post_comments(post_data['id'], node)
-                process_comments(comments, post)
+               # comments = fetch_post_comments(post_data['id'], node)
+               # process_comments(comments, post)
                 
                 # Sync likes
-                likes = fetch_post_likes(post_data['id'], node)
-                process_likes(likes, post)
+              #  likes = fetch_post_likes(post_data['id'], node)
+               # process_likes(likes, post)
                 
     except Exception as e:
         print(f"Error syncing node {node.nodeURL}: {str(e)}")
