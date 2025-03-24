@@ -378,7 +378,7 @@ class AuthorViewSet(GenericViewSet):
         except Exception:
             return Response({"error": "Unknown error"}, status=500)
 
-        serializer = AuthorSerializer(
+        serializer = AuthorObjectToJSONSerializer(
             page.object_list,
             many=True,
             context={'request': request}

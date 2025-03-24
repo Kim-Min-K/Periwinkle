@@ -34,7 +34,32 @@ class AuthorSerializer(serializers.Serializer):
 
     def get_page(self, obj):
         return self.context['request'].build_absolute_uri(f'/accounts/profile/{obj.username}') # this should be changed to UUID
+
+class AuthorObjectToJSONSerializer(serializers.Serializer):
+    type = serializers.CharField(default="author")
+    row_id = serializers.UUIDField(default="row.id")
+    id = serializers.SerializerMethodField()
+    host = serializers.SerializerMethodField()
+    displayName = serializers.CharField(source="username") #do we want to keep username and display seperate?
+    github = serializers.SerializerMethodField()
+    profileImage = serializers.SerializerMethodField()
+    page = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return obj.id
+
+    def get_host(self, obj):
+        return obj.host
     
+    def get_github(self, obj):
+        return f"https://github.com/{obj.github_username}"
+
+    def get_profileImage(self, obj):
+        return obj.avatar_url
+
+    def get_page(self, obj):
+        return obj.host[:-5] + (f'/accounts/profile/{obj.row_id}') # this should be changed to UUID
+
 class AuthorsSerializer(serializers.Serializer):
     type = serializers.CharField(default="authors")
     authors = AuthorSerializer(many=True)
