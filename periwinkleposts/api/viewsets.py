@@ -54,7 +54,7 @@ class FollowersViewSet(GenericViewSet):
             if response.status_code == 200:
                 active_followers.append(follower)
             elif response.status_code == 404:
-                follower.delete()
+                Follow.objects.get(follower=follower, followee=author.row_id).delete()
             else:
                 raise Exception(response.data)
 
