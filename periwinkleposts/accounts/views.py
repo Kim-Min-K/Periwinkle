@@ -292,7 +292,20 @@ def create_post(request):
                 type="post",
                 content=serialized_post
             )
+            for node in ExternalNode.objects.all():
+                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+                try:
+                    response = requests.post(
+                        inbox_url,
+                        json={
+                            'type':'post',
+                            **serializer.data
+                        },
+                        timeout = 5
+                    )
 
+                except Exception as e:
+                    print(f"Failed to send post to {inbox_url}: {e}")
             # Add to other inboxes
             if visibility.upper() == "PUBLIC":
                 # Send to Every Author
@@ -410,6 +423,7 @@ class CommentView(viewsets.ModelViewSet):
                         },
                         timeout = 5
                     )
+
                 except Exception as e:
                     print(f"Failed to send comment to {inbox_url}: {e}")
                 #path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
@@ -588,6 +602,8 @@ class InboxView(APIView):
             return self.handle_like(request,author)
         elif data_type == "follow":
             return self.handle_follow(request, author_serial)
+        elif data_type == 'post':
+            return self.handle_post(request, author)
         return Response({"error": "Invalid type"}, status=400)
 
     def handle_comment(self, request, author):
@@ -603,6 +619,22 @@ class InboxView(APIView):
             Inbox.objects.create(
                 author=post.author, 
                 type="comment",
+                content=serializer.data
+            )
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+    def handle_post(self,request,author):
+        post_url = request.data.get('post')
+        post_id = post_url.split("/")[-1]
+        existing_post = Post.objects.filter(id=post_id).first()
+        serializer = PostSerializer(instance=existing_post, 
+                data=post_data, context={'request': request})
+        if serializer.is_valid():
+            saved_post = serializer.save(author=existing_post.author)
+            Inbox.objects.create(
+                author=author,
+                type="post",
                 content=serializer.data
             )
             return Response(serializer.data, status=201)
