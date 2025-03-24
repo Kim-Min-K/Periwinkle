@@ -312,7 +312,7 @@ def edit_post(request, post_id):
         'visibility_choices': Post.VISIBILITY_CHOICES
     })
 
-def view_post(request, post_id):
+def view_post(request, author_id, post_id):
     post = get_object_or_404(Post, id=post_id)
     return render(request, 'view_post.html', {'post': post})
 

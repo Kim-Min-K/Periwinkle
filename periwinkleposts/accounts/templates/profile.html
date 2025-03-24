@@ -110,15 +110,15 @@
                         </div>
                         {% if post.visibility == "PUBLIC" %}
                             <!-- Share Button -->
-                            <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:view_post' post.id %}')"
-                                class="px-3 py-1 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-700 transition-colors duration-300">
+                            <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}/accounts/authors/{{ post.author.row_id }}/posts/{{ post.id }}/')"
+                                class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
                                 Share
                             </button>
                         {% elif post.visibility == "UNLISTED" %}
                             {% if post.author == request.user %}
                                 <!-- Share Button -->
-                                <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}{% url 'accounts:view_post' post.id %}')"
-                                    class="px-3 py-1 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-700 transition-colors duration-300">
+                                <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}/accounts/authors/{{ post.author.row_id }}/posts/{{ post.id }}/')"
+                                    class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
                                     Share
                                 </button>
                             {% endif %}
@@ -397,15 +397,15 @@
         }
     }
 
-    function copyPostLink(url) {
-        navigator.clipboard.writeText(url)
-            .then(() => {
-                alert("Post link copied to clipboard!");
-            })
-            .catch(err => {
-                console.error("Failed to copy link:", err);
-            });
-    }
+    function copyPostLink(link) {
+        const tempInput = document.createElement("input");
+        tempInput.value = link;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        alert("Link copied to clipboard!");
+    }  
 
 </script>
 
