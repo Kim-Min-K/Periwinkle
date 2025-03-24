@@ -177,8 +177,8 @@ def process_post(posts_data, author_uuid, node):
             id=post_uuid,
             defaults={
                 'author': author,
-                'title': posts.get('title'),
-                'description': posts.get('description'),
+                'title': posts_data.get('title'),
+                'description': posts_data.get('description'),
                 'content': posts_data.get('content'),
                 'contentType': posts_data.get('contentType'),
                 'published': posts_data.get('published'),
