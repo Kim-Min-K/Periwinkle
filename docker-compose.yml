@@ -1,4 +1,3 @@
-
 services:
   web:
     build: .
@@ -16,6 +15,12 @@ services:
       - ./periwinkleposts/media:/app/periwinkleposts/media
     networks:
       - webnet
+    watch:
+      - path: ./periwinkleposts
+        action: rebuild
+      - path: ./package.json
+        action: rebuild
+
   postgres:
     image: postgres:15
     volumes:
@@ -30,6 +35,7 @@ services:
       timeout: 10s
     networks:
       - webnet
+
   caddy:
     image: caddy:latest
     container_name: caddy
@@ -42,8 +48,10 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
     networks:
       - webnet
+
 volumes:
   postgres_data:
+
 networks:
   webnet:
     driver: bridge
