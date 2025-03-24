@@ -54,7 +54,7 @@ class FollowersViewSet(GenericViewSet):
             if response.status_code == 200:
                 active_followers.append(follower)
             elif response.status_code == 404:
-                follower.delete()
+                Follow.objects.get(followee=author_serial, follower=follower).delete()
             else:
                 raise Exception(response.data)
 
@@ -123,7 +123,22 @@ class FolloweesViewSet(GenericViewSet):
         except ValueError:
             return Response({'error': 'Invalid UUID format'}, status=400)
 
-        followees = Authors.objects.filter(row_id__in=Follow.objects.filter(follower=author_uuid).values_list('followee', flat=True))
+        author = get_object_or_404(Authors, row_id=author_uuid)
+
+        followee_ids = Follow.objects.filter(follower=author_uuid).values_list('followee_id', flat=True)  # Get all followees
+
+        followees = Authors.objects.filter(row_id__in=followee_ids)
+
+        active_followees = []
+        for followee in followees:
+            url = f"{followee.host}authors/{followee.row_id}/followers/{author.id}"
+            response = requests.get(url)
+            if response.status_code == 200:
+                active_followees.append(followee)
+            elif response.status_code == 404:
+                Follow.objects.get(followee=followee, follower=author_serial).delete()
+            else:
+                raise Exception(response.text)
 
         serializer = FolloweesSerializer({"followees":followees})
 
@@ -161,13 +176,15 @@ class FriendsViewSet(GenericViewSet):
             author["id"] for author in (FollowersViewSet.as_view({"get": "list"}))(fake_request, author_serial).data["authors"]
         }
 
-        # Get all authors that this author follows (i.e., followees)
-        following_ids = Follow.objects.filter(follower=author).values_list('followee_id', flat=True)
-
-        following_fqids = set(Authors.objects.filter(row_id__in=following_ids).values_list('id', flat=True))
+        factory = APIRequestFactory()
+        fake_request = factory.get(f"/authors/{author_serial}/followees/")  # Simulate a request
+        # Get active followers (mutual followers)
+        active_followees_fqid = {
+            author["id"] for author in (FolloweesViewSet.as_view({"get": "getFollowees"}))(fake_request, author_serial).data["followees"]
+        }
 
         # Find mutual friends
-        friend_ids = list(following_fqids & active_followers_fqid)
+        friend_ids = list(active_followees_fqid & active_followers_fqid)
 
         # Retrieve the friend Author objects
         friends = Authors.objects.filter(id__in=friend_ids)
