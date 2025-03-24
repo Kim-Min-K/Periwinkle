@@ -225,6 +225,8 @@ def process_post(posts_data, author_uuid, node):
                 'description': posts_data.get('description'),
                 'content': posts_data.get('content'),
                 'contentType': posts_data.get('contentType'),
+                'image': posts_data.get('image'),
+                'video': posts_data.get('video'),
                 'published': posts_data.get('published'),
                 'page': posts_data.get('page'),
                 'visibility': posts_data.get('visibility'),
