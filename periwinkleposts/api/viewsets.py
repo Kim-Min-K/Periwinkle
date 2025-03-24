@@ -41,10 +41,24 @@ class FollowersViewSet(GenericViewSet):
         except ValueError:
             return Response({'error': 'Invalid UUID format'}, status=400)
 
+        author = get_object_or_404(Authors, row_id=author_serial)
+
         follower_ids = Follow.objects.filter(followee=author_uuid).values_list('follower_id', flat=True)  # Get all followers
 
         followers = Authors.objects.filter(row_id__in=follower_ids)
-        serializer = self.serializer_class({"type":"followers", "authors": followers})
+
+        active_followers = []
+        for follower in followers:
+            url = follower.host+"authors/"+str(author_serial)+"/followers/"+str(follower.id)
+            response = requests.get(url)
+            if response.status_code == 200:
+                active_followers.append(follower)
+            elif response.status_code == 404:
+                continue
+            else:
+                raise Exception(response.data)
+
+        serializer = self.serializer_class({"type":"followers", "authors": active_followers})
 
         return Response(serializer.data, 200)
 
