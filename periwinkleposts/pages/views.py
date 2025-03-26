@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect
-from accounts.models import Post, Follow
+from django.shortcuts import render, redirect,get_object_or_404
+from accounts.models import Post, Follow, Authors, FollowRequest, Comment, Like, Post, SiteSettings, Follow
 import commonmark
 from django.utils.safestring import mark_safe
 from django.db.models import Q
@@ -137,3 +137,12 @@ def is_friend(user, author):
 def is_following(user, author):
     return Follow.objects.filter(follower=user, followee=author).exists()
 
+#Allows users to view inbox
+#also if "inbox.html -> it render accounts:inbox.html"
+def inboxView(request, row_id):
+    # Check if the logged-in user is the author
+    author = get_object_or_404(Authors, row_id=row_id)
+    if request.user != author:
+        return HttpResponseForbidden("You aren't allowed here.")
+
+    return render(request, "inbox.html")
