@@ -41,7 +41,6 @@ def nodeView(request):
                         nodeURL=node_url,
                         username=username,
                         password=password,
-                        is_approved=True  # optional: mark approved
                     )
 
                     node.save()  # Save to DB
