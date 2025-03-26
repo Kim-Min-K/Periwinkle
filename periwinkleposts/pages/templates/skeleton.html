@@ -9,7 +9,7 @@
             <a href="{% url 'pages:home' %}" class="text-white font-[Baskervville] text-4xl px-3 py-2 rounded">periwinkle.</a>
             <div class="ml-auto flex space-x-4">
                 {% if user.is_authenticated and user.is_approved %}
-                    <a href="{% url 'pages:inbox'  row_id=request.user.row_id %}" class="headerbtn">inbox</a>
+                    <a href="#" class="headerbtn">inbox</a>
                     <a href="{% url 'accounts:profile' row_id=request.user.row_id %}" class="headerbtn">profile</a>
                     <a href="#" class="headerbtn">settings</a>
                 {% endif %}
