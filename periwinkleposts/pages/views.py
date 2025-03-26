@@ -47,8 +47,7 @@ def nodeView(request):
                     print("Node saved!")
                     # Begin data sync
                     node_fetch.get_node_data(node)
-
-                    messages.success(request, "Node registered and data synced successfully!")
+                    print("Node Registered and Data Synced Successfully!")
                     return redirect("pages:home")
                 else:
                     messages.error(request, f"Authentication failed: status code {response.status_code}")

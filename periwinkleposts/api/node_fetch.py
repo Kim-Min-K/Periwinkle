@@ -57,10 +57,13 @@ def fetch_all_users(node):
         url = f"{node.nodeURL}/api/authors/?page={page}&size=20"
         #response = requests.get(url, auth=(node.username, node.password))
         response = requests.get(url)                                                        # Get data from endpoint
+        print(1)
         if response.status_code != 200:                                                     # If no more data, exit loop
+            print(2)
             break
             
         data = response.json()                                                              # Convert the data into a JSON
+        print(data)
         users.extend(data.get('authors', []))                                               # Append it to the Users List
         
         if len(data.get('authors', [])) < 20:                                               # Max 20 Users per page, if less, no need to check other pages
