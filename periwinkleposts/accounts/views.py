@@ -130,6 +130,46 @@ def profileView(request, row_id):
         Follow.objects.filter(followee=request.user, follower=author).exists()
     )
 
+
+    # GitHub activity // NOTE: They are public posts only 
+    # Used this as reference -> can change format of the events 
+    # https://docs.github.com/en/rest/activity/events?apiVersion=2022-11-28#list-public-events-for-a-user
+
+    github_username = author.github_username                                                  # Gets username from author form
+    github_url = f"https://api.github.com/users/{github_username}/events/public"              # URL for users github
+    github_activity = []                                                                      # List to append all activities
+
+    try:
+        response = requests.get(github_url, headers={"Accept": "application/vnd.github.v3+json"}, timeout=5)
+        print(f"GitHub API Status: {response.status_code}")                                    # API response
+
+        if response.status_code == 200:
+            events = response.json()[:5]                                                       #Limit 5 can change this later
+
+            for event in events:                                                               #iterate through each event in the events JSON and process it based on its type
+                event_type = event["type"]                                                     
+                repo_name = event["repo"]["name"]                                              #repository name
+                created_at = event["created_at"][:10]                                          #example format "2025-03-24T14:25:30Z"
+
+                if event_type == "PushEvent":
+                    commit_count = len(event["payload"]["commits"])
+                    message = f"Pushed {commit_count} commit(s) to {repo_name}"
+                elif event_type == "PullRequestEvent":
+                    action = event["payload"]["action"]
+                    message = f"{action.capitalize()} a pull request in {repo_name}"
+                elif event_type == "IssuesEvent":
+                    action = event["payload"]["action"]
+                    message = f"{action.capitalize()} an issue in {repo_name}"
+                else:
+                    message = f"{event_type} in {repo_name}"
+                github_activity.append({"message": message, "date": created_at})
+
+    except requests.RequestException as e:
+        print(f"GitHub API Error: {e}")  
+        github_activity = [{"message": "Failed to fetch GitHub activity", "date": "N/A"}]
+
+
+
     context = {
         "author": author,
         "ownProfile": ownProfile,
@@ -146,6 +186,7 @@ def profileView(request, row_id):
         "followee_count": len(followees),
         "post_count": len(posts),
         "posts": posts,
+        "github_activity": github_activity,
     }
 
     return render(request, "profile.html", context)
@@ -292,22 +333,20 @@ def create_post(request):
                 type="post",
                 content=serialized_post
             )
-            # for node in ExternalNode.objects.all():
-            #     inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
-            #     try:
-            #         response = requests.post(
-            #             inbox_url,
-            #             json={
-            #                 'type':'post',
-            #                 **serialized_post
-            #             },
-            #             timeout = 5
-            #         )
+            for node in ExternalNode.objects.all():
+                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+                try:
+                    response = requests.post(
+                        inbox_url,
+                        json={
+                            'type':'post',
+                            **serializer.data
+                        },
+                        timeout = 5
+                    )
 
-            #     except Exception as e:
-            #         print(f"Failed to send post to {inbox_url}: {e}")
-
-            # Call a Function to Send Post to Other Nodes
+                except Exception as e:
+                    print(f"Failed to send post to {inbox_url}: {e}")
             # Add to other inboxes
             if visibility.upper() == "PUBLIC":
                 # Send to Every Author
@@ -627,13 +666,13 @@ class InboxView(APIView):
         return Response(serializer.errors, status=400)
 
     def handle_post(self,request,author):
-        post_url = request.data.get('id')
+        post_url = request.data.get('post')
         post_id = post_url.split("/")[-1]
         existing_post = Post.objects.filter(id=post_id).first()
-        serializer = PostSerializer(data=request.data, context={'request': request})
-        author1 = AuthorSerializer(author)
+        serializer = PostSerializer(instance=existing_post, 
+                data=post_data, context={'request': request})
         if serializer.is_valid():
-            saved_post = serializer.save(author=author1)
+            saved_post = serializer.save(author=existing_post.author)
             Inbox.objects.create(
                 author=author,
                 type="post",
