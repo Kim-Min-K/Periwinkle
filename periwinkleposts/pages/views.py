@@ -63,21 +63,21 @@ User = get_user_model()
     
 #     return render(request, "node.html", {"form": form})
 
+# This is how a Node is registered!
 @staff_member_required
 def nodeView(request):
-    if request.method == "POST":
+    if request.method == "POST":                                                # POST Call to the API
         form = AddNode(request.POST)
         if form.is_valid(): #import node fetch funcs and call them and print their results 
-            node = ExternalNode(
+            node = ExternalNode(                                                # Create the Node
                 nodeURL=form.cleaned_data["nodeURL"],
                 username=form.cleaned_data["username"],
                 password=form.cleaned_data["password"],
             )
-            data = node_fetch.get_node_data(node)
-            print(data)
-            node.save()
-            form.save()  
-            return redirect("pages:home")  
+            data = node_fetch.get_node_data(node)                               
+            node.save()                                                         # Save the Node
+            form.save()                                                         # Save the Form        
+            return redirect("pages:home")                                       # Upon completion, redirect
         
         else:
             print(form.errors)  # Debug form errors in the terminal

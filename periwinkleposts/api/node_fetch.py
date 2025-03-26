@@ -4,10 +4,13 @@ from urllib.parse import urlparse
 from accounts.models import Authors, Post, Comment, Like
 from .models import ExternalNode
 
+# ----------------
+# Helper Functions
+# ----------------
 def extract_uuid_from_url(url):
     """
     Extract UUID v4 from URL path
-    Example: http://example.com/api/authors/67b7b9bf-d2e4-4a22-8a57-4a087a8a9b1f/ → 
+    Example: http://example.com/api/authors/67b7b9bf-d2e4-4a22-8a57-4a087a8a9b1f/posts/67b7b9bf-alsdfkjghkljsdfhglkjsdf87a8a9b1f → 
     returns '67b7b9bf-d2e4-4a22-8a57-4a087a8a9b1f'
     """
     path_segments = urlparse(url).path.split('/')
@@ -22,6 +25,8 @@ def extract_uuid_from_url(url):
 def extract_second_uuid_from_url(url):
     """
     Extracts the 2nd UUID from URL path
+    Example: http://example.com/api/authors/67b7b9bf-d2e4-4a22-8a57-4a087a8a9b1f/posts/67b7b9bf-alsdfkjghkljsdfhglkjsdf87a8a9b1f → 
+    returns '67b7b9bf-alsdfkjghkljsdfhglkjsdf87a8a9b1f'
     """
     path_segments = urlparse(url).path.split('/')
     index = 0
@@ -37,31 +42,42 @@ def extract_second_uuid_from_url(url):
             continue
     return None
 
+# ---------------
+# Main Functions 
+# ---------------
 def fetch_all_users(node):
-    users = []
-    page = 1
-    while True:
+    """
+    Upon successful registration with an External Node, 
+    This function uses connected nodes api/authors, 
+    and basically fetches all authors from the endpoint
+    """
+    users = []                                                                              
+    page = 1                                                                                # Page for Traversal
+    while True:                                                                             # Traverse Loop
         url = f"{node.nodeURL}/api/authors/?page={page}&size=20"
         #response = requests.get(url, auth=(node.username, node.password))
-        response = requests.get(url)
-        if response.status_code != 200:
+        response = requests.get(url)                                                        # Get data from endpoint
+        if response.status_code != 200:                                                     # If no more data, exit loop
             break
             
-        data = response.json()
-        users.extend(data.get('authors', []))
+        data = response.json()                                                              # Convert the data into a JSON
+        users.extend(data.get('authors', []))                                               # Append it to the Users List
         
-        if len(data.get('authors', [])) < 20:
+        if len(data.get('authors', [])) < 20:                                               # Max 20 Users per page, if less, no need to check other pages
             break
         page += 1
-    return users
+    return users                                                                            # Return Users                                                             
 
-def process_users(users_data, node):
-    for user in users_data:
-        user_uuid = extract_uuid_from_url(user['id'])
+def process_users(users_data, node):     
+    """
+    Uses the list provided (users_data), and creates the user instances in this list inside local DB
+    """                   
+    for user in users_data:                                                                 # Loop through the list
+        user_uuid = extract_uuid_from_url(user['id'])                                       # Get the UUID of the user
         if not user_uuid:
             continue
             
-        Authors.objects.update_or_create(
+        Authors.objects.update_or_create(                                                   # Create user in our current Database
             row_id=user_uuid,
             defaults={
                 'host': user.get('host'),
@@ -73,8 +89,13 @@ def process_users(users_data, node):
         )
 
 def fetch_author_posts(author_url, node):
-    posts = []
-    page = 1
+    """
+    Upon successful registration with an External Node, 
+    This function uses connected nodes api/posts, 
+    and basically fetches all posts from the endpoint
+    """
+    posts = []                                                                              # List of Posts
+    page = 1                                                                                # Page for Traversal
     session = requests.Session()
     
     # Mimic browser headers
@@ -84,7 +105,7 @@ def fetch_author_posts(author_url, node):
         'Referer': f'{node.nodeURL}/'
     }
 
-    while True:
+    while True:                                                                             # Loop for Traversal
         url = f"{author_url}/posts/?page={page}&size=20"
         try:
             response = session.get(
@@ -92,16 +113,16 @@ def fetch_author_posts(author_url, node):
                 headers=headers
             )
             
-            if response.status_code == 403:
+            if response.status_code == 403:                                                 # Auth Failure
                 print(f"Access forbidden. Trying without authentication...")
                 response = session.get(url, headers=headers)
                 
-            if response.status_code != 200:
+            if response.status_code != 200:                                                 # If no data received, break
                 break
 
-            data = response.json()
+            data = response.json()                                                          # Convert data to JSON
             
-            if isinstance(data, dict) and 'results' in data:
+            if isinstance(data, dict) and 'results' in data:                                
                 page_posts = data['results']
                 total_pages = data['total_pages']
             elif isinstance(data, dict) and 'src' in data:
@@ -113,7 +134,7 @@ def fetch_author_posts(author_url, node):
             else:
                 page_posts = []
                 total_pages = 1
-            posts.extend(page_posts)
+            posts.extend(page_posts)                                                        # Append Posts to List
             
             if page >= total_pages or len(page_posts) < 20:
                 break
@@ -128,16 +149,21 @@ def fetch_author_posts(author_url, node):
 
 # Comment synchronization
 def fetch_post_comments(post_url, node):
-    comments = []
-    page = 1
-    while True:
+    """
+    Upon successful registration with an External Node, 
+    This function uses connected nodes api/posts/post_id/comments, 
+    and basically fetches all comments from the endpoint
+    """
+    comments = []                                                                           # Comments List
+    page = 1                                                                                # Page for Traversal
+    while True:                                                                             # Traversal Loop
         url = f"{post_url}/comments/?page={page}&size=20"
         #response = requests.get(url, auth=(node.username, node.password))
         response = requests.get(url)
-        if response.status_code != 200:
+        if response.status_code != 200:                                                     # If no data, break
             break
             
-        data = response.json()
+        data = response.json()                                                              # Data to JSON
 
         if isinstance(data, dict) and 'results' in data:
             page_comments = data['results']
@@ -151,20 +177,20 @@ def fetch_post_comments(post_url, node):
         else:
             page_comments = []
             total_pages = 1
-        comments.extend(page_comments)
+        comments.extend(page_comments)                                                      # Append to List
 
         if page >= total_pages or len(page_comments) < 20:
             break
         page += 1
-    return comments
+    return comments                                                                         # Return 
 
 def process_comments(comments_data, post):
-    for comment in comments_data:
+    for comment in comments_data:                                                           # For each comment in the list 
         if not isinstance(comment, dict):
             continue
 
-        try:
-            # Get the Author of the Comment
+        try:    
+            # Get the Author of the Comment 
             author_data = comment.get('author')
             author_id = author_data.get('id')
             author = Authors.objects.get(id=author_id)
