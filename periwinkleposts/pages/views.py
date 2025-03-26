@@ -35,7 +35,6 @@ def nodeView(request):
             try:
                 response = requests.get(test_url, auth=HTTPBasicAuth(username, password), timeout=5)
                 if response.status_code == 200:
-                    print("Response code successful!")
                     # Create the ExternalNode instance but don’t save it yet
                     node = ExternalNode(
                         nodeURL=node_url,
@@ -44,10 +43,10 @@ def nodeView(request):
                     )
 
                     node.save()  # Save to DB
-                    print("Node saved!")
+
                     # Begin data sync
                     node_fetch.get_node_data(node)
-                    print("Node Registered and Data Synced Successfully!")
+
                     return redirect("pages:home")
                 else:
                     messages.error(request, f"Authentication failed: status code {response.status_code}")

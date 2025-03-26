@@ -2,6 +2,10 @@ from django.conf import settings
 from django.http import JsonResponse
 import base64
 
+
+"""
+settings.py files NEED NODE_USERNAME, and NODE_PASSWORD
+"""
 def require_node_auth(view_func):
     def wrapper(request, *args, **kwargs):
         auth_header = request.headers.get('Authorization')
