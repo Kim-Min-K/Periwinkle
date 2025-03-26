@@ -16,71 +16,49 @@ from django.contrib import messages
 
 User = get_user_model()
 
-# @staff_member_required
-# def nodeView(request):
-#     if request.method == "POST":
-#         form = AddNode(request.POST)
-#         if form.is_valid():
-#             print("Form is valid. Attempting to process node...")
-#             node_url = form.cleaned_data["nodeURL"]
-#             username = form.cleaned_data["username"]
-#             password = form.cleaned_data["password"]
-
-#             # Ensure username and password match the external node's settings
-#             try:
-#                 auth_url = f"{node_url}/api/auth-check/"  # Endpoint for authentication
-#                 response = requests.get(auth_url, auth=HTTPBasicAuth(username, password))
-#                 print(response)
-
-#                 if response.status_code == 200:
-#                     node = ExternalNode(
-#                         nodeURL=node_url,
-#                         username=username,
-#                         password=password,
-#                     )
-#                     node.save()
-#                     form.save()
-                    
-#                     # Fetch and sync the node data only after successful authentication
-#                     node_fetch.get_node_data(node)
-                    
-#                     return redirect("pages:home")
-#                 else:
-#                     messages.error(request, "Invalid credentials for this node.")
-#                     print(request, node)
-#                     print("Form errors:", form.errors)  # Print form errors to debug
-#                     messages.error(request, f"Form errors: {form.errors}")
-#             except requests.exceptions.RequestException as e:
-#                 messages.error(request, f"Failed to connect to node: {str(e)}")
-#         else:
-#             print("Form is invalid. Errors:", form.errors.as_json())  
-#             print(form.errors)  # This will print the errors to your terminal
-#             messages.error(request, f"Form errors: {form.errors}")
-#             messages.error(request, "There was an error with the form submission.")
-    
-#     else:
-#         form = AddNode()
-    
-#     return render(request, "node.html", {"form": form})
-
 # This is how a Node is registered!
 @staff_member_required
 def nodeView(request):
-    if request.method == "POST":                                                # POST Call to the API
+    if request.method == "POST":
         form = AddNode(request.POST)
-        if form.is_valid(): #import node fetch funcs and call them and print their results 
-            node = ExternalNode(                                                # Create the Node
-                nodeURL=form.cleaned_data["nodeURL"],
-                username=form.cleaned_data["username"],
-                password=form.cleaned_data["password"],
-            )
-            data = node_fetch.get_node_data(node)                               
-            node.save()                                                         # Save the Node
-            form.save()                                                         # Save the Form        
-            return redirect("pages:home")                                       # Upon completion, redirect
-        
+        if form.is_valid():
+            print("Form is Valid")
+            node_url = form.cleaned_data["nodeURL"].rstrip("/")
+            username = form.cleaned_data["username"]
+            password = form.cleaned_data["password"]
+
+            print("Username:", username, "Password:", password)
+
+            # Attempt to authenticate with the remote node
+            test_url = f"{node_url}/api/authors/"  # or use /api/authors/ if no /ping endpoint
+
+            try:
+                response = requests.get(test_url, auth=HTTPBasicAuth(username, password), timeout=5)
+                if response.status_code == 200:
+                    print("Response code successful!")
+                    # Create the ExternalNode instance but don’t save it yet
+                    node = ExternalNode(
+                        nodeURL=node_url,
+                        username=username,
+                        password=password,
+                        is_approved=True  # optional: mark approved
+                    )
+
+                    node.save()  # Save to DB
+                    print("Node saved!")
+                    # Begin data sync
+                    node_fetch.get_node_data(node)
+
+                    messages.success(request, "Node registered and data synced successfully!")
+                    return redirect("pages:home")
+                else:
+                    messages.error(request, f"Authentication failed: status code {response.status_code}")
+
+            except requests.exceptions.RequestException as e:
+                messages.error(request, f"Failed to connect to node: {str(e)}")
+
         else:
-            print(form.errors)  # Debug form errors in the terminal
+            print(form.errors)  # Debug form errors
 
     else:
         form = AddNode()
