@@ -3,6 +3,7 @@ from api.viewsets import *
 from accounts.views import CommentView, LikeView, InboxView
 from rest_framework.routers import DefaultRouter
 from api.views import NodeAuthCheckView
+from .views import ping
 
 app_name = 'api'  
 
@@ -88,6 +89,8 @@ urlpatterns = [
     path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
     #-------Auth?--------
     path("auth-check/", NodeAuthCheckView.as_view(), name="node-auth-check"),
+
+    path('ping/', ping, name='ping'),
 ]
 
 

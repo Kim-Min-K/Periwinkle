@@ -30,7 +30,7 @@ def nodeView(request):
             print("Username:", username, "Password:", password)
 
             # Attempt to authenticate with the remote node
-            test_url = f"{node_url}/api/authors/"  # or use /api/authors/ if no /ping endpoint
+            test_url = f"{node_url}/api/ping/"
 
             try:
                 response = requests.get(test_url, auth=HTTPBasicAuth(username, password), timeout=5)
