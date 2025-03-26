@@ -333,20 +333,22 @@ def create_post(request):
                 type="post",
                 content=serialized_post
             )
-            for node in ExternalNode.objects.all():
-                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
-                try:
-                    response = requests.post(
-                        inbox_url,
-                        json={
-                            'type':'post',
-                            **serializer.data
-                        },
-                        timeout = 5
-                    )
+            # for node in ExternalNode.objects.all():
+            #     inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+            #     try:
+            #         response = requests.post(
+            #             inbox_url,
+            #             json={
+            #                 'type':'post',
+            #                 **serialized_post
+            #             },
+            #             timeout = 5
+            #         )
 
-                except Exception as e:
-                    print(f"Failed to send post to {inbox_url}: {e}")
+            #     except Exception as e:
+            #         print(f"Failed to send post to {inbox_url}: {e}")
+
+            # Call a Function to Send Post to Other Nodes
             # Add to other inboxes
             if visibility.upper() == "PUBLIC":
                 # Send to Every Author
@@ -666,13 +668,13 @@ class InboxView(APIView):
         return Response(serializer.errors, status=400)
 
     def handle_post(self,request,author):
-        post_url = request.data.get('post')
+        post_url = request.data.get('id')
         post_id = post_url.split("/")[-1]
         existing_post = Post.objects.filter(id=post_id).first()
-        serializer = PostSerializer(instance=existing_post, 
-                data=post_data, context={'request': request})
+        serializer = PostSerializer(data=request.data, context={'request': request})
+        author1 = AuthorSerializer(author)
         if serializer.is_valid():
-            saved_post = serializer.save(author=existing_post.author)
+            saved_post = serializer.save(author=author1)
             Inbox.objects.create(
                 author=author,
                 type="post",
