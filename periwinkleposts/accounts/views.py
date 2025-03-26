@@ -292,21 +292,7 @@ def create_post(request):
                 type="post",
                 content=serialized_post
             )
-            # for node in ExternalNode.objects.all():
-            #     inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
-            #     try:
-            #         response = requests.post(
-            #             inbox_url,
-            #             json={
-            #                 'type':'post',
-            #                 **serialized_post
-            #             },
-            #             timeout = 5
-            #         )
-
-            #     except Exception as e:
-            #         print(f"Failed to send post to {inbox_url}: {e}")
-
+            
             # Call a Function to Send Post to Other Nodes
             # Add to other inboxes
             if visibility.upper() == "PUBLIC":
@@ -414,21 +400,19 @@ class CommentView(viewsets.ModelViewSet):
                 type="comment",
                 content=serializer.data
             )
-            for node in ExternalNode.objects.all():
-                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
-                try:
-                    response = requests.post(
-                        inbox_url,
-                        json={
-                            'type':'comment',
-                            **serializer.data
-                        },
-                        timeout = 5
-                    )
-
-                except Exception as e:
-                    print(f"Failed to send comment to {inbox_url}: {e}")
-                #path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+            # for node in ExternalNode.objects.all():
+            #     inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+            #     try:
+            #         response = requests.post(
+            #             inbox_url,
+            #             json={
+            #                 'type':'comment',
+            #                 **serializer.data
+            #             },
+            #             timeout = 5
+            #         )
+            #     except Exception as e:
+            #         print(f"Failed to send comment to {inbox_url}: {e}")
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
             return Response(serializer.data, status=201)
         else:
@@ -595,7 +579,6 @@ class InboxView(APIView):
         return Response(serializer.data, status=200)
 
     def post(self, request, author_serial):
-        
         author = get_object_or_404(Authors, row_id=author_serial)
         data_type = request.data.get("type")
         if data_type == "comment":
@@ -618,29 +601,29 @@ class InboxView(APIView):
         serializer = CommentSerializer(data=request.data, context={"request": request})  
         if serializer.is_valid():
             serializer.save(author=commenter, post=post)
-            Inbox.objects.create(
-                author=post.author, 
-                type="comment",
-                content=serializer.data
-            )
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
     def handle_post(self,request,author):
-        post_url = request.data.get('id')
-        post_id = post_url.split("/")[-1]
-        existing_post = Post.objects.filter(id=post_id).first()
-        serializer = PostSerializer(data=request.data, context={'request': request})
+        post_id = request.data.get('id').split("/")[-1]
+        existing_post = Post.objects.filter(id=post_id)
         author1 = AuthorSerializer(author)
         if serializer.is_valid():
             saved_post = serializer.save(author=author1)
-            Inbox.objects.create(
-                author=author,
-                type="post",
-                content=serializer.data
-            )
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+    
+    def create_inbox_page(self,request,author):
+        post_id = request.data.get('id').split("/")[-1]
+        title = request.data.get('title')
+        description = request.data.get('description')
+        contentType = request.data.get('contentType')
+        content = request.data.get('content')
+        published = request.data.get('published')
+        visibility = request.data.get('visibility')
+        page = request.data.get('page')
+        
+
 
     def handle_like(self, request, author): 
         object_url = request.data.get("object")  
@@ -660,11 +643,6 @@ class InboxView(APIView):
             comment=liked_object if isinstance(liked_object, Comment) else None
         )
         serializer = LikeSerializer(like)
-        Inbox.objects.create(
-            author=receiver,
-            type="like",
-            content=serializer.data
-        )
         return Response(serializer.data, status=201)
 
     def handle_follow(self, request, author_serial):
@@ -672,3 +650,10 @@ class InboxView(APIView):
         request._request.POST = QueryDict('', mutable=True)
         request._request.POST.update(request.data)  
         return makeRequest(request._request, author_serial)
+
+    def save_item(self, author, type, content):
+        Inbox.objects.create(
+                author=post.author, 
+                type="comment",
+                content=serializer.data
+            )
