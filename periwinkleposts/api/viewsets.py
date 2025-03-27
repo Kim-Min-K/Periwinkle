@@ -7,6 +7,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, permissions, status
 from drf_yasg import openapi
 import uuid
+import base64
 from rest_framework.decorators import action
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import permissions
@@ -20,6 +21,9 @@ from rest_framework.pagination import PageNumberPagination
 from .models import *
 from django.db.models import Q
 import requests
+from urllib.parse import urlparse
+import requests
+from django.core.files.base import ContentFile
 
 class FollowersSchema(SwaggerAutoSchema):
     def get_tags(self, operation_keys=None):
@@ -370,7 +374,7 @@ class FollowRequestViewSet(GenericViewSet):
     
 class AuthorViewSet(GenericViewSet):
     serializer_class = AuthorSerializer
-    queryset = Authors.objects.all().order_by('id')
+    queryset = Authors.objects.filter(local=True, is_staff=0).order_by('id')
 
     @swagger_auto_schema(
         operation_description="Get paginated list of authors",
@@ -510,14 +514,42 @@ class PostViewSet(viewsets.ModelViewSet):
 
     # POST /api/authors/{AUTHOR_SERIAL}/posts/
     def create(self, request, author_serial=None):
+        # Ensure the author exists and is local
         author = get_object_or_404(Authors, row_id=author_serial)
         if not author.local:
             return Response(status=status.HTTP_403_FORBIDDEN)
-            
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(author=author)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        self.perform_create(serializer, author)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def perform_create(self, serializer, author):
+        # Extract media data from request
+        image_data = self.request.data.get('image')
+        video_data = self.request.data.get('video')
+    
+        save_kwargs = {'author': author}
+
+        if image_data:
+            if image_data.startswith(('http://', 'https://')):
+                try:
+                    response = requests.get(image_data, timeout=5)
+                    response.raise_for_status()
+                    filename = os.path.basename(urlparse(image_data).path)
+                    unique_name = f"{uuid.uuid4()}_{filename}"
+                    save_kwargs['image'] = ContentFile(response.content, name=unique_name)
+                except Exception as e:
+                    print(f"Error downloading image: {str(e)}")
+            elif ';base64,' in image_data:
+                fmt, imgstr = image_data.split(';base64,')
+                ext = fmt.split('/')[-1]
+                filename = f"{uuid.uuid4()}.{ext}"
+                save_kwargs['image'] = ContentFile(base64.b64decode(imgstr), name=filename)
+            else:
+                save_kwargs['image'] = image_data
+        serializer.save(**save_kwargs)
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -558,13 +590,32 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        if 'image' in self.request.data:
-            image_data = self.request.data['image']
-            fmt, imgstr = image_data.split(';base64,')
-            ext = fmt.split('/')[-1]
-            filename = f"{uuid.uuid4()}.{ext}"
-            data = ContentFile(base64.b64decode(imgstr), name=filename)
-            serializer.save(image=data)
+        image_data = self.request.data.get('image')
+        video_data = self.request.data.get('video')
+        if image_data:
+            if image_data.startswith(('http://', 'https://')):
+                try:
+                    response = requests.get(image_data, timeout=5)
+                    response.raise_for_status()
+                    filename = os.path.basename(urlparse(image_data).path)
+                    unique_name = f"{uuid.uuid4()}_{filename}"
+                    
+                    serializer.save(
+                        image=ContentFile(response.content, name=unique_name)
+                    )
+                except Exception as e:
+                    # Handle download errors
+                    print(f"Error downloading image: {str(e)}")
+                    serializer.save()
+            
+            elif ';base64,' in image_data:
+                fmt, imgstr = image_data.split(';base64,')
+                ext = fmt.split('/')[-1]
+                filename = f"{uuid.uuid4()}.{ext}"
+                data = ContentFile(base64.b64decode(imgstr), name=filename)
+                serializer.save(image=data)
+            else:
+                serializer.save(image=image_data)
         else:
             serializer.save()
             

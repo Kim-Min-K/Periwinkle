@@ -79,7 +79,6 @@ def registerView(request):
         form = AuthorCreation(query_dict)
         if form.is_valid():
             user = form.save(commit=False)  #create user but don’t save yet
-
             #get site settings to check if approval is required currently
             site_settings = SiteSettings.objects.first()
             approval_required = True  # Default to requiring approval
@@ -267,7 +266,6 @@ def create_post(request):
         image = request.FILES.get("image")
         video = request.FILES.get("video")
         visibility = request.POST.get("visibility")
-
         if not all([title, description, content, content_type]):
             return HttpResponse("All fields are required.", status=400)
 

@@ -68,7 +68,8 @@ def process_users(users_data, node):
                 'username': user.get('displayName'),
                 'displayName': user.get('displayName'),
                 'github_username': user.get('github', '').split('/')[-1],
-                'avatar_url': user.get('profileImage')
+                'avatar_url': user.get('profileImage'),
+                'local' : False
             }
         )
 
