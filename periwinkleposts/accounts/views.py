@@ -337,36 +337,38 @@ def create_post(request):
                 visibility=visibility,
             )
             post.save()
+            inbox_instance = InboxView()
+            post_data = PostSerializer(post, context={'request': request}).data
+            inbox_instance.save_item(post.author.id, "post", post_data)
 
-            Inbox.save_item(post.author.id, "post", PostSerializer(post).data)
             # Add to other inboxes
-            if visibility.upper() == "PUBLIC":
-                # Send to Every Author
-                for author in Authors.objects.all():
-                    Inbox.objects.create(
-                        author=author,
-                        type="post",
-                        content=serialized_post
-                    )
-            elif visibility.upper() == "UNLISTED":
-                # Send to Followers
-                for follower in request.user.followers.all():
-                    Inbox.objects.create(
-                        author=follower.follower, 
-                        type="post",
-                        content=serialized_post
-                    )
-            elif visibility.upper() == "FRIENDS":
-                # Send to Friends
-                for potential_friend in Authors.objects.exclude(row_id=request.user.row_id):
-                    if is_friend(request.user, potential_friend):
-                        Inbox.objects.create(
-                            author=potential_friend,
-                            type="post",
-                            content=serialized_post
-                        )
+        #     if visibility.upper() == "PUBLIC":
+        #         # Send to Every Author
+        #         for author in Authors.objects.all():
+        #             Inbox.objects.create(
+        #                 author=author,
+        #                 type="post",
+        #                 content=serialized_post
+        #             )
+        #     elif visibility.upper() == "UNLISTED":
+        #         # Send to Followers
+        #         for follower in request.user.followers.all():
+        #             Inbox.objects.create(
+        #                 author=follower.follower, 
+        #                 type="post",
+        #                 content=serialized_post
+        #             )
+        #     elif visibility.upper() == "FRIENDS":
+        #         # Send to Friends
+        #         for potential_friend in Authors.objects.exclude(row_id=request.user.row_id):
+        #             if is_friend(request.user, potential_friend):
+        #                 Inbox.objects.create(
+        #                     author=potential_friend,
+        #                     type="post",
+        #                     content=serialized_post
+        #                 )
 
-            return redirect("pages:home")
+        #     return redirect("pages:home")
         except Exception as e:
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
@@ -696,19 +698,20 @@ class InboxView(APIView):
         return makeRequest(request._request, author_serial)
 
     def save_item(self, author, data_type, content):
+        author = get_object_or_404(Authors, id=author)
         Inbox.objects.create(
-                author=post.author, 
+                author=author, 
                 type=data_type,
-                content=serializer.data
+                content=content
             )
-        for node in ExternalNode.objects.all():
-            inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+        for author in Authors.objects.all():
+            host = author.host
+            inbox_url = f"{host}/authors/{author.row_id}/inbox/"
+            print(inbox_url)
             try:
                 response = requests.post(
                     inbox_url,
-                    json={
-                        **serializer.data
-                    },
+                    json=content,
                     timeout = 5
                 )
             except Exception as e:
