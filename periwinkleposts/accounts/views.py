@@ -79,6 +79,10 @@ def registerView(request):
         form = AuthorCreation(query_dict)
         if form.is_valid():
             user = form.save(commit=False)  #create user but don’t save yet
+            
+            host = request.build_absolute_uri("/api/authors/")
+            user.id = f'{host}{user.row_id}'  
+            
             #get site settings to check if approval is required currently
             site_settings = SiteSettings.objects.first()
             approval_required = True  # Default to requiring approval
@@ -100,8 +104,17 @@ def registerView(request):
 
 
 def profileView(request, row_id):
-    author = get_object_or_404(Authors, row_id=row_id)
-    
+    author = None
+    try:
+        author = get_object_or_404(Authors, row_id=row_id)
+    except Http404:
+        try:
+
+            decoded_url = unquote(row_id)
+            author = get_object_or_404(Authors, id=decoded_url)
+        except Http404:
+            raise Http404("Author not found")
+
     if author.is_staff:
         author = request.user
 

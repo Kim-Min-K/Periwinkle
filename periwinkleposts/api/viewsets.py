@@ -46,9 +46,7 @@ class FollowersViewSet(GenericViewSet):
             return Response({'error': 'Invalid UUID format'}, status=400)
 
         author = get_object_or_404(Authors, row_id=author_serial)
-
         follower_ids = Follow.objects.filter(followee=author_uuid).values_list('follower_id', flat=True)  # Get all followers
-
         followers = Authors.objects.filter(row_id__in=follower_ids)
 
         active_followers = []

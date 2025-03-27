@@ -80,6 +80,7 @@ def process_users(users_data, node):
         Authors.objects.update_or_create(                                                   # Create user in our current Database
             row_id=user_uuid,
             defaults={
+                "id": user.get('id'),
                 'host': user.get('host'),
                 'username': user.get('displayName'),
                 'displayName': user.get('displayName'),

@@ -7,7 +7,7 @@ from .models import *
 class AuthorSerializer(serializers.Serializer):
     type = serializers.CharField(default="author")
     row_id = serializers.UUIDField(default="row.id")
-    id = serializers.SerializerMethodField()
+    id = serializers.CharField()
     host = serializers.SerializerMethodField()
     displayName = serializers.CharField(source="username") #do we want to keep username and display seperate?
     github = serializers.SerializerMethodField()
