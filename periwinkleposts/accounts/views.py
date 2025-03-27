@@ -622,7 +622,7 @@ class InboxView(APIView):
         published = request.data.get('published')
         visibility = request.data.get('visibility')
         page = request.data.get('page')
-        
+
 
 
     def handle_like(self, request, author): 
@@ -651,9 +651,9 @@ class InboxView(APIView):
         request._request.POST.update(request.data)  
         return makeRequest(request._request, author_serial)
 
-    def save_item(self, author, type, content):
+    def save_item(self, author, data_type, content):
         Inbox.objects.create(
                 author=post.author, 
-                type="comment",
+                type=data_type,
                 content=serializer.data
             )
