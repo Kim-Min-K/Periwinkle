@@ -693,8 +693,9 @@ class NodeViewset(viewsets.ModelViewSet):
             validated_data = serializer.validated_data
             try:
                 response = requests.get(
-                    validated_data["nodeURL"],
-                    auth=HTTPBasicAuth(validated_data["username"], validated_data["password"])
+                    f'{validated_data["nodeURL"].rstrip("/")}/api/ping/',
+                    auth=HTTPBasicAuth(validated_data["username"], validated_data["password"]),
+                    timeout=5
                 )
                 if response.status_code != 200:
                     raise ValidationError("Invalid credentials")

@@ -9,50 +9,64 @@
         <!-- Left Column: Profile Header & Content -->
         <div class="md:w-2/3">
             <!-- Profile Header -->
-            <div class="flex items-center space-x-6">
-                <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#A2A2E6]">
-                    <img src="{% if user.avatar_display %}{{ user.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}" 
-                         alt="Profile Picture" class="w-full h-full object-cover">
-                </div>
-                <div>
-                    <div class="flex items-center space-x-4">
-                        <h2 class="text-2xl font-semibold">{{ author.displayName }}</h2>
-                        {% if not ownProfile and isFriend %}
-                            <form action="{% url 'accounts:unfollow' author_serial=user.row_id fqid=author.id %}" method="POST">
-                                {% csrf_token %}
-                                <input type="text" name="your_field" placeholder="Enter something" hidden>
-                                <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Unfriend</button>
-                            </form>
-                        {% elif not ownProfile and not isFollowee and not isPending %}
-                            <form action="{% url 'accounts:sendFollowRequest' author_serial=author.row_id %}" method="POST">
-                                {% csrf_token %}
-                                <input type="text" name="your_field" placeholder="Enter something" hidden>
-                                <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
-                            </form>
-                        {% elif not ownProfile and isFollowee %}
-                        <form action="{% url 'accounts:unfollow' author_serial=user.row_id fqid=author.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="text" name="your_field" placeholder="Enter something" hidden>
-                            <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Unfollow</button>
-                        </form>
-                        {% elif ownProfile %}
-                            <!-- edit profile button, only visible on your own account?-->
-                            <a href="{% url 'accounts:edit_profile' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Edit Profile</a>
-                            <!-- edit avatar button, only visible on your own account, might need some more work done? could be integrated into edit profile? -->
-                            <a href="{% url 'accounts:avatar' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Edit Avatar</a>
+            <div class="bg-white p-6 rounded-lg">
+                <div class="flex items-center space-x-6">
+                    <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#A2A2E6]">
+                        <img src="{% if user.avatar_display %}{{ user.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                            alt="Profile Picture" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-4">
+                            <h2 class="text-2xl font-semibold">{{ author.displayName }}</h2>
+                            {% if not ownProfile and isFriend %}
+                                <form action="{% url 'accounts:unfollow' author_serial=user.row_id fqid=author.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" name="your_field" placeholder="Enter something" hidden>
+                                    <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Unfriend</button>
+                                </form>
+                            {% elif not ownProfile and not isFollowee and not isPending %}
+                                <form action="{% url 'accounts:sendFollowRequest' author_serial=author.row_id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" name="your_field" placeholder="Enter something" hidden>
+                                    <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Follow</button>
+                                </form>
+                            {% elif not ownProfile and isFollowee %}
+                                <form action="{% url 'accounts:unfollow' author_serial=user.row_id fqid=author.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <input type="text" name="your_field" placeholder="Enter something" hidden>
+                                    <button class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:brightness-90" type="submit">Unfollow</button>
+                                </form>
+                            {% elif ownProfile %}
+                                <!-- edit profile button, only visible on your own account?-->
+                                <a href="{% url 'accounts:edit_profile' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Edit Profile</a>
+                                <!-- edit avatar button, only visible on your own account, might need some more work done? could be integrated into edit profile? -->
+                                <a href="{% url 'accounts:avatar' %}" class="px-4 py-1 text-sm font-semibold text-white bg-[#A2A2E6] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">Edit Avatar</a>
+                            {% endif %}
+                        </div>
+                        <div class="flex space-x-6 mt-2">
+                            <div><span class="font-bold">{{post_count}}</span> posts</div>
+                            <div><span class="font-bold">{{follower_count}}</span> followers</div>
+                            <div><span class="font-bold">{{followee_count}}</span> following</div>
+                        </div>
+                        <p class="text-gray-600 mt-2">
+                            GitHub Activity: 
+                            <a href="https://github.com/{{ author.github_username }}" class="text-[#A2A2E6]">
+                                @{{ author.github_username }}
+                            </a>
+                        </p>
+                        
+                        {% if github_activity %}
+                            <hr class="my-2 border-t border-gray-200"> <!-- Added an horizontal line aqui -->
+                            <ul class="mt-2 text-sm text-gray-600 list-disc list-inside">
+                                {% for activity in github_activity %}
+                                    <li>{{ activity.message }} <span class="text-gray-400">({{ activity.date }})</span></li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="mt-2 text-sm text-gray-600">No recent GitHub activity.</p>
                         {% endif %}
+                        
                     </div>
-                    <div class="flex space-x-6 mt-2">
-                        <div><span class="font-bold">{{post_count}}</span> posts</div>
-                        <div><span class="font-bold">{{follower_count}}</span> followers</div>
-                        <div><span class="font-bold">{{followee_count}}</span> following</div>
-                    </div>
-                    <p class="text-gray-600 mt-2">
-                        GitHub: 
-                        <a href="https://github.com/{{ author.github_username }}" class="text-[#A2A2E6]">
-                            @{{ author.github_username }}
-                        </a>
-                    </p>
                 </div>
             </div>
             
@@ -412,4 +426,3 @@
 
 
 {% endblock %}
-
