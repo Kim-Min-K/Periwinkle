@@ -338,28 +338,7 @@ def create_post(request):
             )
             post.save()
 
-            serialized_post = PostSerializer(post, context={'request': request}).data
-
-            # Add to creator's inbox
-            Inbox.objects.create(
-                author=request.user, 
-                type="post",
-                content=serialized_post
-            )
-            for node in ExternalNode.objects.all():
-                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
-                try:
-                    response = requests.post(
-                        inbox_url,
-                        json={
-                            'type':'post',
-                            **serializer.data
-                        },
-                        timeout = 5
-                    )
-
-                except Exception as e:
-                    print(f"Failed to send post to {inbox_url}: {e}")
+            Inbox.save_item(post.author.id, "post", PostSerializer(post).data)
             # Add to other inboxes
             if visibility.upper() == "PUBLIC":
                 # Send to Every Author
@@ -461,11 +440,7 @@ class CommentView(viewsets.ModelViewSet):
             author, _ = Authors.objects.get_or_create(id=author_data["id"], defaults=author_data)
         if serializer.is_valid():
             serializer.save(author=author, post = post)
-            Inbox.objects.create(
-                author=post.author, 
-                type="comment",
-                content=serializer.data
-            )
+            Inbox.save_item(author_serial, "comment", serializer.data)
             # for node in ExternalNode.objects.all():
             #     inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
             #     try:
@@ -569,11 +544,7 @@ class LikeView(viewsets.ModelViewSet):
         post = get_object_or_404(Post, id=post_serial)
         like, created = Like.objects.get_or_create(author=request.user, post=post)
         serializer = self.get_serializer(like)
-        Inbox.objects.create(
-            author=post.author,
-            type="like",
-            content=serializer.data
-        )
+        Inbox.save_item(post.author,serializer.data)
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
@@ -730,3 +701,15 @@ class InboxView(APIView):
                 type=data_type,
                 content=serializer.data
             )
+        for node in ExternalNode.objects.all():
+            inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+            try:
+                response = requests.post(
+                    inbox_url,
+                    json={
+                        **serializer.data
+                    },
+                    timeout = 5
+                )
+            except Exception as e:
+                print(f"Failed to send post to {inbox_url}: {e}")
