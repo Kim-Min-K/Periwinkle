@@ -653,9 +653,9 @@ class InboxView(APIView):
         post_id = post_url.split("/")[-1]
         existing_post = Post.objects.filter(id=post_id).first()
         serializer = PostSerializer(data=request.data, context={'request': request})
-        author1 = AuthorSerializer(author)
+        # author1 = AuthorSerializer(author)
         if serializer.is_valid():
-            saved_post = serializer.save(author=author1)
+            saved_post = serializer.save(author=author)
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
     
@@ -706,7 +706,7 @@ class InboxView(APIView):
             )
         for author in Authors.objects.all():
             host = author.host
-            inbox_url = f"{host}/authors/{author.row_id}/inbox/"
+            inbox_url = f"{host}authors/{author.row_id}/inbox/"
             print(inbox_url)
             try:
                 response = requests.post(
