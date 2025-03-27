@@ -23,6 +23,14 @@ from rest_framework.test import APIRequestFactory
 from inbox.models import Inbox
 from api.serializers import PostSerializer, AuthorSerializer
 from api.models import ExternalNode
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
+from rest_framework.response import Response
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -290,12 +298,6 @@ class CustomLogoutView(LogoutView):
             return reverse_lazy('accounts:login')
         return self.next_page or self.get_redirect_url() or reverse_lazy('accounts:login')
 
-
-# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
-
-from rest_framework import viewsets, permissions
-from rest_framework.response import Response
-from rest_framework.decorators import action
 
 
 class authorAPI(viewsets.ModelViewSet):
@@ -638,12 +640,17 @@ class LikeView(viewsets.ModelViewSet):
         return Response(serializer.data, status=200)
     
 class InboxView(APIView):
+    
     def get(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)
         inbox_items = Inbox.objects.filter(author=author).order_by('-received')
         serializer = InboxSerializer(inbox_items, many=True)
         return Response(serializer.data, status=200)
 
+    @swagger_auto_schema(
+        operation_description="Send different types of actions (comment, like, follow, post) in an author's inbox.",
+        tags=["Remote"]
+    )
     def post(self, request, author_serial):
         
         author = get_object_or_404(Authors, row_id=author_serial)
