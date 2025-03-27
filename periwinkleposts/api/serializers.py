@@ -7,7 +7,7 @@ from .models import *
 class AuthorSerializer(serializers.Serializer):
     type = serializers.CharField(default="author")
     row_id = serializers.UUIDField(default="row.id")
-    id = serializers.SerializerMethodField()
+    id = serializers.CharField()
     host = serializers.SerializerMethodField()
     displayName = serializers.CharField(source="username") #do we want to keep username and display seperate?
     github = serializers.SerializerMethodField()
@@ -75,13 +75,19 @@ class PostSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField()
     likes = serializers.SerializerMethodField()
     contentType = serializers.CharField()
+    image = serializers.SerializerMethodField()
+    video = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = [
             'type', 'title', 'id', 'page', 'description', 'contentType',
-            'content', 'author', 'comments', 'likes', 'published', 'visibility'
+            'content', 'author', 'comments', 'likes', 'published', 'visibility',
+            'image', 'image_url', 'video' 
         ]
+        extra_kwargs = {
+            'image_url': {'write_only': True}  # hides in response
+        }
 
     def get_id(self, obj):
         request = self.context.get('request')
@@ -129,6 +135,16 @@ class PostSerializer(serializers.ModelSerializer):
                 context={'request': request}
             ).data
         }
+        
+    def get_image(self, obj):
+        if obj.image:
+            return self.context['request'].build_absolute_uri(obj.image.url)
+        return obj.image_url
+
+    def get_video(self, obj):
+        if obj.video:
+            return self.context['request'].build_absolute_uri(obj.video.url)
+        return None
 
 class NodeSerializer(serializers.Serializer):
     nodeURL = serializers.URLField()

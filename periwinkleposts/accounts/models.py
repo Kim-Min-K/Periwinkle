@@ -9,9 +9,9 @@ class Authors(AbstractUser):
     row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     host = models.CharField(max_length=200, blank=False, null=False)
     id = models.CharField(max_length=200, default=None, unique=True)
-    displayName = models.CharField(max_length=200, default="John Doe")
+    displayName = models.CharField(max_length=200, default=username)
     is_approved = models.BooleanField(default=False)
-
+    
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     avatar_url = models.URLField(blank=True, null=True)  # For image links
     github_username = models.CharField(
@@ -108,7 +108,8 @@ class Post(models.Model):
             ("text/markdown", "Markdown"),
         ],
     )
-    image = models.ImageField(upload_to="image/", blank=True)
+    image = models.ImageField(upload_to="images/", blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True)  
     video = models.FileField(upload_to="video/", null=True, blank=True)
     published = models.DateTimeField(auto_now_add=True)
     page = models.CharField(max_length=200, blank=True, null=True)

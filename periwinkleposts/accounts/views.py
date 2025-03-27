@@ -23,6 +23,14 @@ from rest_framework.test import APIRequestFactory
 from inbox.models import Inbox
 from api.serializers import PostSerializer, AuthorSerializer
 from api.models import ExternalNode
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
+from rest_framework.response import Response
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -79,7 +87,10 @@ def registerView(request):
         form = AuthorCreation(query_dict)
         if form.is_valid():
             user = form.save(commit=False)  #create user but don’t save yet
-
+            
+            host = request.build_absolute_uri("/api/authors/")
+            user.id = f'{host}{user.row_id}'  
+            
             #get site settings to check if approval is required currently
             site_settings = SiteSettings.objects.first()
             approval_required = True  # Default to requiring approval
@@ -101,8 +112,17 @@ def registerView(request):
 
 
 def profileView(request, row_id):
-    author = get_object_or_404(Authors, row_id=row_id)
-    
+    author = None
+    try:
+        author = get_object_or_404(Authors, row_id=row_id)
+    except Http404:
+        try:
+
+            decoded_url = unquote(row_id)
+            author = get_object_or_404(Authors, id=decoded_url)
+        except Http404:
+            raise Http404("Author not found")
+
     if author.is_staff:
         author = request.user
 
@@ -130,6 +150,46 @@ def profileView(request, row_id):
         Follow.objects.filter(followee=request.user, follower=author).exists()
     )
 
+
+    # GitHub activity // NOTE: They are public posts only 
+    # Used this as reference -> can change format of the events 
+    # https://docs.github.com/en/rest/activity/events?apiVersion=2022-11-28#list-public-events-for-a-user
+
+    github_username = author.github_username                                                  # Gets username from author form
+    github_url = f"https://api.github.com/users/{github_username}/events/public"              # URL for users github
+    github_activity = []                                                                      # List to append all activities
+
+    try:
+        response = requests.get(github_url, headers={"Accept": "application/vnd.github.v3+json"}, timeout=5)
+        print(f"GitHub API Status: {response.status_code}")                                    # API response
+
+        if response.status_code == 200:
+            events = response.json()[:5]                                                       #Limit 5 can change this later
+
+            for event in events:                                                               #iterate through each event in the events JSON and process it based on its type
+                event_type = event["type"]                                                     
+                repo_name = event["repo"]["name"]                                              #repository name
+                created_at = event["created_at"][:10]                                          #example format "2025-03-24T14:25:30Z"
+
+                if event_type == "PushEvent":
+                    commit_count = len(event["payload"]["commits"])
+                    message = f"Pushed {commit_count} commit(s) to {repo_name}"
+                elif event_type == "PullRequestEvent":
+                    action = event["payload"]["action"]
+                    message = f"{action.capitalize()} a pull request in {repo_name}"
+                elif event_type == "IssuesEvent":
+                    action = event["payload"]["action"]
+                    message = f"{action.capitalize()} an issue in {repo_name}"
+                else:
+                    message = f"{event_type} in {repo_name}"
+                github_activity.append({"message": message, "date": created_at})
+
+    except requests.RequestException as e:
+        print(f"GitHub API Error: {e}")  
+        github_activity = [{"message": "Failed to fetch GitHub activity", "date": "N/A"}]
+
+
+
     context = {
         "author": author,
         "ownProfile": ownProfile,
@@ -146,6 +206,7 @@ def profileView(request, row_id):
         "followee_count": len(followees),
         "post_count": len(posts),
         "posts": posts,
+        "github_activity": github_activity,
     }
 
     return render(request, "profile.html", context)
@@ -238,12 +299,6 @@ class CustomLogoutView(LogoutView):
         return self.next_page or self.get_redirect_url() or reverse_lazy('accounts:login')
 
 
-# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
-
-from rest_framework import viewsets, permissions
-from rest_framework.response import Response
-from rest_framework.decorators import action
-
 
 class authorAPI(viewsets.ModelViewSet):
     queryset = Authors.objects.all()
@@ -267,7 +322,6 @@ def create_post(request):
         image = request.FILES.get("image")
         video = request.FILES.get("video")
         visibility = request.POST.get("visibility")
-
         if not all([title, description, content, content_type]):
             return HttpResponse("All fields are required.", status=400)
 
@@ -292,8 +346,20 @@ def create_post(request):
                 type="post",
                 content=serialized_post
             )
-            
-            # Call a Function to Send Post to Other Nodes
+            for node in ExternalNode.objects.all():
+                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+                try:
+                    response = requests.post(
+                        inbox_url,
+                        json={
+                            'type':'post',
+                            **serializer.data
+                        },
+                        timeout = 5
+                    )
+
+                except Exception as e:
+                    print(f"Failed to send post to {inbox_url}: {e}")
             # Add to other inboxes
             if visibility.upper() == "PUBLIC":
                 # Send to Every Author
@@ -572,12 +638,17 @@ class LikeView(viewsets.ModelViewSet):
         return Response(serializer.data, status=200)
     
 class InboxView(APIView):
+    
     def get(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)
         inbox_items = Inbox.objects.filter(author=author).order_by('-received')
         serializer = InboxSerializer(inbox_items, many=True)
         return Response(serializer.data, status=200)
 
+    @swagger_auto_schema(
+        operation_description="Send different types of actions (comment, like, follow, post) in an author's inbox.",
+        tags=["Remote"]
+    )
     def post(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)
         data_type = request.data.get("type")
@@ -605,8 +676,10 @@ class InboxView(APIView):
         return Response(serializer.errors, status=400)
 
     def handle_post(self,request,author):
-        post_id = request.data.get('id').split("/")[-1]
-        existing_post = Post.objects.filter(id=post_id)
+        post_url = request.data.get('id')
+        post_id = post_url.split("/")[-1]
+        existing_post = Post.objects.filter(id=post_id).first()
+        serializer = PostSerializer(data=request.data, context={'request': request})
         author1 = AuthorSerializer(author)
         if serializer.is_valid():
             saved_post = serializer.save(author=author1)

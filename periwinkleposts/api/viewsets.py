@@ -7,6 +7,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, permissions, status
 from drf_yasg import openapi
 import uuid
+import base64
 from rest_framework.decorators import action
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import permissions
@@ -20,19 +21,18 @@ from rest_framework.pagination import PageNumberPagination
 from .models import *
 from django.db.models import Q
 import requests
-
-class FollowersSchema(SwaggerAutoSchema):
-    def get_tags(self, operation_keys=None):
-        return ["Followers"]
+from urllib.parse import urlparse
+import requests
+from django.core.files.base import ContentFile
 
 class FollowersViewSet(GenericViewSet):
-    swagger_schema=FollowersSchema
     serializer_class=authorsSerializer
 
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
         operation_description="Get the followers of an author",
         request_body=None,
+        tags=["Local", "Remote"],
         responses={200: serializer_class()}
     )
     def list(self, request, author_serial):
@@ -42,9 +42,7 @@ class FollowersViewSet(GenericViewSet):
             return Response({'error': 'Invalid UUID format'}, status=400)
 
         author = get_object_or_404(Authors, row_id=author_serial)
-
         follower_ids = Follow.objects.filter(followee=author_uuid).values_list('follower_id', flat=True)  # Get all followers
-
         followers = Authors.objects.filter(row_id__in=follower_ids)
 
         active_followers = []
@@ -64,8 +62,9 @@ class FollowersViewSet(GenericViewSet):
 
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
-        operation_description="Check if foreign_author_fqidD is a follower of author_serial",
+        operation_description="Check if foreign_author_fqid is a follower of author_serial",
         request_body=None,
+        tags=["Local", "Remote"],
         responses={
             200: "foreign_author_fqid is a follower of author_serial",
             404: "foreign_author_fqid is not an author/follower"
@@ -77,19 +76,14 @@ class FollowersViewSet(GenericViewSet):
         get_object_or_404(Follow, followee=author_serial, follower=foreign_author.row_id)
         return Response({"message": "foreign_author_fqid is a follower of author_serial"}, status=200)
 
-        
-
-class FolloweesSchema(SwaggerAutoSchema):
-    def get_tags(self, operation_keys=None):
-        return ["Followees"]
 
 class FolloweesViewSet(GenericViewSet):
-    swagger_schema=FolloweesSchema
     serializer_class = UnfollowSerializer
     @action(detail=False, methods=["post"])
     @swagger_auto_schema(
         operation_description="Unfollow a followee of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: UnfollowSerializer(),
             404: "The author is not following the corresponding followee or one of the authors does not exist ."
@@ -112,6 +106,7 @@ class FolloweesViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Get all followees of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: FolloweesSerializer(),
             400: "Invalid UUID format."
@@ -129,18 +124,13 @@ class FolloweesViewSet(GenericViewSet):
 
         return Response(serializer.data, status=200)
 
-
-class FriendsSchema(SwaggerAutoSchema):
-    def get_tags(self, operation_keys=None):
-        return ["Friends"]
-
 class FriendsViewSet(GenericViewSet):
-    swagger_schema=FriendsSchema
     serializer_class=authorsSerializer()
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
         operation_description="Get all friends of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: authorsSerializer(),
             404: "The author does not exists."
@@ -177,19 +167,14 @@ class FriendsViewSet(GenericViewSet):
 
         return Response(serializer.data)
 
-class FollowRequestSchema(SwaggerAutoSchema):
-    def get_tags(self, operation_keys=None):
-        return ["Follow Requests"]
-
 class FollowRequestViewSet(GenericViewSet):
-
-    swagger_schema=FollowRequestSchema
     serializer_class=ActionSerializer
 
     @action(detail=False, methods=["post"])
     @swagger_auto_schema(
         operation_description="Send a follow request to an author.",
         request_body=ActionSerializer,
+        tags=["Local"],
         responses={
             201: ActionSerializer(),
             400: "Serializer errors. "
@@ -226,6 +211,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Get all follow requests of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: authorsSerializer(),
             404: "The author does not exists."
@@ -249,6 +235,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Get all outgoing follow requests of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: authorsSerializer(),
             400: "Invalid UUID format."
@@ -274,6 +261,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Accept the incoming follow request from the author with uuid 'request_serial' to the author with the uuid 'author_serial'. ",
         request_body=None,
+        tags=["Local"],
         responses={
             200: ActionSerializer()
             }
@@ -294,6 +282,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Decline the incoming follow request from the author with uuid 'request_serial' to the author with the uuid 'author_serial'. ",
         request_body=None,
+        tags=["Local"],
         responses={
             200: ActionSerializer()
             }
@@ -314,6 +303,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Get 5 author suggests that the Author with uuid 'author_serial' can send a follow request.",
         request_body=None,
+        tags=["Local"],
         responses={
             200: authorsSerializer()
             }
@@ -370,7 +360,7 @@ class FollowRequestViewSet(GenericViewSet):
     
 class AuthorViewSet(GenericViewSet):
     serializer_class = AuthorSerializer
-    queryset = Authors.objects.all().order_by('id')
+    queryset = Authors.objects.filter(local=True, is_staff=0).order_by('id')
 
     @swagger_auto_schema(
         operation_description="Get paginated list of authors",
@@ -510,14 +500,42 @@ class PostViewSet(viewsets.ModelViewSet):
 
     # POST /api/authors/{AUTHOR_SERIAL}/posts/
     def create(self, request, author_serial=None):
+        # Ensure the author exists and is local
         author = get_object_or_404(Authors, row_id=author_serial)
         if not author.local:
             return Response(status=status.HTTP_403_FORBIDDEN)
-            
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(author=author)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        self.perform_create(serializer, author)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def perform_create(self, serializer, author):
+        # Extract media data from request
+        image_data = self.request.data.get('image')
+        video_data = self.request.data.get('video')
+    
+        save_kwargs = {'author': author}
+
+        if image_data:
+            if image_data.startswith(('http://', 'https://')):
+                try:
+                    response = requests.get(image_data, timeout=5)
+                    response.raise_for_status()
+                    filename = os.path.basename(urlparse(image_data).path)
+                    unique_name = f"{uuid.uuid4()}_{filename}"
+                    save_kwargs['image'] = ContentFile(response.content, name=unique_name)
+                except Exception as e:
+                    print(f"Error downloading image: {str(e)}")
+            elif ';base64,' in image_data:
+                fmt, imgstr = image_data.split(';base64,')
+                ext = fmt.split('/')[-1]
+                filename = f"{uuid.uuid4()}.{ext}"
+                save_kwargs['image'] = ContentFile(base64.b64decode(imgstr), name=filename)
+            else:
+                save_kwargs['image'] = image_data
+        serializer.save(**save_kwargs)
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -558,13 +576,32 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        if 'image' in self.request.data:
-            image_data = self.request.data['image']
-            fmt, imgstr = image_data.split(';base64,')
-            ext = fmt.split('/')[-1]
-            filename = f"{uuid.uuid4()}.{ext}"
-            data = ContentFile(base64.b64decode(imgstr), name=filename)
-            serializer.save(image=data)
+        image_data = self.request.data.get('image')
+        video_data = self.request.data.get('video')
+        if image_data:
+            if image_data.startswith(('http://', 'https://')):
+                try:
+                    response = requests.get(image_data, timeout=5)
+                    response.raise_for_status()
+                    filename = os.path.basename(urlparse(image_data).path)
+                    unique_name = f"{uuid.uuid4()}_{filename}"
+                    
+                    serializer.save(
+                        image=ContentFile(response.content, name=unique_name)
+                    )
+                except Exception as e:
+                    # Handle download errors
+                    print(f"Error downloading image: {str(e)}")
+                    serializer.save()
+            
+            elif ';base64,' in image_data:
+                fmt, imgstr = image_data.split(';base64,')
+                ext = fmt.split('/')[-1]
+                filename = f"{uuid.uuid4()}.{ext}"
+                data = ContentFile(base64.b64decode(imgstr), name=filename)
+                serializer.save(image=data)
+            else:
+                serializer.save(image=image_data)
         else:
             serializer.save()
             
