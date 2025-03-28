@@ -25,18 +25,14 @@ from urllib.parse import urlparse
 import requests
 from django.core.files.base import ContentFile
 
-class FollowersSchema(SwaggerAutoSchema):
-    def get_tags(self, operation_keys=None):
-        return ["Followers"]
-
 class FollowersViewSet(GenericViewSet):
-    swagger_schema=FollowersSchema
-    serializer_class=authorsSerializer
+    serializer_class=FollowersSerializer
 
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
         operation_description="Get the followers of an author",
         request_body=None,
+        tags=["Local", "Remote"],
         responses={200: serializer_class()}
     )
     def list(self, request, author_serial):
@@ -60,14 +56,15 @@ class FollowersViewSet(GenericViewSet):
             else:
                 raise Exception(response.data)
 
-        serializer = self.serializer_class({"type":"followers", "authors": active_followers})
+        serializer = self.serializer_class({"type":"followers", "followers": active_followers})
 
         return Response(serializer.data, 200)
 
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
-        operation_description="Check if foreign_author_fqidD is a follower of author_serial",
+        operation_description="Check if foreign_author_fqid is a follower of author_serial",
         request_body=None,
+        tags=["Local", "Remote"],
         responses={
             200: "foreign_author_fqid is a follower of author_serial",
             404: "foreign_author_fqid is not an author/follower"
@@ -79,19 +76,14 @@ class FollowersViewSet(GenericViewSet):
         get_object_or_404(Follow, followee=author_serial, follower=foreign_author.row_id)
         return Response({"message": "foreign_author_fqid is a follower of author_serial"}, status=200)
 
-        
-
-class FolloweesSchema(SwaggerAutoSchema):
-    def get_tags(self, operation_keys=None):
-        return ["Followees"]
 
 class FolloweesViewSet(GenericViewSet):
-    swagger_schema=FolloweesSchema
     serializer_class = UnfollowSerializer
     @action(detail=False, methods=["post"])
     @swagger_auto_schema(
         operation_description="Unfollow a followee of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: UnfollowSerializer(),
             404: "The author is not following the corresponding followee or one of the authors does not exist ."
@@ -114,6 +106,7 @@ class FolloweesViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Get all followees of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: FolloweesSerializer(),
             400: "Invalid UUID format."
@@ -131,18 +124,13 @@ class FolloweesViewSet(GenericViewSet):
 
         return Response(serializer.data, status=200)
 
-
-class FriendsSchema(SwaggerAutoSchema):
-    def get_tags(self, operation_keys=None):
-        return ["Friends"]
-
 class FriendsViewSet(GenericViewSet):
-    swagger_schema=FriendsSchema
     serializer_class=authorsSerializer()
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
         operation_description="Get all friends of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: authorsSerializer(),
             404: "The author does not exists."
@@ -160,7 +148,7 @@ class FriendsViewSet(GenericViewSet):
 
         # Get active followers (mutual followers)
         active_followers_fqid = {
-            author["id"] for author in (FollowersViewSet.as_view({"get": "list"}))(fake_request, author_serial).data["authors"]
+            author["id"] for author in (FollowersViewSet.as_view({"get": "list"}))(fake_request, author_serial).data["followers"]
         }
 
         # Get all authors that this author follows (i.e., followees)
@@ -179,19 +167,14 @@ class FriendsViewSet(GenericViewSet):
 
         return Response(serializer.data)
 
-class FollowRequestSchema(SwaggerAutoSchema):
-    def get_tags(self, operation_keys=None):
-        return ["Follow Requests"]
-
 class FollowRequestViewSet(GenericViewSet):
-
-    swagger_schema=FollowRequestSchema
     serializer_class=ActionSerializer
 
     @action(detail=False, methods=["post"])
     @swagger_auto_schema(
         operation_description="Send a follow request to an author.",
         request_body=ActionSerializer,
+        tags=["Local"],
         responses={
             201: ActionSerializer(),
             400: "Serializer errors. "
@@ -228,6 +211,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Get all follow requests of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: authorsSerializer(),
             404: "The author does not exists."
@@ -251,6 +235,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Get all outgoing follow requests of an author",
         request_body=None,
+        tags=["Local"],
         responses={
             200: authorsSerializer(),
             400: "Invalid UUID format."
@@ -276,6 +261,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Accept the incoming follow request from the author with uuid 'request_serial' to the author with the uuid 'author_serial'. ",
         request_body=None,
+        tags=["Local"],
         responses={
             200: ActionSerializer()
             }
@@ -296,6 +282,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Decline the incoming follow request from the author with uuid 'request_serial' to the author with the uuid 'author_serial'. ",
         request_body=None,
+        tags=["Local"],
         responses={
             200: ActionSerializer()
             }
@@ -316,6 +303,7 @@ class FollowRequestViewSet(GenericViewSet):
     @swagger_auto_schema(
         operation_description="Get 5 author suggests that the Author with uuid 'author_serial' can send a follow request.",
         request_body=None,
+        tags=["Local"],
         responses={
             200: authorsSerializer()
             }
@@ -376,7 +364,7 @@ class AuthorViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="Get paginated list of authors",
-        responses={200: AuthorSerializer()}
+        responses={200: AuthorObjectToJSONSerializer()}
     )
     @action(detail=False, methods=['get'])
     def list(self, request):

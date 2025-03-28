@@ -8,10 +8,15 @@ from .serializers import *
 from inbox.serializers import InboxSerializer
 from django.http import QueryDict
 from api.viewsets import *
+from api.serializers import *
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
+from django.utils.dateparse import parse_datetime
+from django.utils import timezone
+from django.utils.timezone import make_aware
 import uuid
+from uuid import UUID
 import requests
 from pages.views import markdown_to_html
 from django.db.models import Q
@@ -23,6 +28,14 @@ from rest_framework.test import APIRequestFactory
 from inbox.models import Inbox
 from api.serializers import PostSerializer, AuthorSerializer
 from api.models import ExternalNode
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
+from rest_framework.response import Response
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+
 def loginView(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -126,11 +139,16 @@ def profileView(request, row_id):
 
     # Connections field
     friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
-    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["authors"]
+    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["followers"]
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
     suggestions = (FollowRequestViewSet.as_view({'get': 'getRequestSuggestions'}))(request, author.row_id).data["authors"]
     sent_requests = (FollowRequestViewSet.as_view({'get': 'getOutGoingFollowRequests'}))(request, author.row_id).data["authors"]
+
+    # Add row_id to followers
+    for follower in followers:
+        # Get row_id from id field
+        follower["row_id"] = follower["id"].split("/")[-1]
 
     for post in posts:
         if post.contentType == "text/markdown":
@@ -149,37 +167,65 @@ def profileView(request, row_id):
 
     github_username = author.github_username                                                  # Gets username from author form
     github_url = f"https://api.github.com/users/{github_username}/events/public"              # URL for users github
-    github_activity = []                                                                      # List to append all activities
+    #github_activity = []                                                                      # List to append all activities
 
     try:
         response = requests.get(github_url, headers={"Accept": "application/vnd.github.v3+json"}, timeout=5)
         print(f"GitHub API Status: {response.status_code}")                                    # API response
 
         if response.status_code == 200:
-            events = response.json()[:5]                                                       #Limit 5 can change this later
+            events = response.json()[:1]                                                       #Limit 1 can change this later
 
             for event in events:                                                               #iterate through each event in the events JSON and process it based on its type
                 event_type = event["type"]                                                     
                 repo_name = event["repo"]["name"]                                              #repository name
-                created_at = event["created_at"][:10]                                          #example format "2025-03-24T14:25:30Z"
+                #created_at = event["created_at"][:10]                                          #example format "2025-03-24T14:25:30Z"
+                created_at = parse_datetime(event["created_at"]) #datetime conversion
+        
+                # Check if the datetime is naive (has no timezone)
+                if created_at and created_at.tzinfo is None:
+                    created_at = make_aware(created_at)  # to fix error
 
+                # post content
                 if event_type == "PushEvent":
                     commit_count = len(event["payload"]["commits"])
-                    message = f"Pushed {commit_count} commit(s) to {repo_name}"
+                    title = f"New GitHub Push in {repo_name}"
+                    content = f"Pushed {commit_count} commit(s) to {repo_name}."
                 elif event_type == "PullRequestEvent":
                     action = event["payload"]["action"]
-                    message = f"{action.capitalize()} a pull request in {repo_name}"
+                    title = f"Pull Request {action.capitalize()} in {repo_name}"
+                    content = f"{action.capitalize()} a pull request in {repo_name}."
                 elif event_type == "IssuesEvent":
                     action = event["payload"]["action"]
-                    message = f"{action.capitalize()} an issue in {repo_name}"
+                    title = f"Issue {action.capitalize()} in {repo_name}"
+                    content = f"{action.capitalize()} an issue in {repo_name}."
                 else:
-                    message = f"{event_type} in {repo_name}"
-                github_activity.append({"message": message, "date": created_at})
+                    title = f"{event_type} in {repo_name}"
+                    content = f"Performed {event_type} in {repo_name}."
+
+                description = f"GitHub Activity from {github_username} at {created_at.strftime('%Y-%m-%d %H:%M:%S')}" if created_at else "GitHub Activity"
+
+                # check if post with latest activity exists already, if it does, dont create a new post.
+                if Post.objects.filter(Q(title=title), Q(content=content), Q(author=author)).exists():
+                    print(f"Skipping duplicate GitHub post: {title}")
+                    continue
+
+                # otherwise, create a new post from the github info
+                Post.objects.create(
+                    author=author,
+                    title=title,
+                    content=content,
+                    description=description,
+                    contentType="text/plain",
+                    visibility="PUBLIC",
+                    published=created_at or timezone.now(),
+                )
+                print(f"Created GitHub Post: {title}")
+                #github_activity.append({"message": message, "date": created_at})
 
     except requests.RequestException as e:
         print(f"GitHub API Error: {e}")  
-        github_activity = [{"message": "Failed to fetch GitHub activity", "date": "N/A"}]
-
+        #github_activity = [{"message": "Failed to fetch GitHub activity", "date": "N/A"}]
 
 
     context = {
@@ -198,7 +244,7 @@ def profileView(request, row_id):
         "followee_count": len(followees),
         "post_count": len(posts),
         "posts": posts,
-        "github_activity": github_activity,
+        #"github_activity": github_activity,
     }
 
     return render(request, "profile.html", context)
@@ -291,12 +337,6 @@ class CustomLogoutView(LogoutView):
         return self.next_page or self.get_redirect_url() or reverse_lazy('accounts:login')
 
 
-# I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
-
-from rest_framework import viewsets, permissions
-from rest_framework.response import Response
-from rest_framework.decorators import action
-
 
 class authorAPI(viewsets.ModelViewSet):
     queryset = Authors.objects.all()
@@ -335,57 +375,38 @@ def create_post(request):
                 visibility=visibility,
             )
             post.save()
+            inbox_instance = InboxView()
+            post_data = PostSerializer(post, context={'request': request}).data
+            inbox_instance.save_item(post.author.id, "post", post_data)
 
-            serialized_post = PostSerializer(post, context={'request': request}).data
-
-            # Add to creator's inbox
-            Inbox.objects.create(
-                author=request.user, 
-                type="post",
-                content=serialized_post
-            )
-            for node in ExternalNode.objects.all():
-                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
-                try:
-                    response = requests.post(
-                        inbox_url,
-                        json={
-                            'type':'post',
-                            **serializer.data
-                        },
-                        timeout = 5
-                    )
-
-                except Exception as e:
-                    print(f"Failed to send post to {inbox_url}: {e}")
             # Add to other inboxes
-            if visibility.upper() == "PUBLIC":
-                # Send to Every Author
-                for author in Authors.objects.all():
-                    Inbox.objects.create(
-                        author=author,
-                        type="post",
-                        content=serialized_post
-                    )
-            elif visibility.upper() == "UNLISTED":
-                # Send to Followers
-                for follower in request.user.followers.all():
-                    Inbox.objects.create(
-                        author=follower.follower, 
-                        type="post",
-                        content=serialized_post
-                    )
-            elif visibility.upper() == "FRIENDS":
-                # Send to Friends
-                for potential_friend in Authors.objects.exclude(row_id=request.user.row_id):
-                    if is_friend(request.user, potential_friend):
-                        Inbox.objects.create(
-                            author=potential_friend,
-                            type="post",
-                            content=serialized_post
-                        )
+        #     if visibility.upper() == "PUBLIC":
+        #         # Send to Every Author
+        #         for author in Authors.objects.all():
+        #             Inbox.objects.create(
+        #                 author=author,
+        #                 type="post",
+        #                 content=serialized_post
+        #             )
+        #     elif visibility.upper() == "UNLISTED":
+        #         # Send to Followers
+        #         for follower in request.user.followers.all():
+        #             Inbox.objects.create(
+        #                 author=follower.follower, 
+        #                 type="post",
+        #                 content=serialized_post
+        #             )
+        #     elif visibility.upper() == "FRIENDS":
+        #         # Send to Friends
+        #         for potential_friend in Authors.objects.exclude(row_id=request.user.row_id):
+        #             if is_friend(request.user, potential_friend):
+        #                 Inbox.objects.create(
+        #                     author=potential_friend,
+        #                     type="post",
+        #                     content=serialized_post
+        #                 )
 
-            return redirect("pages:home")
+        #     return redirect("pages:home")
         except Exception as e:
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
@@ -459,26 +480,21 @@ class CommentView(viewsets.ModelViewSet):
             author, _ = Authors.objects.get_or_create(id=author_data["id"], defaults=author_data)
         if serializer.is_valid():
             serializer.save(author=author, post = post)
-            Inbox.objects.create(
-                author=post.author, 
-                type="comment",
-                content=serializer.data
-            )
-            for node in ExternalNode.objects.all():
-                inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
-                try:
-                    response = requests.post(
-                        inbox_url,
-                        json={
-                            'type':'comment',
-                            **serializer.data
-                        },
-                        timeout = 5
-                    )
-
-                except Exception as e:
-                    print(f"Failed to send comment to {inbox_url}: {e}")
-                #path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+            inbox_instance = InboxView()
+            inbox_instance.save_item(request.user.id, "comment", serializer.data)
+            # for node in ExternalNode.objects.all():
+            #     inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
+            #     try:
+            #         response = requests.post(
+            #             inbox_url,
+            #             json={
+            #                 'type':'comment',
+            #                 **serializer.data
+            #             },
+            #             timeout = 5
+            #         )
+            #     except Exception as e:
+            #         print(f"Failed to send comment to {inbox_url}: {e}")
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
             return Response(serializer.data, status=201)
         else:
@@ -569,11 +585,8 @@ class LikeView(viewsets.ModelViewSet):
         post = get_object_or_404(Post, id=post_serial)
         like, created = Like.objects.get_or_create(author=request.user, post=post)
         serializer = self.get_serializer(like)
-        Inbox.objects.create(
-            author=post.author,
-            type="like",
-            content=serializer.data
-        )
+        inbox_instance = InboxView()
+        inbox_instance.save_item(post.author.id, "like", serializer.data)
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
@@ -638,14 +651,18 @@ class LikeView(viewsets.ModelViewSet):
         return Response(serializer.data, status=200)
     
 class InboxView(APIView):
+    
     def get(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)
         inbox_items = Inbox.objects.filter(author=author).order_by('-received')
         serializer = InboxSerializer(inbox_items, many=True)
         return Response(serializer.data, status=200)
 
+    @swagger_auto_schema(
+        operation_description="Accepts different types of requests, such as followers or posts.",
+        tags=["Remote"],
+    )
     def post(self, request, author_serial):
-        
         author = get_object_or_404(Authors, row_id=author_serial)
         data_type = request.data.get("type")
         if data_type == "comment":
@@ -668,29 +685,82 @@ class InboxView(APIView):
         serializer = CommentSerializer(data=request.data, context={"request": request})  
         if serializer.is_valid():
             serializer.save(author=commenter, post=post)
-            Inbox.objects.create(
-                author=post.author, 
-                type="comment",
-                content=serializer.data
-            )
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
-    def handle_post(self,request,author):
-        post_url = request.data.get('post')
-        post_id = post_url.split("/")[-1]
-        existing_post = Post.objects.filter(id=post_id).first()
-        serializer = PostSerializer(instance=existing_post, 
-                data=post_data, context={'request': request})
-        if serializer.is_valid():
-            saved_post = serializer.save(author=existing_post.author)
-            Inbox.objects.create(
-                author=author,
-                type="post",
-                content=serializer.data
+    def handle_post(self,request,local_author):
+        # get ot create the author
+        remote_author_data = request.data.get("author", {})
+        if not remote_author_data:
+            return Response({"error": "No author data provided"}, status=400)
+        remote_author = remote_author = self.get_or_create_author_from_data(remote_author_data)
+        if not remote_author:
+            return Response({"error": "Failed to create or retrieve remote author"}, status=400)
+        new_post = self.create_inbox_post(request, remote_author)
+        if not new_post:
+            return Response({"error": "Failed to create Post"}, status=400)
+        serializer = PostSerializer(new_post, context={'request': request})
+        return Response(serializer.data, status=201)
+
+    def create_inbox_post(self, request, author):
+        try:
+            post_id = request.data.get('id', '').split("/")[-1]
+            title = request.data.get('title', '')
+            description = request.data.get('description', '')
+            contentType = request.data.get('contentType', 'text/plain')
+            content = request.data.get('content', '')
+            visibility = request.data.get('visibility', 'PUBLIC')
+            page = request.data.get('page', '')
+
+            published_str = request.data.get('published', '')
+            published_dt = parse_datetime(published_str) if published_str else timezone.now()
+
+            post_obj, created = Post.objects.update_or_create(
+                id=post_id,
+                defaults={
+                    'title': title,
+                    'description': description,
+                    'content': content,
+                    'contentType': contentType,
+                    'visibility': visibility,
+                    'author': author,
+                    'page': page,
+                    'published': published_dt,
+                }
             )
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+            print(f"Post created: {created}, ID: {post_obj.id}")
+            return post_obj
+        except Exception as e:
+            print(f"Error creating/updating post: {e}")
+            return None
+
+    def get_or_create_author_from_data(self,remote_author_data):
+        try:
+            remote_author_id = remote_author_data.get("id", "")
+            remote_row_id = remote_author_data.get("row_id") or remote_author_id.split("/")[-1]
+            host = remote_author_data.get("host", "")
+            display_name = remote_author_data.get("displayName") or remote_author_data.get("username") or "unknown"
+            github = remote_author_data.get("github", "")
+            avatar_url = remote_author_data.get("profileImage", None)
+            full_id = remote_author_id or f"{host}authors/{remote_row_id}"
+            author, created = Authors.objects.get_or_create(
+                id=full_id,
+                defaults={
+                    "row_id": UUID(remote_row_id),
+                    "host": host,
+                    "username": display_name,
+                    "displayName": display_name,
+                    "github_username": github,
+                    "avatar_url": avatar_url,
+                    "local": False,
+                    "is_approved": True,  
+                }
+            )
+            return author
+        except Exception as e:
+            print(f"[get_or_create_author_from_data] Error creating author from data: {e}")
+            return None
+
 
     def handle_like(self, request, author): 
         object_url = request.data.get("object")  
@@ -710,11 +780,6 @@ class InboxView(APIView):
             comment=liked_object if isinstance(liked_object, Comment) else None
         )
         serializer = LikeSerializer(like)
-        Inbox.objects.create(
-            author=receiver,
-            type="like",
-            content=serializer.data
-        )
         return Response(serializer.data, status=201)
 
     def handle_follow(self, request, author_serial):
@@ -722,3 +787,24 @@ class InboxView(APIView):
         request._request.POST = QueryDict('', mutable=True)
         request._request.POST.update(request.data)  
         return makeRequest(request._request, author_serial)
+
+    def save_item(self, author, data_type, content):
+        author = get_object_or_404(Authors, id=author)
+        Inbox.objects.create(
+                author=author, 
+                type=data_type,
+                content=content
+            )
+        for author in Authors.objects.all():
+            host = author.host
+
+            inbox_url = f"{host}authors/{author.row_id}/inbox/"
+            print(inbox_url)
+            try:
+                response = requests.post(
+                    inbox_url,
+                    json=content,
+                    timeout = 5
+                )
+            except Exception as e:
+                print(f"Failed to send post to {inbox_url}: {e}")

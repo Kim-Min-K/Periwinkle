@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import Authors, Follow, Post, Comment, Like, SiteSettings
+from inbox.models import Inbox
 from django.utils.html import mark_safe
 
 
@@ -53,3 +54,4 @@ admin.site.register(Follow, FollowsAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Comment)
 admin.site.register(Like)
+admin.site.register(Inbox)
