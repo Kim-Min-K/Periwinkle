@@ -11,7 +11,10 @@ from api.viewsets import *
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
+from django.utils.dateparse import parse_datetime
+from django.utils import timezone
 import uuid
+from uuid import UUID
 import requests
 from pages.views import markdown_to_html
 from django.db.models import Q
@@ -442,7 +445,8 @@ class CommentView(viewsets.ModelViewSet):
             author, _ = Authors.objects.get_or_create(id=author_data["id"], defaults=author_data)
         if serializer.is_valid():
             serializer.save(author=author, post = post)
-            Inbox.save_item(author_serial, "comment", serializer.data)
+            inbox_instance = InboxView()
+            inbox_instance.save_item(request.user.id, "comment", serializer.data)
             # for node in ExternalNode.objects.all():
             #     inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
             #     try:
@@ -546,7 +550,8 @@ class LikeView(viewsets.ModelViewSet):
         post = get_object_or_404(Post, id=post_serial)
         like, created = Like.objects.get_or_create(author=request.user, post=post)
         serializer = self.get_serializer(like)
-        Inbox.save_item(post.author,serializer.data)
+        inbox_instance = InboxView()
+        inbox_instance.save_item(post.author.id, "like", serializer.data)
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
@@ -648,27 +653,78 @@ class InboxView(APIView):
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
-    def handle_post(self,request,author):
-        post_url = request.data.get('id')
-        post_id = post_url.split("/")[-1]
-        existing_post = Post.objects.filter(id=post_id).first()
-        serializer = PostSerializer(data=request.data, context={'request': request})
-        # author1 = AuthorSerializer(author)
-        if serializer.is_valid():
-            saved_post = serializer.save(author=author)
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-    
-    def create_inbox_page(self,request,author):
-        post_id = request.data.get('id').split("/")[-1]
-        title = request.data.get('title')
-        description = request.data.get('description')
-        contentType = request.data.get('contentType')
-        content = request.data.get('content')
-        published = request.data.get('published')
-        visibility = request.data.get('visibility')
-        page = request.data.get('page')
+    def handle_post(self,request,local_author):
+        # get ot create the author
+        remote_author_data = request.data.get("author", {})
+        if not remote_author_data:
+            return Response({"error": "No author data provided"}, status=400)
+        remote_author = remote_author = self.get_or_create_author_from_data(remote_author_data)
+        if not remote_author:
+            return Response({"error": "Failed to create or retrieve remote author"}, status=400)
+        new_post = self.create_inbox_post(request, remote_author)
+        if not new_post:
+            return Response({"error": "Failed to create Post"}, status=400)
+        serializer = PostSerializer(new_post, context={'request': request})
+        return Response(serializer.data, status=201)
 
+    def create_inbox_post(self, request, author):
+        try:
+            post_id = request.data.get('id', '').split("/")[-1]
+            title = request.data.get('title', '')
+            description = request.data.get('description', '')
+            contentType = request.data.get('contentType', 'text/plain')
+            content = request.data.get('content', '')
+            visibility = request.data.get('visibility', 'PUBLIC')
+            page = request.data.get('page', '')
+
+            published_str = request.data.get('published', '')
+            published_dt = parse_datetime(published_str) if published_str else timezone.now()
+
+            post_obj, created = Post.objects.update_or_create(
+                id=post_id,
+                defaults={
+                    'title': title,
+                    'description': description,
+                    'content': content,
+                    'contentType': contentType,
+                    'visibility': visibility,
+                    'author': author,
+                    'page': page,
+                    'published': published_dt,
+                }
+            )
+            print(f"Post created: {created}, ID: {post_obj.id}")
+            return post_obj
+        except Exception as e:
+            print(f"Error creating/updating post: {e}")
+            return None
+
+    def get_or_create_author_from_data(self,remote_author_data):
+        try:
+            remote_author_id = remote_author_data.get("id", "")
+            remote_row_id = remote_author_data.get("row_id") or remote_author_id.split("/")[-1]
+            host = remote_author_data.get("host", "")
+            display_name = remote_author_data.get("displayName") or remote_author_data.get("username") or "unknown"
+            github = remote_author_data.get("github", "")
+            avatar_url = remote_author_data.get("profileImage", None)
+            full_id = remote_author_id or f"{host}authors/{remote_row_id}"
+            author, created = Authors.objects.get_or_create(
+                id=full_id,
+                defaults={
+                    "row_id": UUID(remote_row_id),
+                    "host": host,
+                    "username": display_name,
+                    "displayName": display_name,
+                    "github_username": github,
+                    "avatar_url": avatar_url,
+                    "local": False,
+                    "is_approved": True,  
+                }
+            )
+            return author
+        except Exception as e:
+            print(f"[get_or_create_author_from_data] Error creating author from data: {e}")
+            return None
 
 
     def handle_like(self, request, author): 
@@ -706,6 +762,7 @@ class InboxView(APIView):
             )
         for author in Authors.objects.all():
             host = author.host
+
             inbox_url = f"{host}authors/{author.row_id}/inbox/"
             print(inbox_url)
             try:
