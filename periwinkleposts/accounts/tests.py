@@ -2,7 +2,8 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from .models import Authors, Follow, FollowRequest, Post, Comment, Like
-from .serializers import authorSerializer, CommentSerializer
+from .serializers import *
+from api.serializers import *
 import uuid
 from rest_framework import status
 from rest_framework import permissions
@@ -495,9 +496,6 @@ class FollowAPITests(APITestCase):
         
         self.assertEqual(response.status_code, 404)
 
-
-        
-
 class FollowRequestAPITests(APITestCase):
     def setUp(self):
         # Create test authors
@@ -871,6 +869,20 @@ class AuthorViewSetTests(APITestCase):
                 host="http://testserver/api/",
                 avatar_url=f"http://example.com/avatar_{i}.jpg"
             )
+    def test_author_to_json_serializer(self):
+        """
+        Test to make sure AuthorObjectToJSONSerializer only has type, id, host, displayName, page, github, and profileImage following
+        """
+
+        author = Authors.objects.first()
+        serializer = AuthorObjectToJSONSerializer(author)
+
+        expected_keys = {"type", "id", "host", "displayName", "page", "github", "profileImage"}
+        serialized_data = serializer.data
+
+        # Ensure only the expected keys are in the response
+        self.assertEqual(set(serialized_data.keys()), expected_keys)
+
 
     # Retrieve single author tests
     def test_author(self):
