@@ -49,14 +49,14 @@
                             <div><span class="font-bold">{{followee_count}}</span> following</div>
                         </div>
                         <p class="text-gray-600 mt-2">
-                            GitHub Activity: 
+                            GitHub Username: 
                             <a href="https://github.com/{{ author.github_username }}" class="text-[#A2A2E6]">
                                 @{{ author.github_username }}
                             </a>
                         </p>
                         
-                        {% if github_activity %}
-                            <hr class="my-2 border-t border-gray-200"> <!-- Added an horizontal line aqui -->
+                        <!-- {% if github_activity %}
+                            <hr class="my-2 border-t border-gray-200"> 
                             <ul class="mt-2 text-sm text-gray-600 list-disc list-inside">
                                 {% for activity in github_activity %}
                                     <li>{{ activity.message }} <span class="text-gray-400">({{ activity.date }})</span></li>
@@ -64,7 +64,7 @@
                             </ul>
                         {% else %}
                             <p class="mt-2 text-sm text-gray-600">No recent GitHub activity.</p>
-                        {% endif %}
+                        {% endif %} -->
                         
                     </div>
                 </div>

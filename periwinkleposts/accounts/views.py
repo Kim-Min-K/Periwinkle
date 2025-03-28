@@ -13,6 +13,7 @@ from django.http import HttpResponse
 from .models import Post
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
+from django.utils.timezone import make_aware
 import uuid
 from uuid import UUID
 import requests
@@ -160,37 +161,65 @@ def profileView(request, row_id):
 
     github_username = author.github_username                                                  # Gets username from author form
     github_url = f"https://api.github.com/users/{github_username}/events/public"              # URL for users github
-    github_activity = []                                                                      # List to append all activities
+    #github_activity = []                                                                      # List to append all activities
 
     try:
         response = requests.get(github_url, headers={"Accept": "application/vnd.github.v3+json"}, timeout=5)
         print(f"GitHub API Status: {response.status_code}")                                    # API response
 
         if response.status_code == 200:
-            events = response.json()[:5]                                                       #Limit 5 can change this later
+            events = response.json()[:1]                                                       #Limit 1 can change this later
 
             for event in events:                                                               #iterate through each event in the events JSON and process it based on its type
                 event_type = event["type"]                                                     
                 repo_name = event["repo"]["name"]                                              #repository name
-                created_at = event["created_at"][:10]                                          #example format "2025-03-24T14:25:30Z"
+                #created_at = event["created_at"][:10]                                          #example format "2025-03-24T14:25:30Z"
+                created_at = parse_datetime(event["created_at"]) #datetime conversion
+        
+                # Check if the datetime is naive (has no timezone)
+                if created_at and created_at.tzinfo is None:
+                    created_at = make_aware(created_at)  # to fix error
 
+                # post content
                 if event_type == "PushEvent":
                     commit_count = len(event["payload"]["commits"])
-                    message = f"Pushed {commit_count} commit(s) to {repo_name}"
+                    title = f"New GitHub Push in {repo_name}"
+                    content = f"Pushed {commit_count} commit(s) to {repo_name}."
                 elif event_type == "PullRequestEvent":
                     action = event["payload"]["action"]
-                    message = f"{action.capitalize()} a pull request in {repo_name}"
+                    title = f"Pull Request {action.capitalize()} in {repo_name}"
+                    content = f"{action.capitalize()} a pull request in {repo_name}."
                 elif event_type == "IssuesEvent":
                     action = event["payload"]["action"]
-                    message = f"{action.capitalize()} an issue in {repo_name}"
+                    title = f"Issue {action.capitalize()} in {repo_name}"
+                    content = f"{action.capitalize()} an issue in {repo_name}."
                 else:
-                    message = f"{event_type} in {repo_name}"
-                github_activity.append({"message": message, "date": created_at})
+                    title = f"{event_type} in {repo_name}"
+                    content = f"Performed {event_type} in {repo_name}."
+
+                description = f"GitHub Activity from {github_username} at {created_at.strftime('%Y-%m-%d %H:%M:%S')}" if created_at else "GitHub Activity"
+
+                # check if post with latest activity exists already, if it does, dont create a new post.
+                if Post.objects.filter(Q(title=title), Q(content=content), Q(author=author)).exists():
+                    print(f"Skipping duplicate GitHub post: {title}")
+                    continue
+
+                # otherwise, create a new post from the github info
+                Post.objects.create(
+                    author=author,
+                    title=title,
+                    content=content,
+                    description=description,
+                    contentType="text/plain",
+                    visibility="PUBLIC",
+                    published=created_at or timezone.now(),
+                )
+                print(f"Created GitHub Post: {title}")
+                #github_activity.append({"message": message, "date": created_at})
 
     except requests.RequestException as e:
         print(f"GitHub API Error: {e}")  
-        github_activity = [{"message": "Failed to fetch GitHub activity", "date": "N/A"}]
-
+        #github_activity = [{"message": "Failed to fetch GitHub activity", "date": "N/A"}]
 
 
     context = {
@@ -209,7 +238,7 @@ def profileView(request, row_id):
         "followee_count": len(followees),
         "post_count": len(posts),
         "posts": posts,
-        "github_activity": github_activity,
+        #"github_activity": github_activity,
     }
 
     return render(request, "profile.html", context)
