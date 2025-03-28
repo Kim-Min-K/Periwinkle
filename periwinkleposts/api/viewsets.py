@@ -587,36 +587,6 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(post)
         return Response(serializer.data)
 
-    def perform_create(self, serializer):
-        image_data = self.request.data.get('image')
-        video_data = self.request.data.get('video')
-        if image_data:
-            if image_data.startswith(('http://', 'https://')):
-                try:
-                    response = requests.get(image_data, timeout=5)
-                    response.raise_for_status()
-                    filename = os.path.basename(urlparse(image_data).path)
-                    unique_name = f"{uuid.uuid4()}_{filename}"
-                    
-                    serializer.save(
-                        image=ContentFile(response.content, name=unique_name)
-                    )
-                except Exception as e:
-                    # Handle download errors
-                    print(f"Error downloading image: {str(e)}")
-                    serializer.save()
-            
-            elif ';base64,' in image_data:
-                fmt, imgstr = image_data.split(';base64,')
-                ext = fmt.split('/')[-1]
-                filename = f"{uuid.uuid4()}.{ext}"
-                data = ContentFile(base64.b64decode(imgstr), name=filename)
-                serializer.save(image=data)
-            else:
-                serializer.save(image=image_data)
-        else:
-            serializer.save()
-            
     @swagger_auto_schema(
         operation_description="Get paginated list of all posts",
         responses={200: PostSerializer(many=True)}
