@@ -8,6 +8,7 @@ from .serializers import *
 from inbox.serializers import InboxSerializer
 from django.http import QueryDict
 from api.viewsets import *
+from api.serializers import *
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .models import Post
@@ -134,11 +135,16 @@ def profileView(request, row_id):
 
     # Connections field
     friends = (FriendsViewSet.as_view({'get': 'getFriends'}))(request,author.row_id).data["authors"]
-    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["authors"]
+    followers = (FollowersViewSet.as_view({"get": "list"}))(request, author.row_id).data["followers"]
     followees = (FolloweesViewSet.as_view({"get": "getFollowees"}))(request, author.row_id).data["followees"]
     requesters = (FollowRequestViewSet.as_view({'get': 'getFollowRequests'}))(request, author.row_id).data["authors"]
     suggestions = (FollowRequestViewSet.as_view({'get': 'getRequestSuggestions'}))(request, author.row_id).data["authors"]
     sent_requests = (FollowRequestViewSet.as_view({'get': 'getOutGoingFollowRequests'}))(request, author.row_id).data["authors"]
+
+    # Add row_id to followers
+    for follower in followers:
+        # Get row_id from id field
+        follower["row_id"] = follower["id"].split("/")[-1]
 
     for post in posts:
         if post.contentType == "text/markdown":
@@ -619,8 +625,8 @@ class InboxView(APIView):
         return Response(serializer.data, status=200)
 
     @swagger_auto_schema(
-        operation_description="Send different types of actions (comment, like, follow, post) in an author's inbox.",
-        tags=["Remote"]
+        operation_description="Accepts different types of requests, such as followers or posts.",
+        tags=["Remote"],
     )
     def post(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)

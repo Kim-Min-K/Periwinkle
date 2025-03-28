@@ -37,7 +37,6 @@ class AuthorSerializer(serializers.Serializer):
 
 class AuthorObjectToJSONSerializer(serializers.Serializer):
     type = serializers.CharField(default="author")
-    row_id = serializers.UUIDField(default="row.id")
     id = serializers.SerializerMethodField()
     host = serializers.SerializerMethodField()
     displayName = serializers.CharField() #do we want to keep username and display seperate?
@@ -62,6 +61,10 @@ class AuthorObjectToJSONSerializer(serializers.Serializer):
 
     def get_page(self, obj):
         return obj.host[:-5] + (f'/accounts/profile/{obj.row_id}') # this should be changed to UUID
+
+class FollowersSerializer(serializers.Serializer):
+    type = serializers.CharField(default="followers", read_only=True)
+    followers = AuthorObjectToJSONSerializer(many=True)
 
 class AuthorsSerializer(serializers.Serializer):
     type = serializers.CharField(default="authors")

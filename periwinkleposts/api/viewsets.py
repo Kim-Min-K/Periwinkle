@@ -26,7 +26,7 @@ import requests
 from django.core.files.base import ContentFile
 
 class FollowersViewSet(GenericViewSet):
-    serializer_class=authorsSerializer
+    serializer_class=FollowersSerializer
 
     @action(detail=False, methods=["get"])
     @swagger_auto_schema(
@@ -56,7 +56,7 @@ class FollowersViewSet(GenericViewSet):
             else:
                 raise Exception(response.data)
 
-        serializer = self.serializer_class({"type":"followers", "authors": active_followers})
+        serializer = self.serializer_class({"type":"followers", "followers": active_followers})
 
         return Response(serializer.data, 200)
 
@@ -148,7 +148,7 @@ class FriendsViewSet(GenericViewSet):
 
         # Get active followers (mutual followers)
         active_followers_fqid = {
-            author["id"] for author in (FollowersViewSet.as_view({"get": "list"}))(fake_request, author_serial).data["authors"]
+            author["id"] for author in (FollowersViewSet.as_view({"get": "list"}))(fake_request, author_serial).data["followers"]
         }
 
         # Get all authors that this author follows (i.e., followees)
@@ -364,7 +364,7 @@ class AuthorViewSet(GenericViewSet):
 
     @swagger_auto_schema(
         operation_description="Get paginated list of authors",
-        responses={200: AuthorSerializer()}
+        responses={200: AuthorObjectToJSONSerializer()}
     )
     @action(detail=False, methods=['get'])
     def list(self, request):
