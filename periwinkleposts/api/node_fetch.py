@@ -160,6 +160,7 @@ def fetch_post_comments(post_url, node):
     page = 1                                                                                # Page for Traversal
     while True:                                                                             # Traversal Loop
         url = f"{post_url}/comments/?page={page}&size=20"
+        print(url)
         #response = requests.get(url, auth=(node.username, node.password))
         response = requests.get(url)
         if response.status_code != 200:                                                     # If no data, break
@@ -190,7 +191,6 @@ def process_comments(comments_data, post):
     for comment in comments_data:                                                           # For each comment in the list 
         if not isinstance(comment, dict):
             continue
-
         try:    
             # Get the Author of the Comment 
             author_data = comment.get('author')
@@ -201,9 +201,7 @@ def process_comments(comments_data, post):
             post_url = comment.get('post')
             post_uuid = extract_second_uuid_from_url(post_url)
             post = Post.objects.get(id=post_uuid)
-
             comment_uuid = extract_uuid_from_url(comment.get('id'))
-
             Comment.objects.update_or_create(
                 id=comment_uuid,
                 defaults={
@@ -224,12 +222,13 @@ def fetch_post_likes(post_url, node):
     page = 1
     while True:
         url = f"{post_url}/likes/?page={page}&size=20"
+        print(url)
         response = requests.get(url)
         if response.status_code != 200:
             break
             
         data = response.json()
-
+        print(data)
         if isinstance(data, dict) and 'results' in data:
             page_likes = data['results']
             total_pages = data['total_pages']
@@ -332,7 +331,8 @@ def fetch_followers(author_url, node):
     followers = []
     page = 1
     while True:
-        url = f"{author_url}/followers/?page={page}&size=20"
+        url = f"{author_url}/followers?page={page}&size=20"
+        print(url)
         response = requests.get(url)
         if response.status_code != 200:
             break
@@ -344,9 +344,9 @@ def fetch_followers(author_url, node):
             page_followers = data['items']
         else:
             page_followers = []
-        
         followers.extend(page_followers)
-
+        print(f'\n\nRaw JSON Response: {data}\n\n')
+        print(f'\n\nfollowees List: {followers}\n\n')
         if len(page_followers) < 20:
             break
         page += 1
@@ -360,7 +360,8 @@ def fetch_followees(author_url, node):
     followees = []
     page = 1
     while True:
-        url = f"{author_url}/followees/?page={page}&size=20"
+        url = f"{author_url}/followees?page={page}&size=20"
+        print(url)
         response = requests.get(url)
         if response.status_code != 200:
             break
@@ -374,7 +375,8 @@ def fetch_followees(author_url, node):
             page_followees = []
 
         followees.extend(page_followees)
-
+        print(f'\n\nRaw JSON Response: {data}\n\n')
+        print(f'\n\nfollowees List: {followees}\n\n')
         if len(page_followees) < 20:
             break
         page += 1
@@ -385,8 +387,10 @@ def process_followers(followers_data, author):
     """
     Store fetched followers into the database upon initial sync
     """
+    print("The code makes it to process_followers")
     for follower in followers_data:
         follower_id = extract_uuid_from_url(follower['id'])
+        print("Follower ID: ", follower_id)
         if not follower_id:
             continue
 
@@ -454,21 +458,23 @@ def get_node_data(node):
                 print("Post Done, Moving onto Comments")
                 # Sync comments
                 comments = fetch_post_comments(post_data['id'], node)
+                print(comments)
                 process_comments(comments, post)
                 print("Comments Done, Moving onto Likes")
             
                 # Sync likes
                 likes = fetch_post_likes(post_data['id'], node)
+                print(likes)
                 process_likes(likes, post)
                 print("Likes Done!")
             
              # Sync followers & followees
             followers = fetch_followers(author_url, node)
-            process_followers(followers, author)
+            process_followers(followers, author_uuid)
             print("Followers Synced")
 
             followees = fetch_followees(author_url, node)
-            process_followees(followees, author)
+            process_followees(followees, author_uuid)
             print("Followees Synced")
 
         print("Sync with Node successful")

@@ -63,6 +63,7 @@ MIDDLEWARE = [
     "accounts.middleware.ApprovalRequiredMiddleware", #required for admin panel author approval
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'periwinkleposts.middleware.AuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = "periwinkleposts.urls"
