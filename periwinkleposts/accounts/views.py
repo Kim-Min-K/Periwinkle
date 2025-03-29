@@ -120,7 +120,7 @@ def profileView(request, row_id):
     author = None
     try:
         author = get_object_or_404(Authors, row_id=row_id)
-    except Http404:
+    except:
         try:
 
             decoded_url = unquote(row_id)
