@@ -342,8 +342,8 @@ def fetch_followers(author_url, node):
         print(f"Followers Data: {data}")
         if isinstance(data, list):
             page_followers = data
-        elif isinstance(data, dict) and 'items' in data:
-            page_followers = data['items']
+        elif isinstance(data, dict) and 'followers' in data:
+            page_followers = data['followers']
         else:
             page_followers = []
         
@@ -373,8 +373,8 @@ def fetch_followees(author_url, node):
         print(f"Followees Data: {data}")
         if isinstance(data, list):
             page_followees = data
-        elif isinstance(data, dict) and 'items' in data:
-            page_followees = data['items']
+        elif isinstance(data, dict) and 'followees' in data:
+            page_followees = data['followees']
         else:
             page_followees = []
 
