@@ -396,18 +396,19 @@ def process_followers(followers_data, author):
         if not follower_id:
             continue
 
-        follower_author, _ = Authors.objects.get_or_create(
-            id=follower_id,
-            defaults={
-                "id": follower.get('id'),
-                'host': follower.get('host'),
-                'username': follower.get('displayName'),
-                'displayName': follower.get('displayName'),
-                'github_username': follower.get('github', '').split('/')[-1],
-                'avatar_url': follower.get('profileImage'),
-                'local': False
-            }
-        )
+        # first check if the follower author already exsits in db
+        follower_author = Authors.objects.filter(id=follower_id).first()
+        
+        if not follower_author: #create it it doesnt 
+            follower_author = Authors.objects.create(
+                id=follower_id,
+                host=follower.get('host'),
+                username=follower.get('displayName'),
+                displayName=follower.get('displayName'),
+                github_username=follower.get('github', '').split('/')[-1],
+                avatar_url=follower.get('profileImage'),
+                local=False
+            )
 
         Follow.objects.update_or_create(
             follower=follower_author,
@@ -424,18 +425,19 @@ def process_followees(followees_data, author):
         if not followee_id:
             continue
 
-        followee_author, _ = Authors.objects.get_or_create(
-            id=followee_id,
-            defaults={
-                "id": followee.get('id'),
-                'host': followee.get('host'),
-                'username': followee.get('displayName'),
-                'displayName': followee.get('displayName'),
-                'github_username': followee.get('github', '').split('/')[-1],
-                'avatar_url': followee.get('profileImage'),
-                'local': False
-            }
-        )
+        # first check if the followee author already exsits in db
+        followee_author = Authors.objects.filter(id=followee_id).first()
+
+        if not followee_author: #create it it doesnt 
+            followee_author = Authors.objects.create(
+                id=followee_id,
+                host=followee.get('host'),
+                username=followee.get('displayName'),
+                displayName=followee.get('displayName'),
+                github_username=followee.get('github', '').split('/')[-1],
+                avatar_url=followee.get('profileImage'),
+                local=False
+            )
 
         Follow.objects.update_or_create(
             follower=author,
