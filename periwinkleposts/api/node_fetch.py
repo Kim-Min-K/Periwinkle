@@ -464,11 +464,11 @@ def get_node_data(node):
             
              # Sync followers & followees
             followers = fetch_followers(author_url, node)
-            process_followers(followers, author)
+            process_followers(followers, author_uuid)
             print("Followers Synced")
 
             followees = fetch_followees(author_url, node)
-            process_followees(followees, author)
+            process_followees(followees, author_uuid)
             print("Followees Synced")
 
         print("Sync with Node successful")
