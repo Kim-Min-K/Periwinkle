@@ -462,12 +462,15 @@ def get_node_data(node):
                 process_likes(likes, post)
                 print("Likes Done!")
             
-             # Sync followers & followees
-            followers = fetch_followers(author_url, node)
+            #ensure there's no trailing slash in author_url (bug fix)
+            author_url_no_trailing_slash = author_url.rstrip('/')
+            
+            # Sync followers & followees
+            followers = fetch_followers(author_url_no_trailing_slash, node)
             process_followers(followers, author_uuid)
             print("Followers Synced")
 
-            followees = fetch_followees(author_url, node)
+            followees = fetch_followees(author_url_no_trailing_slash, node)
             process_followees(followees, author_uuid)
             print("Followees Synced")
 
