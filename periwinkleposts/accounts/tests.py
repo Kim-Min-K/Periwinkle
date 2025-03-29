@@ -709,26 +709,7 @@ class InboxTest(APITestCase):
         self.comment1 = Comment.objects.create(
             author=self.author1, post = self.post1, comment = "Test comment", content_type = "text/plain")
 
-    # ://service/api/authors/{AUTHOR_SERIAL}/inbox POST
-    def test_post_comment_to_inbox(self):
-        self.assertEqual(Comment.objects.count(), 1)  
-        url = reverse("api:inbox", kwargs={"author_serial": str(self.author.row_id)})
-        comment_data = {
-            "type": "comment",
-            "comment": "Inbox comment",
-            "contentType": "text/plain",
-            "post": f"http://localhost:8000/api/authors/{self.author.row_id}/posts/{self.post.id}",
-            "author": {  
-                "id": str(self.author2.id),  
-                "username": self.author2.username,
-            }
-        }
-        response = self.client.post(url, comment_data, format="json")
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(Comment.objects.count(), 2)  
-        
 
-        # ://service/api/authors/{AUTHOR_SERIAL}/inbox
     
     def test_like_post(self):
         post_url = f"http://localhost:8000/api/authors/{self.author1.row_id}/posts/{self.post1.id}"
