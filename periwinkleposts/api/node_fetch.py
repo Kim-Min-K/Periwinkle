@@ -60,7 +60,7 @@ def fetch_all_users(node):
             break
             
         data = response.json()                                                              # Convert the data into a JSON
-        print(data)
+        #print(data)
         users.extend(data.get('authors', []))                                               # Append it to the Users List
         
         if len(data.get('authors', [])) < 20:                                               # Max 20 Users per page, if less, no need to check other pages
@@ -332,12 +332,14 @@ def fetch_followers(author_url, node):
     followers = []
     page = 1
     while True:
-        url = f"{author_url}/followers/?page={page}&size=20"
+        url = f"{author_url}/followers?page={page}&size=20"
         response = requests.get(url)
+        print(f"Followers Response: {response.json()}")
         if response.status_code != 200:
             break
         
         data = response.json()
+        print(f"Followers Data: {data}")
         if isinstance(data, list):
             page_followers = data
         elif isinstance(data, dict) and 'items' in data:
@@ -346,6 +348,7 @@ def fetch_followers(author_url, node):
             page_followers = []
         
         followers.extend(page_followers)
+        print(f"Followers: {followers}")
 
         if len(page_followers) < 20:
             break
@@ -360,12 +363,14 @@ def fetch_followees(author_url, node):
     followees = []
     page = 1
     while True:
-        url = f"{author_url}/followees/?page={page}&size=20"
+        url = f"{author_url}/followees?page={page}&size=20"
         response = requests.get(url)
+        print(f"Followees Response: {response.json()}")
         if response.status_code != 200:
             break
 
         data = response.json()
+        print(f"Followees Data: {data}")
         if isinstance(data, list):
             page_followees = data
         elif isinstance(data, dict) and 'items' in data:
@@ -374,6 +379,7 @@ def fetch_followees(author_url, node):
             page_followees = []
 
         followees.extend(page_followees)
+        print(f"Followees: {followees}")
 
         if len(page_followees) < 20:
             break
@@ -464,6 +470,7 @@ def get_node_data(node):
             
             #ensure there's no trailing slash in author_url (bug fix)
             author_url_no_trailing_slash = author_url.rstrip('/')
+            print(f"Author URL: {author_url_no_trailing_slash}")
             
             # Sync followers & followees
             followers = fetch_followers(author_url_no_trailing_slash, node)
