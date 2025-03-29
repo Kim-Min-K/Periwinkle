@@ -136,8 +136,6 @@ class Comment(models.Model):
         ],
         default="text/plain",
     )
-
-
     def __str__(self):
         return f"{self.author.displayName} commented on {self.published}"
 

@@ -377,7 +377,7 @@ def create_post(request):
             post.save()
             inbox_instance = InboxView()
             post_data = PostSerializer(post, context={'request': request}).data
-            inbox_instance.save_item(post.author.id, "post", post_data)
+            inbox_instance.save_item(post.author.id, "post", post_data,request)
 
             # Add to other inboxes
         #     if visibility.upper() == "PUBLIC":
@@ -406,7 +406,7 @@ def create_post(request):
         #                     content=serialized_post
         #                 )
 
-        #     return redirect("pages:home")
+            return redirect("pages:home")
         except Exception as e:
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
@@ -481,20 +481,7 @@ class CommentView(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save(author=author, post = post)
             inbox_instance = InboxView()
-            inbox_instance.save_item(request.user.id, "comment", serializer.data)
-            # for node in ExternalNode.objects.all():
-            #     inbox_url = f"{node.nodeURL}/api/authors/{post.author.row_id}/inbox/"
-            #     try:
-            #         response = requests.post(
-            #             inbox_url,
-            #             json={
-            #                 'type':'comment',
-            #                 **serializer.data
-            #             },
-            #             timeout = 5
-            #         )
-            #     except Exception as e:
-            #         print(f"Failed to send comment to {inbox_url}: {e}")
+            inbox_instance.save_item(request.user.id, "comment", serializer.data,request)
         if request.headers.get("Accept") == "application/json" or request.content_type == "application/json":
             return Response(serializer.data, status=201)
         else:
@@ -586,7 +573,7 @@ class LikeView(viewsets.ModelViewSet):
         like, created = Like.objects.get_or_create(author=request.user, post=post)
         serializer = self.get_serializer(like)
         inbox_instance = InboxView()
-        inbox_instance.save_item(post.author.id, "like", serializer.data)
+        inbox_instance.save_item(post.author.id, "like", serializer.data,request)
         redirect_url = request.POST.get('next')
         return redirect(redirect_url)
     
@@ -675,18 +662,49 @@ class InboxView(APIView):
             return self.handle_post(request, author)
         return Response({"error": "Invalid type"}, status=400)
 
-    def handle_comment(self, request, author):
-        post_url = request.data.get("post")  
+    def handle_comment(self, request, local_author):
+        post_url = request.data.get("post", "")
         post_id = post_url.split("/")[-1]
-        post = get_object_or_404(Post, id=post_id) 
-        author_data = request.data.get('author',{})
-        author_id = author_data.get("id", "").split("/")[-1]
-        commenter = get_object_or_404(Authors, row_id=author_id)
-        serializer = CommentSerializer(data=request.data, context={"request": request})  
-        if serializer.is_valid():
-            serializer.save(author=commenter, post=post)
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            return Response({"error": "Post not found"}, status=404)
+
+        remote_author_data = request.data.get("author", {})
+        if not remote_author_data:
+            return Response({"error": "No author data"}, status=400)
+        remote_author = self.get_or_create_author_from_data(remote_author_data)
+        if not remote_author:
+            return Response({"error": "Invalid remote author"}, status=400)
+        comment_obj = self.create_inbox_comment(request, remote_author, post)
+        if not comment_obj:
+            return Response({"error": "Comment creation failed"}, status=400)
+        serializer = CommentSerializer(comment_obj, context={'request': request})
+        return Response(serializer.data, status=201)
+
+    def create_inbox_comment(self, request, author, post):
+        try:
+            comment_id = request.data.get('id', '').split("/")[-1]
+            content = request.data.get('comment', '')
+            content_type = request.data.get('contentType', 'text/plain')
+            published_str = request.data.get('published', '')
+            published_dt = parse_datetime(published_str) if published_str else timezone.now()
+            comment_obj, created = Comment.objects.update_or_create(
+                id=comment_id,
+                defaults={
+                    'comment': content,
+                    'content_type': content_type,
+                    'published': published_dt,
+                    'author': author,
+                    'post': post,
+                }
+            )
+            print(f"Comment created: {created}, ID: {comment_obj.id}")
+            return comment_obj
+        except Exception as e:
+            print(f"Error creating/updating comment: {e}")
+            return None
+
 
     def handle_post(self,request,local_author):
         # get ot create the author
@@ -733,6 +751,7 @@ class InboxView(APIView):
         except Exception as e:
             print(f"Error creating/updating post: {e}")
             return None
+        
 
     def get_or_create_author_from_data(self,remote_author_data):
         try:
@@ -762,25 +781,65 @@ class InboxView(APIView):
             return None
 
 
-    def handle_like(self, request, author): 
-        object_url = request.data.get("object")  
-        object_id = object_url.split("/")[-1] 
-        if "/posts/" in object_url:
-            liked_object = get_object_or_404(Post, id=object_id)
-            receiver = liked_object.author
-        elif "/commented/" in object_url:
-            liked_object = get_object_or_404(Comment, id=object_id)
-            receiver = liked_object.author
+    def handle_like(self, request, local_author):
+        object_url = request.data.get("object", "")
+        if not object_url:
+            return Response({"error": "Missing object URL"}, status=400)
         author_data = request.data.get("author", {})
-        author_id = author_data.get("id", "").split("/")[-1]  
-        liker = get_object_or_404(Authors, row_id=author_id)  
-        like, _ = Like.objects.get_or_create(
-            author=liker,
-            post=liked_object if isinstance(liked_object, Post) else None,
-            comment=liked_object if isinstance(liked_object, Comment) else None
-        )
-        serializer = LikeSerializer(like)
+        if not author_data:
+            return Response({"error": "Missing author data"}, status=400)
+
+        liker = self.get_or_create_author_from_data(author_data)
+        if not liker:
+            return Response({"error": "Failed to create liker author"}, status=400)
+
+        like_obj = self.create_inbox_like(request, liker)
+        if not like_obj:
+            return Response({"error": "Failed to create Like"}, status=400)
+        serializer = LikeSerializer(like_obj, context={'request': request})
         return Response(serializer.data, status=201)
+
+    def create_inbox_like(self, request, author):
+        try:
+            object_url = request.data.get("object", "")
+            if not object_url:
+                print("Missing object field")
+                return None
+
+            object_id = object_url.split("/")[-1]
+            if "/posts/" in object_url:
+                liked_object = Post.objects.get(id=object_id)
+                is_post = True
+            elif "/commented/" in object_url:
+                liked_object = Comment.objects.get(id=object_id)
+                is_post = False
+            else:
+                print("Invalid object type in like")
+                return None
+            like_id = request.data.get("id", "")
+            if like_id:
+                like_id = like_id.split("/")[-1]
+            published_str = request.data.get("published", "")
+            published_dt = parse_datetime(published_str) if published_str else timezone.now()
+            like_obj, created = Like.objects.update_or_create(
+                id=like_id if like_id else uuid.uuid4(),
+                defaults={
+                    "author": author,
+                    "published": published_dt,
+                    "post": liked_object if is_post else None,
+                    "comment": liked_object if not is_post else None,
+                }
+            )
+            print(f"Like created: {created}, ID: {like_obj.id}")
+            return like_obj
+        except (Post.DoesNotExist, Comment.DoesNotExist):
+            print("Liked object not found")
+            return None
+        except Exception as e:
+            print(f"Error creating/updating like: {e}")
+            return None
+
+
 
     def handle_follow(self, request, author_serial):
         makeRequest = FollowRequestViewSet.as_view({'post': "makeRequest"})
@@ -788,16 +847,18 @@ class InboxView(APIView):
         request._request.POST.update(request.data)  
         return makeRequest(request._request, author_serial)
 
-    def save_item(self, author, data_type, content):
-        author = get_object_or_404(Authors, id=author)
+    def save_item(self, author_id, data_type, content,request):
+        current_host = request.get_host()
+        author = get_object_or_404(Authors, id=author_id)
         Inbox.objects.create(
                 author=author, 
                 type=data_type,
                 content=content
             )
-        for author in Authors.objects.all():
-            host = author.host
-
+        for other_author in Authors.objects.all():
+            host = other_author.host
+            if host == current_host:
+                continue
             inbox_url = f"{host}authors/{author.row_id}/inbox/"
             print(inbox_url)
             try:
