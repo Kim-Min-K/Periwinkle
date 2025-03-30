@@ -696,7 +696,7 @@ class InboxView(APIView):
                 ),
             },
         ),
-        responses={201: "Success"},
+        responses={201: "Successful"},
     )
     def post(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)
