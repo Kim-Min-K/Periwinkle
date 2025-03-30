@@ -417,6 +417,7 @@ def delete_post(request, post_id):
     if request.method == "POST":
         post = get_object_or_404(Post, id=post_id, author=request.user)
         post.is_deleted = True
+        post.visibility = "DELETED"
         post.save()
         inbox_instance = InboxView()
         post_data = PostSerializer(post, context={'request': request}).data
@@ -788,6 +789,10 @@ class InboxView(APIView):
             page = request.data.get('page', '')
             published_str = request.data.get('published', '')
             published_dt = parse_datetime(published_str) if published_str else timezone.now()
+            is_deleted = False
+
+            if visibility.upper() is "DELETED":
+                is_deleted = True
 
             post_obj, created = Post.objects.update_or_create(
                 id=post_id,
@@ -802,6 +807,7 @@ class InboxView(APIView):
                     'published': published_dt,
                     'image':image,
                     'video':video,
+                    'is_deleted':is_deleted,
                 }
             )
             print(f"Post created: {created}, ID: {post_obj.id}")
