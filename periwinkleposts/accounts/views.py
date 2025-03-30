@@ -809,14 +809,13 @@ class InboxView(APIView):
     def get_or_create_author_from_data(self,remote_author_data):
         try:
             remote_author_id = remote_author_data.get("id", "")
-            remote_row_id = remote_author_data.get("row_id") or remote_author_id.split("/")[-1]
+            remote_row_id =  remote_author_id.split("/")[-1]
             host = remote_author_data.get("host", "")
             display_name = remote_author_data.get("displayName") or remote_author_data.get("username") or "unknown"
             github = remote_author_data.get("github", "")
             avatar_url = remote_author_data.get("profileImage", None)
-            full_id = remote_author_id or f"{host}authors/{remote_row_id}"
             author, created = Authors.objects.get_or_create(
-                id=full_id,
+                id=remote_author_id,
                 defaults={
                     "row_id": UUID(remote_row_id),
                     "host": host,
