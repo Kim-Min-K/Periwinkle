@@ -791,7 +791,7 @@ class InboxView(APIView):
             published_dt = parse_datetime(published_str) if published_str else timezone.now()
             is_deleted = False
 
-            if visibility.upper() is "DELETED":
+            if visibility.upper() == "DELETED":
                 is_deleted = True
 
             post_obj, created = Post.objects.update_or_create(
