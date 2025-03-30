@@ -417,7 +417,11 @@ def delete_post(request, post_id):
     if request.method == "POST":
         post = get_object_or_404(Post, id=post_id, author=request.user)
         post.is_deleted = True
+        post.visibility = "DELETED"
         post.save()
+        inbox_instance = InboxView()
+        post_data = PostSerializer(post, context={'request': request}).data
+        inbox_instance.save_item(post.author.id, "post", post_data,request)
         return redirect("pages:home")
 
     return render(request, "home.html", {"error": "Only POST method is allowed."})
@@ -443,6 +447,9 @@ def edit_post(request, post_id):
             # print("YES",request.FILES)
             post.video = request.FILES['video']
         post.save()
+        inbox_instance = InboxView()
+        post_data = PostSerializer(post, context={'request': request}).data
+        inbox_instance.save_item(post.author.id, "post", post_data,request)
         return redirect('accounts:profile', row_id=request.user.row_id)
 
     return render(request, 'edit_post.html', {
@@ -777,11 +784,19 @@ class InboxView(APIView):
             contentType = request.data.get('contentType', 'text/plain')
             content = request.data.get('content', '')
             visibility = request.data.get('visibility', 'PUBLIC')
+            image = request.data.get("image",None)
+            video = request.data.get("video",None)
             page = request.data.get('page', '')
-
             published_str = request.data.get('published', '')
             published_dt = parse_datetime(published_str) if published_str else timezone.now()
+            is_deleted = False
 
+            if visibility.upper() == "DELETED":
+                is_deleted = True
+            if image != None:
+                image = image[7:]
+            if video != None:
+                video = video[7:]
             post_obj, created = Post.objects.update_or_create(
                 id=post_id,
                 defaults={
@@ -793,6 +808,9 @@ class InboxView(APIView):
                     'author': author,
                     'page': page,
                     'published': published_dt,
+                    'image':image,
+                    'video':video,
+                    'is_deleted':is_deleted,
                 }
             )
             print(f"Post created: {created}, ID: {post_obj.id}")
@@ -905,7 +923,7 @@ class InboxView(APIView):
             )
         for other_author in Authors.objects.all():
             host = other_author.host
-            if host == current_host:
+            if current_host in host:
                 continue
             if other_author.id.startswith("http"):
                 inbox_url = f"{other_author.id.rstrip('/')}/inbox/"

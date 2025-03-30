@@ -482,6 +482,7 @@ def get_node_data(node):
                 print("Likes Done!")
             
             # #ensure there's no trailing slash in author_url (bug fix)
+
             # author_url_no_trailing_slash = author_url.rstrip('/')
             # print(f"Author URL: {author_url_no_trailing_slash}")
             
