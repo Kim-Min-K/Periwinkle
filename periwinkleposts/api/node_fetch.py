@@ -324,134 +324,134 @@ def process_likes(likes_data, post):
             print(f"Error processing like {like}: {str(e)}")
             continue
 
-def fetch_followers(author_url, node):
-    """
-    Fetch all followers of a given author from the external node during the initial sync
-    """
-    followers = []
-    page = 1
-    while True:
-        url = f"{author_url}/followers?page={page}&size=20"
-        response = requests.get(url)
-        print(f"Followers Response: {response.json()}")
-        if response.status_code != 200:
-            break
+# def fetch_followers(author_url, node):
+#     """
+#     Fetch all followers of a given author from the external node during the initial sync
+#     """
+#     followers = []
+#     page = 1
+#     while True:
+#         url = f"{author_url}/followers?page={page}&size=20"
+#         response = requests.get(url)
+#         print(f"Followers Response: {response.json()}")
+#         if response.status_code != 200:
+#             break
         
-        data = response.json()
-        print(f"Followers Data: {data}")
-        if isinstance(data, list):
-            page_followers = data
-        elif isinstance(data, dict) and 'followers' in data:
-            page_followers = data['followers']
-        else:
-            page_followers = []
-        followers.extend(page_followers)
-        print(f'\n\nRaw JSON Response: {data}\n\n')
-        print(f'\n\nfollowees List: {followers}\n\n')
-        if len(page_followers) < 20:
-            break
-        page += 1
+#         data = response.json()
+#         print(f"Followers Data: {data}")
+#         if isinstance(data, list):
+#             page_followers = data
+#         elif isinstance(data, dict) and 'followers' in data:
+#             page_followers = data['followers']
+#         else:
+#             page_followers = []
+#         followers.extend(page_followers)
+#         print(f'\n\nRaw JSON Response: {data}\n\n')
+#         print(f'\n\nfollowees List: {followers}\n\n')
+#         if len(page_followers) < 20:
+#             break
+#         page += 1
 
-    return followers
+#     return followers
 
-def fetch_followees(author_url, node):
-    """
-    Fetch all the authors that the given author follows upon initial sunc
-    """
-    followees = []
-    page = 1
-    while True:
-        url = f"{author_url}/followees?page={page}&size=20"
-        response = requests.get(url)
-        print(f"Followees Response: {response.json()}")
-        if response.status_code != 200:
-            break
+# def fetch_followees(author_url, node):
+#     """
+#     Fetch all the authors that the given author follows upon initial sunc
+#     """
+#     followees = []
+#     page = 1
+#     while True:
+#         url = f"{author_url}/followees?page={page}&size=20"
+#         response = requests.get(url)
+#         print(f"Followees Response: {response.json()}")
+#         if response.status_code != 200:
+#             break
 
-        data = response.json()
-        print(f"Followees Data: {data}")
-        if isinstance(data, list):
-            page_followees = data
-        elif isinstance(data, dict) and 'followees' in data:
-            page_followees = data['followees']
-        else:
-            page_followees = []
+#         data = response.json()
+#         print(f"Followees Data: {data}")
+#         if isinstance(data, list):
+#             page_followees = data
+#         elif isinstance(data, dict) and 'followees' in data:
+#             page_followees = data['followees']
+#         else:
+#             page_followees = []
 
-        followees.extend(page_followees)
-        print(f'\n\nRaw JSON Response: {data}\n\n')
-        print(f'\n\nfollowees List: {followees}\n\n')
-        if len(page_followees) < 20:
-            break
-        page += 1
+#         followees.extend(page_followees)
+#         print(f'\n\nRaw JSON Response: {data}\n\n')
+#         print(f'\n\nfollowees List: {followees}\n\n')
+#         if len(page_followees) < 20:
+#             break
+#         page += 1
 
-    return followees
+#     return followees
 
-def process_followers(followers_data, author):
-    """
-    Store fetched followers into the database upon initial sync
-    """
-    print("The code makes it to process_followers")
-    for follower in followers_data:
-        follower_id = extract_uuid_from_url(follower['id'])
-        print("Follower ID: ", follower_id)
-        if not follower_id:
-            continue
+# def process_followers(followers_data, author):
+#     """
+#     Store fetched followers into the database upon initial sync
+#     """
+#     print("The code makes it to process_followers")
+#     for follower in followers_data:
+#         follower_id = extract_uuid_from_url(follower['id'])
+#         print("Follower ID: ", follower_id)
+#         if not follower_id:
+#             continue
 
-        # first check if the follower author already exsits in db
-        follower_author = Authors.objects.filter(id=follower_id).first()
+#         # first check if the follower author already exsits in db
+#         follower_author = Authors.objects.filter(id=follower_id).first()
 
-        if not follower_author:
-            print(f"Warning: Author {follower_id} not found in database. Sync may be incomplete.")
-            continue
+#         if not follower_author:
+#             print(f"Warning: Author {follower_id} not found in database. Sync may be incomplete.")
+#             continue
         
-        # if not follower_author: #create it it doesnt 
-        #     follower_author = Authors.objects.create(
-        #         id=follower_id,
-        #         host=follower.get('host'),
-        #         username=follower.get('displayName'),
-        #         displayName=follower.get('displayName'),
-        #         github_username=follower.get('github', '').split('/')[-1],
-        #         avatar_url=follower.get('profileImage'),
-        #         local=False
-        #     )
+#         # if not follower_author: #create it it doesnt 
+#         #     follower_author = Authors.objects.create(
+#         #         id=follower_id,
+#         #         host=follower.get('host'),
+#         #         username=follower.get('displayName'),
+#         #         displayName=follower.get('displayName'),
+#         #         github_username=follower.get('github', '').split('/')[-1],
+#         #         avatar_url=follower.get('profileImage'),
+#         #         local=False
+#         #     )
 
-        Follow.objects.update_or_create(
-            follower=follower_author,
-            following=author,
-            defaults={'accepted': True}
-        )
+#         Follow.objects.update_or_create(
+#             follower=follower_author,
+#             following=author,
+#             defaults={'accepted': True}
+#         )
 
-def process_followees(followees_data, author):
-    """
-    Store fetched followees into the database upon initial sync
-    """
-    for followee in followees_data:
-        followee_id = extract_uuid_from_url(followee['id'])
-        if not followee_id:
-            continue
+# def process_followees(followees_data, author):
+#     """
+#     Store fetched followees into the database upon initial sync
+#     """
+#     for followee in followees_data:
+#         followee_id = extract_uuid_from_url(followee['id'])
+#         if not followee_id:
+#             continue
 
-        # first check if the followee author already exsits in db
-        followee_author = Authors.objects.filter(id=followee_id).first()
+#         # first check if the followee author already exsits in db
+#         followee_author = Authors.objects.filter(id=followee_id).first()
 
-        if not followee_author:
-            print(f"Warning: Author {followee_id} not found in database. Sync may be incomplete.")
-            continue
+#         if not followee_author:
+#             print(f"Warning: Author {followee_id} not found in database. Sync may be incomplete.")
+#             continue
 
-        # if not followee_author: #create it it doesnt 
-        #     followee_author = Authors.objects.create(
-        #         id=followee_id,
-        #         host=followee.get('host'),
-        #         username=followee.get('displayName'),
-        #         displayName=followee.get('displayName'),
-        #         github_username=followee.get('github', '').split('/')[-1],
-        #         avatar_url=followee.get('profileImage'),
-        #         local=False
-        #     )
+#         # if not followee_author: #create it it doesnt 
+#         #     followee_author = Authors.objects.create(
+#         #         id=followee_id,
+#         #         host=followee.get('host'),
+#         #         username=followee.get('displayName'),
+#         #         displayName=followee.get('displayName'),
+#         #         github_username=followee.get('github', '').split('/')[-1],
+#         #         avatar_url=followee.get('profileImage'),
+#         #         local=False
+#         #     )
 
-        Follow.objects.update_or_create(
-            follower=author,
-            following=followee_author,
-            defaults={'accepted': True}
-        )
+#         Follow.objects.update_or_create(
+#             follower=author,
+#             following=followee_author,
+#             defaults={'accepted': True}
+#         )
 
 def get_node_data(node):
     try:
@@ -481,17 +481,17 @@ def get_node_data(node):
                 print("Likes Done!")
             
             #ensure there's no trailing slash in author_url (bug fix)
-            author_url_no_trailing_slash = author_url.rstrip('/')
-            print(f"Author URL: {author_url_no_trailing_slash}")
+            # author_url_no_trailing_slash = author_url.rstrip('/')
+            # print(f"Author URL: {author_url_no_trailing_slash}")
             
-            # Sync followers & followees
-            followers = fetch_followers(author_url_no_trailing_slash, node)
-            process_followers(followers, author_uuid)
-            print("Followers Synced")
+            # # Sync followers & followees
+            # followers = fetch_followers(author_url_no_trailing_slash, node)
+            # process_followers(followers, author_uuid)
+            # print("Followers Synced")
 
-            followees = fetch_followees(author_url_no_trailing_slash, node)
-            process_followees(followees, author_uuid)
-            print("Followees Synced")
+            # followees = fetch_followees(author_url_no_trailing_slash, node)
+            # process_followees(followees, author_uuid)
+            # print("Followees Synced")
 
         print("Sync with Node successful")
         

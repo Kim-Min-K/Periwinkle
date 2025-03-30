@@ -783,12 +783,8 @@ class InboxView(APIView):
             contentType = request.data.get('contentType', 'text/plain')
             content = request.data.get('content', '')
             visibility = request.data.get('visibility', 'PUBLIC')
-            is_deleted = request.data.get('is_deleted', False)
-            if visibility == 'DELETED':
-                is_deleted = True
-                visibility = 'PUBLIC'  
-            else:
-                is_deleted = request.data.get('is_deleted', False)
+            image = request.FILES.get("image",None)
+            video = request.FILES.get("video",None)
             page = request.data.get('page', '')
             published_str = request.data.get('published', '')
             published_dt = parse_datetime(published_str) if published_str else timezone.now()
@@ -804,7 +800,8 @@ class InboxView(APIView):
                     'author': author,
                     'page': page,
                     'published': published_dt,
-                    'is_deleted': is_deleted,
+                    'image':image,
+                    'video':video,
                 }
             )
             print(f"Post created: {created}, ID: {post_obj.id}")
@@ -917,7 +914,7 @@ class InboxView(APIView):
             )
         for other_author in Authors.objects.all():
             host = other_author.host
-            if host == current_host:
+            if current_host in host:
                 continue
             if other_author.id.startswith("http"):
                 inbox_url = f"{other_author.id.rstrip('/')}/inbox/"
