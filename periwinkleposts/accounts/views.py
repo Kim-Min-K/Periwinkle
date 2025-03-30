@@ -418,6 +418,9 @@ def delete_post(request, post_id):
         post = get_object_or_404(Post, id=post_id, author=request.user)
         post.is_deleted = True
         post.save()
+        inbox_instance = InboxView()
+        post_data = PostSerializer(post, context={'request': request}).data
+        inbox_instance.save_item(post.author.id, "post", post_data,request)
         return redirect("pages:home")
 
     return render(request, "home.html", {"error": "Only POST method is allowed."})
@@ -443,6 +446,9 @@ def edit_post(request, post_id):
             # print("YES",request.FILES)
             post.video = request.FILES['video']
         post.save()
+        inbox_instance = InboxView()
+        post_data = PostSerializer(post, context={'request': request}).data
+        inbox_instance.save_item(post.author.id, "post", post_data,request)
         return redirect('accounts:profile', row_id=request.user.row_id)
 
     return render(request, 'edit_post.html', {
@@ -777,8 +783,13 @@ class InboxView(APIView):
             contentType = request.data.get('contentType', 'text/plain')
             content = request.data.get('content', '')
             visibility = request.data.get('visibility', 'PUBLIC')
+            is_deleted = request.data.get('is_deleted', False)
+            if visibility == 'DELETED':
+                is_deleted = True
+                visibility = 'PUBLIC'  
+            else:
+                is_deleted = request.data.get('is_deleted', False)
             page = request.data.get('page', '')
-
             published_str = request.data.get('published', '')
             published_dt = parse_datetime(published_str) if published_str else timezone.now()
 
@@ -793,6 +804,7 @@ class InboxView(APIView):
                     'author': author,
                     'page': page,
                     'published': published_dt,
+                    'is_deleted': is_deleted,
                 }
             )
             print(f"Post created: {created}, ID: {post_obj.id}")
