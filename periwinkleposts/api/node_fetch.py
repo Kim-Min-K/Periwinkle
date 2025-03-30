@@ -250,30 +250,41 @@ def fetch_post_likes(post_url, node):
     return likes
 
 def process_post(posts_data, author_uuid, node):
-        author = Authors.objects.filter(row_id=author_uuid).first()
-        if not author:
-            return
-        
-        post_id = posts_data.get('id', '')
-        post_id = post_id.split("posts/")[1]
-        post_uuid = uuid.UUID(post_id)
-        
-        Post.objects.update_or_create(
-            id=post_uuid,
-            defaults={
-                'author': author,
-                'title': posts_data.get('title'),
-                'description': posts_data.get('description'),
-                'content': posts_data.get('content'),
-                'contentType': posts_data.get('contentType'),
-                'image': posts_data.get('image'),
-                'video': posts_data.get('video'),
-                'published': posts_data.get('published'),
-                'page': posts_data.get('page'),
-                'visibility': posts_data.get('visibility'),
-                'is_deleted': posts_data.get('isDeleted', False)
-            }
-        )
+    author = Authors.objects.filter(row_id=author_uuid).first()
+    if not author:
+        return
+
+    post_id = posts_data.get('id', '')
+    post_id = post_id.split("posts/")[1]
+    post_uuid = uuid.UUID(post_id)
+
+    image_fetch= posts_data.get('image')
+    image_url = None
+    image = None
+
+    if image_fetch:
+        if isinstance(image_fetch, str) and image_fetch.lower().startswith(('http://', 'https://')):
+            image_url = image_fetch
+        else:
+            image = image_fetch
+
+    Post.objects.update_or_create(
+        id=post_uuid,
+        defaults={
+            'author': author,
+            'title': posts_data.get('title'),
+            'description': posts_data.get('description'),
+            'content': posts_data.get('content'),
+            'contentType': posts_data.get('contentType'),
+            'image': image,
+            'image_url': image_url,  
+            'video': posts_data.get('video'),
+            'published': posts_data.get('published'),
+            'page': posts_data.get('page'),
+            'visibility': posts_data.get('visibility'),
+            'is_deleted': posts_data.get('isDeleted', False)
+        }
+    )
 
 def process_likes(likes_data, post):
     for like in likes_data:
