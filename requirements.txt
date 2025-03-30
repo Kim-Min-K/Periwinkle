@@ -11,3 +11,4 @@ gunicorn==20.1.0
 requests
 selenium
 utils
+drf_spectacular

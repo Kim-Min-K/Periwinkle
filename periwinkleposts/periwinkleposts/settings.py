@@ -160,3 +160,9 @@ LOGOUT_REDIRECT_URL = 'accounts:login'
 # NODE_PASSWORD = os.environ.get("NODE_PASSWORD", "admin")
 NODE_USERNAME = "admin"
 NODE_PASSWORD = "password"
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Your API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,  # Important to enable UI
+}

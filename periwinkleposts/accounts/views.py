@@ -31,6 +31,10 @@ from api.models import ExternalNode
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from drf_spectacular.utils import extend_schema, OpenApiTypes
+from typing import Union
+
+
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions
@@ -645,9 +649,58 @@ class InboxView(APIView):
         serializer = InboxSerializer(inbox_items, many=True)
         return Response(serializer.data, status=200)
 
+    
     @swagger_auto_schema(
-        operation_description="Accepts different types of requests, such as followers or posts.",
+        description="Accepts a Follow request with actor and object data.",
         tags=["Remote"],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "Request body for follow": openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    title="Follow Request",
+                    properties={
+                        "type": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description="Must be the string'follow'",
+                        ),
+                        "summary": openapi.Schema(type=openapi.TYPE_STRING, example="Greg wants to follow Lara"),
+                        "actor": openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Must be the string'author'",
+                                ),
+                                "id": openapi.Schema(type=openapi.TYPE_STRING, example="http://nodeaaaa/api/authors/111"),
+                                "host": openapi.Schema(type=openapi.TYPE_STRING, example="http://nodeaaaa/api/"),
+                                "displayName": openapi.Schema(type=openapi.TYPE_STRING, example="Greg Johnson"),
+                                "github": openapi.Schema(type=openapi.TYPE_STRING, example="http://github.com/gjohnson"),
+                                "profileImage": openapi.Schema(type=openapi.TYPE_STRING, example="https://i.imgur.com/k7XVwpB.jpeg"),
+                                "page": openapi.Schema(type=openapi.TYPE_STRING, example="http://nodeaaaa/authors/greg")
+                            }
+                        ),
+                        "object": openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Must be the string'author'",
+                                ),
+                                "id": openapi.Schema(type=openapi.TYPE_STRING, example="http://nodebbbb/api/authors/222"),
+                                "host": openapi.Schema(type=openapi.TYPE_STRING, example="http://nodebbbb/api/"),
+                                "displayName": openapi.Schema(type=openapi.TYPE_STRING, example="Lara Croft"),
+                                "page": openapi.Schema(type=openapi.TYPE_STRING, example="http://nodebbbb/authors/222"),
+                                "github": openapi.Schema(type=openapi.TYPE_STRING, example="http://github.com/laracroft"),
+                                "profileImage": openapi.Schema(type=openapi.TYPE_STRING, example="http://nodebbbb/api/authors/222/posts/217/image")
+                            }
+                        ),
+                    },
+                    required=["type", "actor", "object"]
+                ),
+            },
+        ),
+        responses={201: "Success"},
     )
     def post(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)
