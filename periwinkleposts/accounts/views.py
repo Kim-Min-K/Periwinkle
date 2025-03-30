@@ -31,10 +31,6 @@ from api.models import ExternalNode
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from drf_spectacular.utils import extend_schema, OpenApiTypes
-from typing import Union
-
-
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions
@@ -700,7 +696,7 @@ class InboxView(APIView):
                 ),
             },
         ),
-        responses={201: "Success"},
+        responses={201: "Successful"},
     )
     def post(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)

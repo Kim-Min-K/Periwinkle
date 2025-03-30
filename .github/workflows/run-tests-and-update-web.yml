@@ -1,8 +1,9 @@
-name: Run Django Tests
+name: Run Django Tests and Update Deployment
 on:
   push:
     branches:
       - main  # Only run when pushing to the main branch
+      - end_point_cleanup
 
 jobs:
   test_project:
@@ -16,3 +17,18 @@ jobs:
           python3 manage.py migrate
           python3 manage.py makemigrations
           python3 manage.py test  # Run Django tests
+
+  build_and_push:
+    needs: test_project  # Run only if tests pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        run: docker login -u "periwinkledocker" -p "123456789"
+
+      - name: Build Docker image
+        run: docker build -t periwinkledocker/periwinkle:latest .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push periwinkledocker/periwinkle:latest
