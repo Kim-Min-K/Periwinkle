@@ -25,10 +25,10 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "ryankennethrom" --password-stdin
+        run: docker login -u "periwinkledocker" -p "123456789"
 
       - name: Build Docker image
-        run: docker build -t ryankennethrom/periwinkle:latest .
+        run: docker build -t periwinkledocker/periwinkle:latest .
 
       - name: Push Docker image to Docker Hub
-        run: docker push ryankennethrom/periwinkle:latest
+        run: docker push periwinkledocker/periwinkle:latest
