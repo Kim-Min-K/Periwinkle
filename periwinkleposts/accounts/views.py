@@ -912,13 +912,14 @@ class InboxView(APIView):
             host = other_author.host
             if host == current_host:
                 continue
-            inbox_url = f"{host}authors/{author.row_id}/inbox/"
-            print(inbox_url)
-            try:
-                response = requests.post(
-                    inbox_url,
-                    json=content,
-                    timeout = 5
-                )
-            except Exception as e:
-                print(f"Failed to send post to {inbox_url}: {e}")
+            if other_author.id.startswith("http"):
+                inbox_url = f"{other_author.id.rstrip('/')}/inbox/"
+                print(inbox_url)
+                try:
+                    response = requests.post(
+                        inbox_url,
+                        json=content,
+                        timeout = 5
+                    )
+                except Exception as e:
+                    print(f"Failed to send post to {inbox_url}: {e}")
