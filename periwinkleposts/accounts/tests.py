@@ -870,7 +870,7 @@ class AuthorViewSetTests(APITestCase):
             )
     def test_author_to_json_serializer(self):
         """
-        Test to make sure AuthorObjectToJSONSerializer only has type, id, host, displayName, page, github, and profileImage following
+        Test to make sure AuthorObjectToJSONSerializer only has type, id, host, displayName, page, github, and profileImage following specifications closely.
         """
 
         author = Authors.objects.first()

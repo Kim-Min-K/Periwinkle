@@ -627,8 +627,14 @@
   .inline {
     display: inline;
   }
+  .inline-block {
+    display: inline-block;
+  }
   .inline-flex {
     display: inline-flex;
+  }
+  .h-6 {
+    height: calc(var(--spacing) * 6);
   }
   .h-10 {
     height: calc(var(--spacing) * 10);
@@ -648,6 +654,9 @@
   .h-screen {
     height: 100vh;
   }
+  .w-6 {
+    width: calc(var(--spacing) * 6);
+  }
   .w-10 {
     width: calc(var(--spacing) * 10);
   }
@@ -659,6 +668,9 @@
   }
   .w-full {
     width: 100%;
+  }
+  .max-w-3xl {
+    max-width: var(--container-3xl);
   }
   .max-w-4xl {
     max-width: var(--container-4xl);
@@ -782,9 +794,6 @@
   .border-\[\#A2A2E6\] {
     border-color: #A2A2E6;
   }
-  .border-\[\#CCCCFF\] {
-    border-color: #CCCCFF;
-  }
   .border-\[\#d9d9d9\] {
     border-color: #d9d9d9;
   }
@@ -835,9 +844,6 @@
   }
   .px-6 {
     padding-inline: calc(var(--spacing) * 6);
-  }
-  .px-8 {
-    padding-inline: calc(var(--spacing) * 8);
   }
   .py-1 {
     padding-block: calc(var(--spacing) * 1);
@@ -957,9 +963,6 @@
   }
   .text-\[\#CCCCFF\] {
     color: #CCCCFF;
-  }
-  .text-black {
-    color: var(--color-black);
   }
   .text-gray-400 {
     color: var(--color-gray-400);
@@ -1132,6 +1135,13 @@
     &:hover {
       @media (hover: hover) {
         color: var(--color-red-800);
+      }
+    }
+  }
+  .hover\:underline {
+    &:hover {
+      @media (hover: hover) {
+        text-decoration-line: underline;
       }
     }
   }
