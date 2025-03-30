@@ -414,11 +414,11 @@ def process_followers(followers_data, author):
         #         local=False
         #     )
 
-        # Follow.objects.update_or_create(
-        #     follower=follower_author,
-        #     following=author,
-        #     defaults={'accepted': True}
-        # )
+        Follow.objects.update_or_create(
+            follower=follower_author,
+            following=author,
+            defaults={'accepted': True}
+        )
 
 def process_followees(followees_data, author):
     """
@@ -447,11 +447,11 @@ def process_followees(followees_data, author):
         #         local=False
         #     )
 
-        # Follow.objects.update_or_create(
-        #     follower=author,
-        #     following=followee_author,
-        #     defaults={'accepted': True}
-        # )
+        Follow.objects.update_or_create(
+            follower=author,
+            following=followee_author,
+            defaults={'accepted': True}
+        )
 
 def get_node_data(node):
     try:
