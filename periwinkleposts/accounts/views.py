@@ -784,8 +784,8 @@ class InboxView(APIView):
             contentType = request.data.get('contentType', 'text/plain')
             content = request.data.get('content', '')
             visibility = request.data.get('visibility', 'PUBLIC')
-            image = request.FILES.get("image",None)
-            video = request.FILES.get("video",None)
+            image = request.data.get("image",None)
+            video = request.data.get("video",None)
             page = request.data.get('page', '')
             published_str = request.data.get('published', '')
             published_dt = parse_datetime(published_str) if published_str else timezone.now()
@@ -805,8 +805,8 @@ class InboxView(APIView):
                     'author': author,
                     'page': page,
                     'published': published_dt,
-                    'image':image,
-                    'video':video,
+                    'image':image[7:],
+                    'video':video[7:],
                     'is_deleted':is_deleted,
                 }
             )
