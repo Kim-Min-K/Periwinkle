@@ -481,8 +481,8 @@ class IsLocalAuthor(permissions.BasePermission):
 # views.py
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
-    #permission_classes = [IsOwnerOrPublic] #removed to test authentication
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsOwnerOrPublic] #removed to test authentication
+    #permission_classes = [permissions.IsAuthenticated]
     pagination_class = PageNumberPagination  # Add pagination class
     lookup_field = 'id'
 

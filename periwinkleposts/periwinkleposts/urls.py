@@ -30,7 +30,7 @@ schema_view = swagger_get_schema_view(
         description="API documentation of Periwinkle node"
     ),
     public=True,
-    permission_classes = [AllowAny], #allows people to view the docs instead of 403 auth error 
+    # permission_classes = [AllowAny], #allows people to view the docs instead of 403 auth error 
 )
 
 urlpatterns = [

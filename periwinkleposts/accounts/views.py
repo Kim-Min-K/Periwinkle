@@ -793,10 +793,6 @@ class InboxView(APIView):
 
             if visibility.upper() == "DELETED":
                 is_deleted = True
-            if image != None:
-                image = image[7:]
-            if video != None:
-                video = video[7:]
             post_obj, created = Post.objects.update_or_create(
                 id=post_id,
                 defaults={
