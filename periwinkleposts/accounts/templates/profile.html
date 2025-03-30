@@ -95,7 +95,7 @@
                     <!-- Image/Video -->
                     <div class="media-container flex flex-col justify-center">
                         {% if post.image %}
-                            <img src="{{ post.image }}" alt="Post Image" class="mb-4 max-w-full h-auto rounded-lg shadow">
+                            <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 max-w-full h-auto rounded-lg shadow">
                         {% endif %}
                         {% if post.image_url %}
                             <img src="{{ post.image_url }}" alt="Post Image" class="mb-4 max-w-full h-auto rounded-lg shadow">

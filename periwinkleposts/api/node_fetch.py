@@ -74,10 +74,11 @@ def process_users(users_data, node):
     Uses the list provided (users_data), and creates the user instances in this list inside local DB
     """                   
     for user in users_data:                                                                 # Loop through the list
+        print(user)
         user_uuid = extract_uuid_from_url(user['id'])                                       # Get the UUID of the user
         if not user_uuid:
             continue
-            
+        print(user.get('profileImage'))
         Authors.objects.update_or_create(                                                   # Create user in our current Database
             row_id=user_uuid,
             defaults={
