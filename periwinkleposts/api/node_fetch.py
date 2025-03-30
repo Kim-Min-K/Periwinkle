@@ -398,23 +398,27 @@ def process_followers(followers_data, author):
 
         # first check if the follower author already exsits in db
         follower_author = Authors.objects.filter(id=follower_id).first()
-        
-        if not follower_author: #create it it doesnt 
-            follower_author = Authors.objects.create(
-                id=follower_id,
-                host=follower.get('host'),
-                username=follower.get('displayName'),
-                displayName=follower.get('displayName'),
-                github_username=follower.get('github', '').split('/')[-1],
-                avatar_url=follower.get('profileImage'),
-                local=False
-            )
 
-        Follow.objects.update_or_create(
-            follower=follower_author,
-            following=author,
-            defaults={'accepted': True}
-        )
+        if not follower_author:
+            print(f"Warning: Author {follower_id} not found in database. Sync may be incomplete.")
+            continue
+        
+        # if not follower_author: #create it it doesnt 
+        #     follower_author = Authors.objects.create(
+        #         id=follower_id,
+        #         host=follower.get('host'),
+        #         username=follower.get('displayName'),
+        #         displayName=follower.get('displayName'),
+        #         github_username=follower.get('github', '').split('/')[-1],
+        #         avatar_url=follower.get('profileImage'),
+        #         local=False
+        #     )
+
+        # Follow.objects.update_or_create(
+        #     follower=follower_author,
+        #     following=author,
+        #     defaults={'accepted': True}
+        # )
 
 def process_followees(followees_data, author):
     """
@@ -428,22 +432,26 @@ def process_followees(followees_data, author):
         # first check if the followee author already exsits in db
         followee_author = Authors.objects.filter(id=followee_id).first()
 
-        if not followee_author: #create it it doesnt 
-            followee_author = Authors.objects.create(
-                id=followee_id,
-                host=followee.get('host'),
-                username=followee.get('displayName'),
-                displayName=followee.get('displayName'),
-                github_username=followee.get('github', '').split('/')[-1],
-                avatar_url=followee.get('profileImage'),
-                local=False
-            )
+        if not followee_author:
+            print(f"Warning: Author {followee_id} not found in database. Sync may be incomplete.")
+            continue
 
-        Follow.objects.update_or_create(
-            follower=author,
-            following=followee_author,
-            defaults={'accepted': True}
-        )
+        # if not followee_author: #create it it doesnt 
+        #     followee_author = Authors.objects.create(
+        #         id=followee_id,
+        #         host=followee.get('host'),
+        #         username=followee.get('displayName'),
+        #         displayName=followee.get('displayName'),
+        #         github_username=followee.get('github', '').split('/')[-1],
+        #         avatar_url=followee.get('profileImage'),
+        #         local=False
+        #     )
+
+        # Follow.objects.update_or_create(
+        #     follower=author,
+        #     following=followee_author,
+        #     defaults={'accepted': True}
+        # )
 
 def get_node_data(node):
     try:
