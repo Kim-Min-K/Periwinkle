@@ -3,6 +3,7 @@ import uuid
 from urllib.parse import urlparse
 from accounts.models import Authors, Post, Comment, Like, FollowRequest, Follow
 from .models import ExternalNode
+from django.conf import settings
 
 # ----------------
 # Helper Functions
@@ -480,7 +481,8 @@ def get_node_data(node):
                 process_likes(likes, post)
                 print("Likes Done!")
             
-            #ensure there's no trailing slash in author_url (bug fix)
+            # #ensure there's no trailing slash in author_url (bug fix)
+
             # author_url_no_trailing_slash = author_url.rstrip('/')
             # print(f"Author URL: {author_url_no_trailing_slash}")
             

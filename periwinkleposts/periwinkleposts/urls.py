@@ -21,6 +21,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view as swagger_get_schema_view
 from django.conf import settings
 import django.views.static
+from rest_framework.permissions import AllowAny
 
 schema_view = swagger_get_schema_view(
     openapi.Info(
@@ -28,7 +29,8 @@ schema_view = swagger_get_schema_view(
         default_version="1.0.0",
         description="API documentation of Periwinkle node"
     ),
-    public=True
+    public=True,
+    permission_classes = [AllowAny], #allows people to view the docs instead of 403 auth error 
 )
 
 urlpatterns = [
