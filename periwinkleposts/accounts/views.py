@@ -793,7 +793,10 @@ class InboxView(APIView):
 
             if visibility.upper() == "DELETED":
                 is_deleted = True
-
+            if image != None:
+                image = image[7:]
+            if video != None:
+                video = video[7:]
             post_obj, created = Post.objects.update_or_create(
                 id=post_id,
                 defaults={
@@ -805,8 +808,8 @@ class InboxView(APIView):
                     'author': author,
                     'page': page,
                     'published': published_dt,
-                    'image':image[7:],
-                    'video':video[7:],
+                    'image':image,
+                    'video':video,
                     'is_deleted':is_deleted,
                 }
             )
