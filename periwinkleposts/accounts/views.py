@@ -589,11 +589,8 @@ class LikeView(viewsets.ModelViewSet):
         comment = get_object_or_404(Comment, id=comment_serial)
         like, created = Like.objects.get_or_create(author=request.user, comment=comment)
         serializer = self.get_serializer(like)
-        Inbox.objects.create(
-            author=comment.author,
-            type="like",
-            content=serializer.data
-        )
+        inbox_instance = InboxView()
+        inbox_instance.save_item(comment.author.id, "like", serializer.data,request)
         return redirect("pages:home")
     
     def get_post_likes(self, request, author_serial, post_serial):
