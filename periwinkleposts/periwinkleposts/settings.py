@@ -35,8 +35,7 @@ DEBUG = 1
 ALLOWED_HOSTS = ["*"]
 # Application definition
 
-#MEDIA_URL = "/media/"
-MEDIA_URL = "" #for testing
+MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 INSTALLED_APPS = [
@@ -166,4 +165,13 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Your API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,  # Important to enable UI
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',  #django session based auth
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  #require authentication/login
+    ],
 }
