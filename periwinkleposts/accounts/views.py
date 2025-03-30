@@ -379,33 +379,6 @@ def create_post(request):
             post_data = PostSerializer(post, context={'request': request}).data
             inbox_instance.save_item(post.author.id, "post", post_data,request)
 
-            # Add to other inboxes
-        #     if visibility.upper() == "PUBLIC":
-        #         # Send to Every Author
-        #         for author in Authors.objects.all():
-        #             Inbox.objects.create(
-        #                 author=author,
-        #                 type="post",
-        #                 content=serialized_post
-        #             )
-        #     elif visibility.upper() == "UNLISTED":
-        #         # Send to Followers
-        #         for follower in request.user.followers.all():
-        #             Inbox.objects.create(
-        #                 author=follower.follower, 
-        #                 type="post",
-        #                 content=serialized_post
-        #             )
-        #     elif visibility.upper() == "FRIENDS":
-        #         # Send to Friends
-        #         for potential_friend in Authors.objects.exclude(row_id=request.user.row_id):
-        #             if is_friend(request.user, potential_friend):
-        #                 Inbox.objects.create(
-        #                     author=potential_friend,
-        #                     type="post",
-        #                     content=serialized_post
-        #                 )
-
             return redirect("pages:home")
         except Exception as e:
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
@@ -784,7 +757,7 @@ class InboxView(APIView):
             contentType = request.data.get('contentType', 'text/plain')
             content = request.data.get('content', '')
             visibility = request.data.get('visibility', 'PUBLIC')
-            image = request.data.get("image",None)
+            image_fetch = request.data.get("image",None)
             video = request.data.get("video",None)
             page = request.data.get('page', '')
             published_str = request.data.get('published', '')
@@ -793,6 +766,16 @@ class InboxView(APIView):
 
             if visibility.upper() == "DELETED":
                 is_deleted = True
+
+            image_url = None
+            image = None
+
+            if image_fetch:
+                if isinstance(image_fetch, str) and image.lower().startswith(('http://', 'https://')):
+                    image_url = image_fetch
+                else:
+                    image = image_fetch
+
             post_obj, created = Post.objects.update_or_create(
                 id=post_id,
                 defaults={
@@ -805,6 +788,7 @@ class InboxView(APIView):
                     'page': page,
                     'published': published_dt,
                     'image':image,
+                    'image_url': image_url,
                     'video':video,
                     'is_deleted':is_deleted,
                 }
