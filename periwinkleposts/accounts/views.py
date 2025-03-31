@@ -30,6 +30,7 @@ from api.serializers import PostSerializer, AuthorSerializer
 from api.models import ExternalNode
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.authentication import BasicAuthentication
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 from rest_framework.response import Response
@@ -615,6 +616,9 @@ class LikeView(viewsets.ModelViewSet):
         return Response(serializer.data, status=200)
     
 class InboxView(APIView):
+    #auth stuff plz dont break...
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)
