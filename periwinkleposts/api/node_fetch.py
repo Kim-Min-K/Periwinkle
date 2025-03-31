@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from accounts.models import Authors, Post, Comment, Like, FollowRequest, Follow
 from .models import ExternalNode
 from django.conf import settings
+from requests.auth import HTTPBasicAuth
 
 # ----------------
 # Helper Functions
@@ -56,7 +57,7 @@ def fetch_all_users(node):
     page = 1                                                                                # Page for Traversal
     while True:                                                                             # Traverse Loop
         url = f"{node.nodeURL}/api/authors/?page={page}&size=20"
-        response = requests.get(url)                                                        # Get data from endpoint
+        response = requests.get(url, HTTPBasicAuth(node.username,node.password))                                     # Get data from endpoint
         if response.status_code != 200:                                                     # If no more data, exit loop
             break
             
@@ -163,8 +164,8 @@ def fetch_post_comments(post_url, node):
     while True:                                                                             # Traversal Loop
         url = f"{post_url}/comments/?page={page}&size=20"
         print(url)
-        #response = requests.get(url, auth=(node.username, node.password))
-        response = requests.get(url)
+        response = requests.get(url, auth=(node.username, node.password))
+        #response = requests.get(url)
         if response.status_code != 200:                                                     # If no data, break
             break
             
@@ -225,7 +226,8 @@ def fetch_post_likes(post_url, node):
     while True:
         url = f"{post_url}/likes/?page={page}&size=20"
         print(url)
-        response = requests.get(url)
+        #response = requests.get(url)
+        response = requests.get(url, HTTPBasicAuth(node.username,node.password))
         if response.status_code != 200:
             break
             
@@ -345,7 +347,8 @@ def fetch_followers(author_url, node):
     page = 1
     while True:
         url = f"{author_url}/followers?page={page}&size=20"
-        response = requests.get(url)
+        #response = requests.get(url)
+        response = requests.get(url, HTTPBasicAuth(node.username,node.password))
         print(f"Followers Response: {response.json()}")
         if response.status_code != 200:
             break
