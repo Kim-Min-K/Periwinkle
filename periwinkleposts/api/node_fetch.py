@@ -110,12 +110,15 @@ def fetch_author_posts(author_url, node):
         'Referer': f'{node.nodeURL}/'
     }
 
+    auth = HTTPBasicAuth(node.username, node.password)                                          # Auth for the session
+
     while True:                                                                             # Loop for Traversal
         url = f"{author_url}/posts/?page={page}&size=20"
         try:
             response = session.get(
                 url,
-                headers=headers
+                headers=headers,
+                auth=auth,
             )
             
             if response.status_code == 403:                                                 # Auth Failure
