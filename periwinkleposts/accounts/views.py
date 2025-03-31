@@ -152,7 +152,7 @@ def profileView(request, row_id):
     # Add row_id to followers
     for follower in followers:
         # Get row_id from id field
-        follower["row_id"] = follower["id"].split("/")[-1]
+        follower["row_id"] = follower["id"].rstrip('/').split("/")[-1]
 
     for post in posts:
         if post.contentType == "text/markdown":
@@ -512,7 +512,7 @@ class CommentView(viewsets.ModelViewSet):
 
     def known_post_comments(self,request, post_fqid):
         decoded_post_fqid = unquote(post_fqid)
-        post_id = decoded_post_fqid.split("/")[-1]
+        post_id = decoded_post_fqid.rstrip('/').split("/")[-1]
         post = get_object_or_404(Post, id = post_id)
         comments = Comment.objects.filter(post=post).order_by("published")
         serializer = self.get_serializer(comments, many = True)
@@ -531,7 +531,7 @@ class CommentView(viewsets.ModelViewSet):
 
     def author_commented(self, request, author_fqid):
         decoded_author_fqid = unquote(author_fqid)  
-        author_id = decoded_author_fqid.split("/")[-1]  
+        author_id = decoded_author_fqid.rstrip('/').split("/")[-1]
         # print("Extracted Author Id", author_id)
         author = get_object_or_404(Authors, row_id=author_id)
         comments = Comment.objects.filter(author=author).order_by("published")
@@ -540,7 +540,7 @@ class CommentView(viewsets.ModelViewSet):
 
     def get_comment_by_fqid(self, request, comment_fqid):
         decoded_comment_fqid = unquote(comment_fqid)  
-        comment_id = decoded_comment_fqid.split("/")[-1] 
+        comment_id = decoded_comment_fqid.rstrip('/').split("/")[-1]
         comment = Comment.objects.get(id=comment_id)
         serializer = self.get_serializer(comment)
         return Response(serializer.data, status=200)
@@ -581,7 +581,7 @@ class LikeView(viewsets.ModelViewSet):
     
     def get_all_post_likes(self, request, post_fqid):
         decoded_post_fqid = unquote(post_fqid)  
-        post_id = decoded_post_fqid.split("/")[-1]
+        post_id = decoded_post_fqid.rstrip('/').split("/")[-1]
         post = get_object_or_404(Post, id=post_id)  
         likes = Like.objects.filter(post=post)  
         serializer = LikeSerializer(likes, many=True)  
@@ -589,7 +589,7 @@ class LikeView(viewsets.ModelViewSet):
 
     def get_comment_likes(self, request, author_serial, post_serial, comment_fqid):
         decoded_comment_fqid = unquote(comment_fqid)
-        comment_id = decoded_comment_fqid.split("/")[-1]
+        comment_id = decoded_comment_fqid.rstrip('/').split("/")[-1]
         comment = get_object_or_404(Comment, id=comment_id)
         likes = Like.objects.filter(comment=comment)
         serializer = LikeSerializer(likes, many=True)
@@ -609,14 +609,14 @@ class LikeView(viewsets.ModelViewSet):
 
     def get_like_by_author_fqid(self, request, author_fqid):
         decoded_author_fqid = unquote(author_fqid)  
-        author = get_object_or_404(Authors, row_id=decoded_author_fqid.split("/")[-1])  
+        author = get_object_or_404(Authors, row_id=decoded_author_fqid.rstrip('/').split("/")[-1])
         likes = Like.objects.filter(author=author) 
         serializer = LikeSerializer(likes, many=True)
         return Response(serializer.data, status=200)
     
     def a_single_like(self,request,like_fqid):
         decoded_like_fqid = unquote(like_fqid)  
-        like_uuid = decoded_like_fqid.split("/")[-1]  
+        like_uuid = decoded_like_fqid.rstrip('/').split("/")[-1]
         like = get_object_or_404(Like, id=like_uuid)  
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=200)
@@ -701,7 +701,7 @@ class InboxView(APIView):
 
     def handle_comment(self, request, local_author):
         post_url = request.data.get("post", "")
-        post_id = post_url.split("/")[-1]
+        post_id = post_url.rstrip('/').split("/")[-1]
         try:
             post = Post.objects.get(id=post_id)
         except Post.DoesNotExist:
@@ -721,7 +721,7 @@ class InboxView(APIView):
 
     def create_inbox_comment(self, request, author, post):
         try:
-            comment_id = request.data.get('id', '').split("/")[-1]
+            comment_id = request.data.get('id', '').rstrip('/').split("/")[-1]
             content = request.data.get('comment', '')
             content_type = request.data.get('contentType', 'text/plain')
             published_str = request.data.get('published', '')
@@ -758,7 +758,8 @@ class InboxView(APIView):
 
     def create_inbox_post(self, request, author):
         try:
-            post_id = request.data.get('id', '').split("/")[-1]
+            post_id = request.data.get('id', '').rstrip('/').split("/")[-1]
+            print("PID", post_id)
             title = request.data.get('title', '')
             description = request.data.get('description', '')
             contentType = request.data.get('contentType', 'text/plain')
@@ -809,7 +810,7 @@ class InboxView(APIView):
     def get_or_create_author_from_data(self,remote_author_data):
         try:
             remote_author_id = remote_author_data.get("id", "")
-            remote_row_id =  remote_author_id.split("/")[-1]
+            remote_row_id =  remote_author_id.rstrip('/').split("/")[-1]
             host = remote_author_data.get("host", "")
             display_name = remote_author_data.get("displayName") or remote_author_data.get("username") or "unknown"
             github = remote_author_data.get("github", "")
@@ -857,7 +858,7 @@ class InboxView(APIView):
                 print("Missing object field")
                 return None
 
-            object_id = object_url.split("/")[-1]
+            object_id = object_url.rstrip('/').split("/")[-1]
             if "/posts/" in object_url:
                 liked_object = Post.objects.get(id=object_id)
                 is_post = True
@@ -869,7 +870,7 @@ class InboxView(APIView):
                 return None
             like_id = request.data.get("id", "")
             if like_id:
-                like_id = like_id.split("/")[-1]
+                like_id = like_id.rstrip('/').split("/")[-1]
             published_str = request.data.get("published", "")
             published_dt = parse_datetime(published_str) if published_str else timezone.now()
             like_obj, created = Like.objects.update_or_create(

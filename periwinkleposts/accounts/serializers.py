@@ -253,8 +253,10 @@ class ActionSerializer(serializers.Serializer):
         elif self.action_type == "accept-follow-request":
             try:
                 with transaction.atomic():
+                    print(123)
                     FollowRequest.objects.get(requestee=self.actor_instance, requester=self.object_instance).delete()
                     Follow.objects.create(followee=self.actor_instance, follower=self.object_instance)
+                    print(1234)
             except Exception as e:
                 # Return the validation error message
                 raise ValueError(e)

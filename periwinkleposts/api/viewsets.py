@@ -25,6 +25,8 @@ from urllib.parse import urlparse
 import requests
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
+from requests.auth import HTTPBasicAuth
+from .models import ExternalNode
 
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer
@@ -48,12 +50,19 @@ class FollowersViewSet(GenericViewSet):
 
         active_followers = []
         for follower in followers:
+            node_url = follower.host.removesuffix('api/')
+            node = ExternalNode.objects.get(nodeURL=node_url)
+            print("node_url", node_url)
+            print("node", node)
             url = follower.host+"authors/"+str(author_serial)+"/followers/"+str(follower.id)
-            response = requests.get(url)
+            print("url", url)
+            response = requests.get(url, auth=HTTPBasicAuth(node.username, node.password))
+            print("response", response)
             if response.status_code == 200:
                 active_followers.append(follower)
             elif response.status_code == 404:
-                Follow.objects.get(follower=follower, followee=author.row_id).delete()
+                # Follow.objects.get(follower=follower, followee=author.row_id).delete()
+                active_followers.append(follower)
             else:
                 raise Exception(response.data)
 
@@ -185,22 +194,28 @@ class FollowRequestViewSet(GenericViewSet):
     def makeRequest(self, request, author_serial):
         try:
             with transaction.atomic():
-
+                print(1)
                 requestee = get_object_or_404(Authors, pk=author_serial)
                 requester_json = request.data.get("actor")
 
                 # Use requester object in database if it exists otherwise create it
                 try:
                     requester = Authors.objects.get(id=requester_json["id"])
+                    print(2)
+                    print("requester", requester)
+                    print("requestee", requestee)
                 except Authors.DoesNotExist:
                     requester_json["row_id"] = requester_json["id"].split("/")[-1]
                     requester_serializer = authorSerializer(data=requester_json)
+                    print(3)
                     if not requester_serializer.is_valid():
+                        print(4)
                         raise ValueError(requester_serializer.errors)
                     requester = requester_serializer.save()
                     
                 serializer = ActionSerializer(action_type="follow", actor=requester, object=requestee)
                 serializer.save()
+                print(5)
                 return Response(serializer.to_representation(), 200)
 
         except ValueError as e:
@@ -270,13 +285,19 @@ class FollowRequestViewSet(GenericViewSet):
     )
     def acceptFollowRequest(self, request, author_serial, requester_serial):
         try:
+            print("Transaction")
             with transaction.atomic():
                 object = get_object_or_404(Authors, row_id=requester_serial)
                 actor = get_object_or_404(Authors, row_id=author_serial)
+                print("object", object)
+                print("actor", actor)
+                print(11)
                 serializer = ActionSerializer(action_type="accept-follow-request", actor=actor, object=object)
                 serializer.save()
+                print(12)
                 return Response(serializer.to_representation(), status=200)
         except ValueError as e:
+            print("Transaction Failed")
             # Return the validation error message
             return Response({"error": str(e)}, status=400)
     
@@ -344,7 +365,6 @@ class FollowRequestViewSet(GenericViewSet):
                     if len(suggestions) >= 5:
                         break
                     if not Authors.objects.filter(id=author_data["id"]).exists() and not Authors.objects.filter(github_username=author_data['github'].split("/")[-1]).exists():
-                        
                         author_data['row_id'] = author_data['id'].split("/")[-1]
                         github_username = author_data['github'].split("/")[-1]
                         author_data['github_username'] = github_username

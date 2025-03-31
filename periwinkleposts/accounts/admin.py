@@ -39,6 +39,8 @@ class AuthorsAdmin(UserAdmin):
 class FollowsAdmin(admin.ModelAdmin):
     list_display = ("follower", "followee", "followed_since")
 
+class FollowRequestAdmin(admin.ModelAdmin):
+    list_display = ("requester", "requestee", "requested_since")
 
 class PostAdmin(admin.ModelAdmin):
     list_display = ("title", "author", "is_deleted", "published")

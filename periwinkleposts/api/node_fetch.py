@@ -85,12 +85,12 @@ def process_users(users_data, node):
         Authors.objects.update_or_create(                                                   # Create user in our current Database
             row_id=user_uuid,
             defaults={
-                "id": user.get('id'),
-                'host': user.get('host'),
-                'username': user.get('displayName'),
-                'displayName': user.get('displayName'),
+                "id": user.get('id', ""),
+                'host': user.get('host', ""),
+                'username': user.get('displayName', ""),
+                'displayName': user.get('displayName', ""),
                 'github_username': github_username,
-                'avatar_url': user.get('profileImage'),
+                'avatar_url': user.get('profileImage', ""),
                 'local' : False
             }
         )
@@ -116,6 +116,8 @@ def fetch_author_posts(author_url, node):
 
     while True:                                                                             # Loop for Traversal
         url = f"{author_url}/posts/?page={page}&size=20"
+        if node.username == "ivory":
+            url = f"http://[2605:fd00:4:1001:f816:3eff:fe1a:b4f8]/api/posts/"
         print(url)
         try:
             response = session.get(
@@ -203,23 +205,23 @@ def process_comments(comments_data, post):
             continue
         try:    
             # Get the Author of the Comment 
-            author_data = comment.get('author')
-            author_id = author_data.get('id')
+            author_data = comment.get('author', "")
+            author_id = author_data.get('id', "")
             author = Authors.objects.get(id=author_id)
 
             # Get the Post that was commented on
-            post_url = comment.get('post')
+            post_url = comment.get('post', "")
             post_uuid = extract_second_uuid_from_url(post_url)
             post = Post.objects.get(id=post_uuid)
-            comment_uuid = extract_uuid_from_url(comment.get('id'))
+            comment_uuid = extract_uuid_from_url(comment.get('id', ""))
             Comment.objects.update_or_create(
                 id=comment_uuid,
                 defaults={
                     'author': author,
                     'post': post,
-                    'comment': comment.get('comment'),
-                    'content_type': comment.get('contentType'),
-                    'published': comment.get('published')
+                    'comment': comment.get('comment', ""),
+                    'content_type': comment.get('contentType', ""),
+                    'published': comment.get('published', "")
                 }
             )
         except Exception as e:
@@ -231,9 +233,8 @@ def fetch_post_likes(post_url, node):
     likes = []
     page = 1
     while True:
-        print(url)
         #response = requests.get(url)
-        response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password))
+        response = requests.get(post_url, auth=HTTPBasicAuth(node.username,node.password))
         if response.status_code != 200:
             break
             
@@ -275,7 +276,7 @@ def process_post(posts_data, author_uuid, node):
     post_uuid = uuid.UUID(post_id)
     print(post_uuid)
 
-    image_fetch= posts_data.get('image')
+    image_fetch= posts_data.get('image', "")
     image_url = None
     image = None
 
@@ -289,16 +290,16 @@ def process_post(posts_data, author_uuid, node):
         id=post_uuid,
         defaults={
             'author': author,
-            'title': posts_data.get('title'),
-            'description': posts_data.get('description'),
-            'content': posts_data.get('content'),
-            'contentType': posts_data.get('contentType'),
+            'title': posts_data.get('title', ""),
+            'description': posts_data.get('description', ""),
+            'content': posts_data.get('content', ""),
+            'contentType': posts_data.get('contentType', ""),
             'image': image,
             'image_url': image_url,  
-            'video': posts_data.get('video'),
-            'published': posts_data.get('published'),
-            'page': posts_data.get('page'),
-            'visibility': posts_data.get('visibility'),
+            'video': posts_data.get('video', ""),
+            'published': posts_data.get('published', ""),
+            'page': posts_data.get('page', ""),
+            'visibility': posts_data.get('visibility', ""),
             'is_deleted': posts_data.get('isDeleted', False)
         }
     )
@@ -309,12 +310,12 @@ def process_likes(likes_data, post):
             continue
         try:
             # Get the Author of the Like
-            author_data = like.get('author')
-            author_id = author_data.get('id')
+            author_data = like.get('author', "")
+            author_id = author_data.get('id', "")
             author = Authors.objects.get(id=author_id)
 
             # Determine the Object Type
-            object_url = like.get('object')
+            object_url = like.get('object', "")
             if '/posts/' in object_url:
                 liked_type = 'post'
             elif '/commented/' in object_url:
@@ -324,7 +325,7 @@ def process_likes(likes_data, post):
             # Resolve Liked Object
             like_kwargs = {
                 'author': author,
-                'published': like.get('published')
+                'published': like.get('published', "")
             }
 
             if liked_type == 'post':
@@ -343,7 +344,7 @@ def process_likes(likes_data, post):
                     continue
             
             # Get Like UUID
-            like_uuid = extract_second_uuid_from_url(like.get('id'))
+            like_uuid = extract_second_uuid_from_url(like.get('id', ""))
 
             Like.objects.update_or_create(
                 id=like_uuid,
@@ -406,18 +407,18 @@ def process_followers(followers_data, author_uuid):
         if not follower_author: #create it it doesnt 
             follower_author = Authors.objects.create(
                 id=follower_id,
-                host=follower.get('host'),
-                username=follower.get('displayName'),
-                displayName=follower.get('displayName'),
+                host=follower.get('host', ""),
+                username=follower.get('displayName', ""),
+                displayName=follower.get('displayName', ""),
                 github_username=follower.get('github', '').split('/')[-1],
-                avatar_url=follower.get('profileImage'),
+                avatar_url=follower.get('profileImage', ""),
                 local=False
             )
 
         Follow.objects.update_or_create(
             follower=follower_author,
             followee=author,
-            followed_since=follower.get('followed_since'),
+            followed_since=follower.get('followed_since', ""),
         )
 
 
