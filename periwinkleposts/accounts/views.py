@@ -31,6 +31,7 @@ from api.models import ExternalNode
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.authentication import BasicAuthentication
+from requests.auth import HTTPBasicAuth
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 from rest_framework.response import Response
@@ -909,14 +910,14 @@ class InboxView(APIView):
             if other_author.id.startswith("http"):
                 inbox_url = f"{other_author.id.rstrip('/')}/inbox/"
                 print(inbox_url)
+                node_url = host.removesuffix('api/')
                 try:
-                    node = ExternalNode.objects.get(nodeURL=host)
-                    print("Host:", host)
+                    node = ExternalNode.objects.get(nodeURL=node_url)
                     print("Node:", node)
                     response = requests.post(
                         inbox_url,
-                        HTTPBasicAuth(node.username, node.password),
                         json=content,
+                        auth=HTTPBasicAuth(node.username, node.password),
                         timeout = 5
                     )
                 except Exception as e:
