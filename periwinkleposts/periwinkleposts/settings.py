@@ -54,18 +54,19 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware', #whitenoise 
-    'accounts.middleware.DisableCSRF',  # disable csrf for api/ endpoints
     "django.middleware.security.SecurityMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise after SecurityMiddleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    'accounts.middleware.DisableCSRF',  # Disable CSRF early if needed
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "accounts.middleware.ApprovalRequiredMiddleware", #required for admin panel author approval
+    'periwinkleposts.middleware.AuthenticationMiddleware',  # Custom auth handling
+    "accounts.middleware.ApprovalRequiredMiddleware",  # Approval check after auth
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'periwinkleposts.middleware.AuthenticationMiddleware',
 ]
+
 
 ROOT_URLCONF = "periwinkleposts.urls"
 
