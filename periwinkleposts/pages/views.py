@@ -76,7 +76,15 @@ def nodeView(request):
             print(data)
             node.save()
             form.save()  
-            return redirect("pages:home")
+            return redirect("pages:home")  
+
+        else:
+            print(form.errors)  # Debug form errors in the terminal
+
+    else:
+        form = AddNode()
+
+    return render(request, "node.html", {"form": form})
 
 @login_required
 def homeView(request):
