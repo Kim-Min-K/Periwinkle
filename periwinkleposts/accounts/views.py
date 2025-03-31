@@ -915,9 +915,9 @@ class InboxView(APIView):
                     print("Node:", node)
                     response = requests.post(
                         inbox_url,
+                        HTTPBasicAuth(node.username, node.password),
                         json=content,
-                        timeout = 5,
-                        HTTPBasicAuth(node.username, node.password)
+                        timeout = 5
                     )
                 except Exception as e:
                     print(f"Failed to send post to {inbox_url}: {e}")

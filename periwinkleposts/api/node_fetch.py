@@ -167,7 +167,7 @@ def fetch_post_comments(post_url, node):
     while True:                                                                             # Traversal Loop
         url = f"{post_url}/comments/?page={page}&size=20"
         print(url)
-        response = requests.get(url, auth=(node.username, node.password))
+        response = requests.get(url, HTTPBasicAuth(node.username,node.password)) 
         #response = requests.get(url)
         if response.status_code != 200:                                                     # If no data, break
             break
