@@ -910,10 +910,14 @@ class InboxView(APIView):
                 inbox_url = f"{other_author.id.rstrip('/')}/inbox/"
                 print(inbox_url)
                 try:
+                    node = ExternalNode.objects.get(nodeURL=host)
+                    print("Host:", host)
+                    print("Node:", node)
                     response = requests.post(
                         inbox_url,
                         json=content,
-                        timeout = 5
+                        timeout = 5,
+                        HTTPBasicAuth(node.username, node.password)
                     )
                 except Exception as e:
                     print(f"Failed to send post to {inbox_url}: {e}")
