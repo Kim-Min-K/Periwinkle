@@ -16,51 +16,67 @@ from django.contrib import messages
 
 User = get_user_model()
 
-# This is how a Node is registered!
+# # This is how a Node is registered!
+# @staff_member_required
+# def nodeView(request):
+#     if request.method == "POST":
+#         form = AddNode(request.POST)
+#         if form.is_valid():
+#             print("Form is Valid")
+#             node_url = form.cleaned_data["nodeURL"].rstrip("/")
+#             username = form.cleaned_data["username"]
+#             password = form.cleaned_data["password"]
+
+#             print("Username:", username, "Password:", password)
+
+#             # Attempt to authenticate with the remote node
+#             test_url = f"{node_url}/api/ping/"
+
+#             try:
+#                 response = requests.get(test_url, auth=HTTPBasicAuth(username, password), timeout=5)
+#                 if response.status_code == 200:
+#                     # Create the ExternalNode instance but don’t save it yet
+#                     node = ExternalNode(
+#                         nodeURL=node_url,
+#                         username=username,
+#                         password=password,
+#                     )
+
+#                     node.save()  # Save to DB
+
+#                     # Begin data sync
+#                     node_fetch.get_node_data(node)
+
+#                     return redirect("pages:home")
+#                 else:
+#                     messages.error(request, f"Authentication failed: status code {response.status_code}")
+
+#             except requests.exceptions.RequestException as e:
+#                 messages.error(request, f"Failed to connect to node: {str(e)}")
+
+#         else:
+#             print(form.errors)  # Debug form errors
+
+#     else:
+#         form = AddNode()
+
+#     return render(request, "node.html", {"form": form})
+
 @staff_member_required
 def nodeView(request):
     if request.method == "POST":
         form = AddNode(request.POST)
-        if form.is_valid():
-            print("Form is Valid")
-            node_url = form.cleaned_data["nodeURL"].rstrip("/")
-            username = form.cleaned_data["username"]
-            password = form.cleaned_data["password"]
-
-            print("Username:", username, "Password:", password)
-
-            # Attempt to authenticate with the remote node
-            test_url = f"{node_url}/api/ping/"
-
-            try:
-                response = requests.get(test_url, auth=HTTPBasicAuth(username, password), timeout=5)
-                if response.status_code == 200:
-                    # Create the ExternalNode instance but don’t save it yet
-                    node = ExternalNode(
-                        nodeURL=node_url,
-                        username=username,
-                        password=password,
-                    )
-
-                    node.save()  # Save to DB
-
-                    # Begin data sync
-                    node_fetch.get_node_data(node)
-
-                    return redirect("pages:home")
-                else:
-                    messages.error(request, f"Authentication failed: status code {response.status_code}")
-
-            except requests.exceptions.RequestException as e:
-                messages.error(request, f"Failed to connect to node: {str(e)}")
-
-        else:
-            print(form.errors)  # Debug form errors
-
-    else:
-        form = AddNode()
-
-    return render(request, "node.html", {"form": form})
+        if form.is_valid(): #import node fetch funcs and call them and print their results 
+            node = ExternalNode(
+                nodeURL=form.cleaned_data["nodeURL"],
+                username=form.cleaned_data["username"],
+                password=form.cleaned_data["password"],
+            )
+            data = node_fetch.get_node_data(node)
+            print(data)
+            node.save()
+            form.save()  
+            return redirect("pages:home")
 
 @login_required
 def homeView(request):
