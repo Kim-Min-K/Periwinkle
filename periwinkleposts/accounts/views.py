@@ -32,6 +32,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.authentication import BasicAuthentication
 from requests.auth import HTTPBasicAuth
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 # I used https://www.geeksforgeeks.org/how-to-create-a-basic-api-using-django-rest-framework/ to do the api stuff
 from rest_framework.response import Response
@@ -299,8 +301,11 @@ def sendFollowRequest(request, author_serial):
     else:
         url = f"{requestee.host}authors/{author_serial}/inbox/"
 
+        externalNode_url = requestee.host.removesuffix('api/')
+        node = ExternalNode.objects.get(nodeURL=externalNode_url)
+
         try:
-            response = requests.post(url, json=follow_request)
+            response = requests.post(url, json=follow_request, auth=HTTPBasicAuth(node.username, node.password))
             if response.status_code not in [400, 200, 201]:  # Check for success statuses
                 raise Exception(response.json().get("message", "Failed to send follow request"))
             Follow.objects.create(followee=requestee, follower=requester)
@@ -615,12 +620,13 @@ class LikeView(viewsets.ModelViewSet):
         like = get_object_or_404(Like, id=like_uuid)  
         serializer = LikeSerializer(like)
         return Response(serializer.data, status=200)
-    
+
+@method_decorator(csrf_exempt, name='dispatch')
 class InboxView(APIView):
     #auth stuff plz dont break...
     # authentication_classes = [BasicAuthentication] #commented out because this is failing tests...
     # permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request, author_serial):
         author = get_object_or_404(Authors, row_id=author_serial)
         inbox_items = Inbox.objects.filter(author=author).order_by('-received')
@@ -736,7 +742,6 @@ class InboxView(APIView):
             print(f"Error creating/updating comment: {e}")
             return None
 
-
     def handle_post(self,request,local_author):
         # get ot create the author
         remote_author_data = request.data.get("author", {})
@@ -801,7 +806,6 @@ class InboxView(APIView):
             print(f"Error creating/updating post: {e}")
             return None
         
-
     def get_or_create_author_from_data(self,remote_author_data):
         try:
             remote_author_id = remote_author_data.get("id", "")
@@ -827,7 +831,6 @@ class InboxView(APIView):
         except Exception as e:
             print(f"[get_or_create_author_from_data] Error creating author from data: {e}")
             return None
-
 
     def handle_like(self, request, local_author):
         object_url = request.data.get("object", "")
@@ -886,7 +889,6 @@ class InboxView(APIView):
         except Exception as e:
             print(f"Error creating/updating like: {e}")
             return None
-
 
 
     def handle_follow(self, request, author_serial):

@@ -24,6 +24,7 @@ import requests
 from urllib.parse import urlparse
 import requests
 from django.core.files.base import ContentFile
+from django.views.decorators.csrf import csrf_exempt
 
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer
@@ -180,6 +181,7 @@ class FollowRequestViewSet(GenericViewSet):
             400: "Serializer errors. "
         }
     )
+    @csrf_exempt
     def makeRequest(self, request, author_serial):
         try:
             with transaction.atomic():

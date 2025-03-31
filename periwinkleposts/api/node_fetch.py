@@ -56,13 +56,12 @@ def fetch_all_users(node):
     users = []                                                                              
     page = 1                                                                                # Page for Traversal
     while True:                                                                             # Traverse Loop
-        url = f"{node.nodeURL}/api/authors/?page={page}&size=20"
-        response = requests.get(url, HTTPBasicAuth(node.username,node.password))                                     # Get data from endpoint
+        url = f"{node.nodeURL}api/authors/?page={page}&size=20"                             # Include the / at the end on the node URL
+        response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password))                                     # Get data from endpoint
         if response.status_code != 200:                                                     # If no more data, exit loop
             break
             
         data = response.json()                                                              # Convert the data into a JSON
-        #print(data)
         users.extend(data.get('authors', []))                                               # Append it to the Users List
         
         if len(data.get('authors', [])) < 20:                                               # Max 20 Users per page, if less, no need to check other pages
@@ -75,11 +74,14 @@ def process_users(users_data, node):
     Uses the list provided (users_data), and creates the user instances in this list inside local DB
     """                   
     for user in users_data:                                                                 # Loop through the list
-        print(user)
         user_uuid = extract_uuid_from_url(user['id'])                                       # Get the UUID of the user
         if not user_uuid:
             continue
-        print(user.get('profileImage'))
+        
+        github_username = None
+        # if user.github:
+        #     github_username = user.get('github', '').split('/')[-1]                       # This is messing up the id field (Need to find a fix)
+
         Authors.objects.update_or_create(                                                   # Create user in our current Database
             row_id=user_uuid,
             defaults={
@@ -87,7 +89,7 @@ def process_users(users_data, node):
                 'host': user.get('host'),
                 'username': user.get('displayName'),
                 'displayName': user.get('displayName'),
-                'github_username': user.get('github', '').split('/')[-1],
+                'github_username': github_username,
                 'avatar_url': user.get('profileImage'),
                 'local' : False
             }
@@ -114,12 +116,14 @@ def fetch_author_posts(author_url, node):
 
     while True:                                                                             # Loop for Traversal
         url = f"{author_url}/posts/?page={page}&size=20"
+        print(url)
         try:
             response = session.get(
                 url,
                 headers=headers,
                 auth=auth,
             )
+            print(response)
             
             if response.status_code == 403:                                                 # Auth Failure
                 print(f"Access forbidden. Trying without authentication...")
@@ -167,7 +171,7 @@ def fetch_post_comments(post_url, node):
     while True:                                                                             # Traversal Loop
         url = f"{post_url}/comments/?page={page}&size=20"
         print(url)
-        response = requests.get(url, HTTPBasicAuth(node.username,node.password)) 
+        response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password)) 
         #response = requests.get(url)
         if response.status_code != 200:                                                     # If no data, break
             break
@@ -227,10 +231,9 @@ def fetch_post_likes(post_url, node):
     likes = []
     page = 1
     while True:
-        url = f"{post_url}/likes/?page={page}&size=20"
         print(url)
         #response = requests.get(url)
-        response = requests.get(url, HTTPBasicAuth(node.username,node.password))
+        response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password))
         if response.status_code != 200:
             break
             
@@ -256,13 +259,21 @@ def fetch_post_likes(post_url, node):
     return likes
 
 def process_post(posts_data, author_uuid, node):
+    print(posts_data)
+    print(author_uuid)
+    print(node)
     author = Authors.objects.filter(row_id=author_uuid).first()
     if not author:
         return
 
     post_id = posts_data.get('id', '')
+    print(post_id)
     post_id = post_id.split("posts/")[1]
+    print(post_id)
+    post_id = post_id.removesuffix('/')
+    print(post_id)
     post_uuid = uuid.UUID(post_id)
+    print(post_uuid)
 
     image_fetch= posts_data.get('image')
     image_url = None
@@ -351,7 +362,7 @@ def fetch_followers(author_url, node):
     while True:
         url = f"{author_url}/followers?page={page}&size=20"
         #response = requests.get(url)
-        response = requests.get(url, HTTPBasicAuth(node.username,node.password))
+        response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password))
         print(f"Followers Response: {response.json()}")
         if response.status_code != 200:
             break
@@ -424,6 +435,7 @@ def get_node_data(node):
             print("Posts Synced")
             for post_data in posts:
                 post = process_post(post_data, author_uuid, node)
+
                 print("Post Done, Moving onto Comments")
                 # Sync comments
                 comments = fetch_post_comments(post_data['id'], node)
