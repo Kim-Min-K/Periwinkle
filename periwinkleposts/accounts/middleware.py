@@ -1,5 +1,7 @@
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.deprecation import MiddlewareMixin
+from django.urls import resolve
 
 class ApprovalRequiredMiddleware:
     def __init__(self, get_response):
@@ -20,3 +22,14 @@ class ApprovalRequiredMiddleware:
                 return redirect('accounts:approval_pending')
                 
         return self.get_response(request)
+
+class DisableCSRF(MiddlewareMixin):
+    """Middleware for disabling CSRF in a specified app name."""
+
+    def process_request(self, request):
+        """Preprocess the request."""
+        app_name = "api"
+        resolver_match = resolve(request.path_info)
+        
+        if resolver_match.app_name == app_name:
+            setattr(request, '_dont_enforce_csrf_checks', True)
