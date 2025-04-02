@@ -834,18 +834,23 @@ class InboxView(APIView):
             return None
 
     def handle_like(self, request, local_author):
+        print(request.data)
         object_url = request.data.get("object", "")
+        print(object_url)
         if not object_url:
             return Response({"error": "Missing object URL"}, status=400)
         author_data = request.data.get("author", {})
+        print(author_data)
         if not author_data:
             return Response({"error": "Missing author data"}, status=400)
 
         liker = self.get_or_create_author_from_data(author_data)
+        print(liker)
         if not liker:
             return Response({"error": "Failed to create liker author"}, status=400)
 
         like_obj = self.create_inbox_like(request, liker)
+        print(like_obj)
         if not like_obj:
             return Response({"error": "Failed to create Like"}, status=400)
         serializer = LikeSerializer(like_obj, context={'request': request})
@@ -854,11 +859,13 @@ class InboxView(APIView):
     def create_inbox_like(self, request, author):
         try:
             object_url = request.data.get("object", "")
+            print(object_url)
             if not object_url:
                 print("Missing object field")
                 return None
 
             object_id = object_url.rstrip('/').split("/")[-1]
+            print(object_id)
             if "/posts/" in object_url:
                 liked_object = Post.objects.get(id=object_id)
                 is_post = True
@@ -869,6 +876,7 @@ class InboxView(APIView):
                 print("Invalid object type in like")
                 return None
             like_id = request.data.get("id", "")
+            print(like_id)
             if like_id:
                 like_id = like_id.rstrip('/').split("/")[-1]
             published_str = request.data.get("published", "")

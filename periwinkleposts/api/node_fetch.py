@@ -5,6 +5,7 @@ from accounts.models import Authors, Post, Comment, Like, FollowRequest, Follow
 from .models import ExternalNode
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
+import datetime
 
 # ----------------
 # Helper Functions
@@ -116,8 +117,6 @@ def fetch_author_posts(author_url, node):
 
     while True:                                                                             # Loop for Traversal
         url = f"{author_url}/posts/?page={page}&size=20"
-        if node.username == "ivory":
-            url = f"http://[2605:fd00:4:1001:f816:3eff:fe1a:b4f8]/api/posts/"
         print(url)
         try:
             response = session.get(
@@ -418,7 +417,7 @@ def process_followers(followers_data, author_uuid):
         Follow.objects.update_or_create(
             follower=follower_author,
             followee=author,
-            followed_since=follower.get('followed_since', ""),
+            followed_since=datetime.datetime.now().isoformat(),
         )
 
 

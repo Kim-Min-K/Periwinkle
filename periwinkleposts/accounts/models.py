@@ -8,7 +8,7 @@ class Authors(AbstractUser):
     username = models.CharField(max_length=150, unique=True, blank=True, null=True)
     row_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     host = models.CharField(max_length=200, blank=False, null=False)
-    id = models.CharField(max_length=200, default=None, unique=True)
+    id = models.CharField(max_length=500, default=None, unique=True)
     displayName = models.CharField(max_length=200, default=username)
     is_approved = models.BooleanField(default=False)
     
@@ -112,7 +112,7 @@ class Post(models.Model):
     image_url = models.URLField(blank=True, null=True)  
     video = models.FileField(upload_to="video/", null=True, blank=True)
     published = models.DateTimeField(auto_now_add=True)
-    page = models.CharField(max_length=200, blank=True, null=True)
+    page = models.CharField(max_length=500, blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default="PUBLIC")
 
