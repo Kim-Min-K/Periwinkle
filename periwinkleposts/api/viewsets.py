@@ -48,25 +48,22 @@ class FollowersViewSet(GenericViewSet):
         follower_ids = Follow.objects.filter(followee=author_uuid).values_list('follower_id', flat=True)  # Get all followers
         followers = Authors.objects.filter(row_id__in=follower_ids)
 
-        active_followers = []
-        for follower in followers:
-            node_url = follower.host.removesuffix('api/')
-            node = ExternalNode.objects.get(nodeURL=node_url)
-            print("node_url", node_url)
-            print("node", node)
-            url = follower.host+"authors/"+str(author_serial)+"/followers/"+str(follower.id)
-            print("url", url)
-            response = requests.get(url, auth=HTTPBasicAuth(node.username, node.password))
-            print("response", response)
-            if response.status_code == 200:
-                active_followers.append(follower)
-            elif response.status_code == 404:
-                # Follow.objects.get(follower=follower, followee=author.row_id).delete()
-                active_followers.append(follower)
-            else:
-                raise Exception(response.data)
+        # DO NOT DELETE
+        # active_followers = []
+        # for follower in followers:
+        #     node_url = follower.host.removesuffix('api/')
+        #     node = ExternalNode.objects.get(nodeURL=node_url)
+        #     url = follower.host+"authors/"+str(author_serial)+"/followers/"+str(follower.id)
+        #     response = requests.get(url, auth=HTTPBasicAuth(node.username, node.password))
+        #     if response.status_code == 200:
+        #         active_followers.append(follower)
+        #     elif response.status_code == 404:
+        #         # Follow.objects.get(follower=follower, followee=author.row_id).delete()
+        #         active_followers.append(follower)
+        #     else:
+        #         raise Exception(response.data)
 
-        serializer = self.serializer_class({"type":"followers", "followers": active_followers})
+        serializer = self.serializer_class({"type":"followers", "followers": followers})
 
         return Response(serializer.data, 200)
 
