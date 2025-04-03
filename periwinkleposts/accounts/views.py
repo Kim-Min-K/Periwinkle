@@ -298,9 +298,8 @@ def sendFollowRequest(request, author_serial):
         if response.status_code != 200:
             raise Exception(response.json().get("message"))
         return redirect("accounts:profile", row_id=requester.row_id)
-    else:
-        url = f"{requestee.host}authors/{author_serial}/inbox/"
-
+    else:     
+        url = f"{requestee.id}/inbox/"
         externalNode_url = requestee.host.removesuffix('api/')
         node = ExternalNode.objects.get(nodeURL=externalNode_url)
 
@@ -919,7 +918,7 @@ class InboxView(APIView):
             if current_host in host:
                 continue
             if other_author.id.startswith("http"):
-                inbox_url = f"{other_author.id.rstrip('/')}/inbox/"
+                inbox_url = f"{other_author.id.rstrip('/')}/inbox"
                 print(inbox_url)
                 node_url = host.removesuffix('api/')
                 try:

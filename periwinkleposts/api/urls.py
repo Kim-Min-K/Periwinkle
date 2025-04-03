@@ -60,7 +60,7 @@ urlpatterns = [
     path("authors/<uuid:author_serial>/liked/<like_serial>/",
         LikeView.as_view({'get':'get_single_like'}), name = 'get_single_like'),
     # ://service/api/authors/{AUTHOR_FQID}/liked
-    path("authors/<path:author_fqid>.liked/",
+    path("authors/<path:author_fqid>/liked/",
         LikeView.as_view({'get': 'get_like_by_author_fqid'}), name="get_like_by_author_fqid"),
     # ://service/api/liked/{LIKE_FQID}
     path('liked/<path:like_fqid>/',
@@ -85,7 +85,8 @@ urlpatterns = [
 
     #---------Inbox--------------
     # ://service/api/authors/{AUTHOR_SERIAL}/inbox, for comment, follow and like
-    path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox"),
+    path("authors/<uuid:author_serial>/inbox", InboxView.as_view(), name="inbox"),
+    path("authors/<uuid:author_serial>/inbox/", InboxView.as_view(), name="inbox2"),
     #-------Auth?--------
     # path("auth-check/", NodeAuthCheckView.as_view(), name="node-auth-check"),
 

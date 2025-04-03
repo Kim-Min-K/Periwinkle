@@ -58,11 +58,14 @@ def fetch_all_users(node):
     page = 1                                                                                # Page for Traversal
     while True:                                                                             # Traverse Loop
         url = f"{node.nodeURL}api/authors/?page={page}&size=20"                             # Include the / at the end on the node URL
+        print(url)
         response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password))                                     # Get data from endpoint
+        print(response)
         if response.status_code != 200:                                                     # If no more data, exit loop
             break
             
-        data = response.json()                                                              # Convert the data into a JSON
+        data = response.json()
+        print(data)                                                              # Convert the data into a JSON
         users.extend(data.get('authors', []))                                               # Append it to the Users List
         
         if len(data.get('authors', [])) < 20:                                               # Max 20 Users per page, if less, no need to check other pages
@@ -73,9 +76,13 @@ def fetch_all_users(node):
 def process_users(users_data, node):     
     """
     Uses the list provided (users_data), and creates the user instances in this list inside local DB
-    """                   
+    """  
+    print("Processing Users")                 
     for user in users_data:                                                                 # Loop through the list
-        user_uuid = extract_uuid_from_url(user['id'])                                       # Get the UUID of the user
+        if node.username == 'banana':
+            user_uuid = uuid.uuid4()
+        else:
+            user_uuid = extract_uuid_from_url(user['id'])                                       # Get the UUID of the user                             
         if not user_uuid:
             continue
         
@@ -232,7 +239,6 @@ def fetch_post_likes(post_url, node):
     likes = []
     page = 1
     while True:
-        #response = requests.get(url)
         response = requests.get(post_url, auth=HTTPBasicAuth(node.username,node.password))
         if response.status_code != 200:
             break
@@ -426,12 +432,16 @@ def get_node_data(node):
         # Sync users
         users = fetch_all_users(node)
         process_users(users, node)
+        print(users)
         print("Users Synced")
         # Sync posts for each user
         for user_data in users:
             author_url = user_data['id']
             posts = fetch_author_posts(author_url, node)
-            author_uuid = extract_uuid_from_url(author_url)
+            if node.username == 'banana':
+                author_uuid = Authors.objects.get(id=author_url).row_id
+            else:
+                author_uuid = extract_uuid_from_url(author_url)
             print("Posts Synced")
             for post_data in posts:
                 post = process_post(post_data, author_uuid, node)
