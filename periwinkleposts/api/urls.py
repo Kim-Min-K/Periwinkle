@@ -2,13 +2,14 @@ from django.urls import path, include
 from api.viewsets import *
 from accounts.views import CommentView, LikeView, InboxView
 from rest_framework.routers import DefaultRouter
-from .views import ping
 
 app_name = 'api'  
 
 urlpatterns = [
+    #----------Authors API ---------------------------------
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve', 'put':'update'}), name='getAuthor'),
+
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
     path('authors/comments/', CommentView.as_view({'get': 'comment_list'}), name = 'commentList'),
@@ -90,7 +91,7 @@ urlpatterns = [
     #-------Auth?--------
     # path("auth-check/", NodeAuthCheckView.as_view(), name="node-auth-check"),
 
-    path('ping/', ping, name='ping'),
+    # path('ping/', ping, name='ping'),
 ]
 
 

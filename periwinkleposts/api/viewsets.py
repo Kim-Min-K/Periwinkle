@@ -667,16 +667,16 @@ class NodeViewset(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            try:
-                response = requests.get(
-                    f'{validated_data["nodeURL"].rstrip("/")}/api/ping/',
-                    auth=HTTPBasicAuth(validated_data["username"], validated_data["password"]),
-                    timeout=5
-                )
-                if response.status_code != 200:
-                    raise ValidationError("Invalid credentials")
-            except requests.exceptions.ConnectionError:
-                raise ValidationError("Node unreachable")
+            # try:
+            #     response = requests.get(
+            #         f'{validated_data["nodeURL"].rstrip("/")}/api/ping/',
+            #         auth=HTTPBasicAuth(validated_data["username"], validated_data["password"]),
+            #         timeout=5
+            #     )
+            #     if response.status_code != 200:
+            #         raise ValidationError("Invalid credentials")
+            # except requests.exceptions.ConnectionError:
+            #     raise ValidationError("Node unreachable")
 
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

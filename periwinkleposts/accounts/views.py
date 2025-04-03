@@ -778,7 +778,7 @@ class InboxView(APIView):
             image = None
 
             if image_fetch:
-                if isinstance(image_fetch, str) and image.lower().startswith(('http://', 'https://')):
+                if isinstance(image_fetch, str) and image_fetch.lower().startswith(('http://', 'https://')):
                     image_url = image_fetch
                 else:
                     image = image_fetch

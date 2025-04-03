@@ -54,18 +54,23 @@ def fetch_all_users(node):
     This function uses connected nodes api/authors, 
     and basically fetches all authors from the endpoint
     """
-    users = []                                                                              
-    page = 1                                                                                # Page for Traversal
-    while True:                                                                             # Traverse Loop
+    users = []
+    page = 1                                                                              
+    print("Fetching Users")
+    # Traverse Loop
+    while True: 
+        # Authors URL                                                                            
         url = f"{node.nodeURL}api/authors/?page={page}&size=20"                             # Include the / at the end on the node URL
-        print(url)
-        response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password))                                     # Get data from endpoint
-        print(response)
+        print("Attempting to obtain Author Data from: ", url)
+
+        # Response from the Endpoint
+        response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password))       # Get data from endpoint
         if response.status_code != 200:                                                     # If no more data, exit loop
+            print("Author Request did not recieve 200")
             break
             
         data = response.json()
-        print(data)                                                              # Convert the data into a JSON
+        print("Author Data: ",data)                                                                         # Convert the data into a JSON
         users.extend(data.get('authors', []))                                               # Append it to the Users List
         
         if len(data.get('authors', [])) < 20:                                               # Max 20 Users per page, if less, no need to check other pages
@@ -90,6 +95,7 @@ def process_users(users_data, node):
         # if user.github:
         #     github_username = user.get('github', '').split('/')[-1]                       # This is messing up the id field (Need to find a fix)
 
+        print("Creating new author in the database with uuid: ", user_uuid)
         Authors.objects.update_or_create(                                                   # Create user in our current Database
             row_id=user_uuid,
             defaults={
@@ -120,24 +126,25 @@ def fetch_author_posts(author_url, node):
         'Referer': f'{node.nodeURL}/'
     }
 
-    auth = HTTPBasicAuth(node.username, node.password)                                          # Auth for the session
-
+    auth = HTTPBasicAuth(node.username, node.password)                                      # Auth for the session
+    print("Fetching Posts")
     while True:                                                                             # Loop for Traversal
         url = f"{author_url}/posts/?page={page}&size=20"
-        print(url)
+        print("Attempting to obtain Post Data from: ",url)
         try:
             response = session.get(
                 url,
                 headers=headers,
                 auth=auth,
             )
-            print(response)
+            print("Post Response",response)
             
             if response.status_code == 403:                                                 # Auth Failure
                 print(f"Access forbidden. Trying without authentication...")
                 response = session.get(url, headers=headers)
                 
             if response.status_code != 200:                                                 # If no data received, break
+                print("Posts data not recieved :(")
                 break
 
             data = response.json()                                                          # Convert data to JSON
@@ -176,15 +183,18 @@ def fetch_post_comments(post_url, node):
     """
     comments = []                                                                           # Comments List
     page = 1                                                                                # Page for Traversal
+    print("Fetching Comments")
     while True:                                                                             # Traversal Loop
         url = f"{post_url}/comments/?page={page}&size=20"
-        print(url)
+        print("Attempting to obtain comments from: ",url)
+
         response = requests.get(url, auth=HTTPBasicAuth(node.username,node.password)) 
-        #response = requests.get(url)
+
         if response.status_code != 200:                                                     # If no data, break
             break
             
         data = response.json()                                                              # Data to JSON
+        print("Comments Data: ", data)
 
         if isinstance(data, dict) and 'results' in data:
             page_comments = data['results']
@@ -214,12 +224,16 @@ def process_comments(comments_data, post):
             author_data = comment.get('author', "")
             author_id = author_data.get('id', "")
             author = Authors.objects.get(id=author_id)
+            print("Author of the comment: ", author)
 
             # Get the Post that was commented on
             post_url = comment.get('post', "")
             post_uuid = extract_second_uuid_from_url(post_url)
             post = Post.objects.get(id=post_uuid)
+            print("Post of the comment: ", post)
+
             comment_uuid = extract_uuid_from_url(comment.get('id', ""))
+            print("UUID of the comment: ", comment_uuid)
             Comment.objects.update_or_create(
                 id=comment_uuid,
                 defaults={
@@ -230,6 +244,7 @@ def process_comments(comments_data, post):
                     'published': comment.get('published', "")
                 }
             )
+            print("Comment Created")
         except Exception as e:
             print(f"Error processing comment {comment}: {str(e)}")
             continue
@@ -238,13 +253,14 @@ def process_comments(comments_data, post):
 def fetch_post_likes(post_url, node):
     likes = []
     page = 1
+    print("Fetching Posts Likes")
     while True:
         response = requests.get(post_url, auth=HTTPBasicAuth(node.username,node.password))
         if response.status_code != 200:
             break
             
         data = response.json()
-        print(data)
+        print("Obtained Likes Data: ", data)
         if isinstance(data, dict) and 'results' in data:
             page_likes = data['results']
             total_pages = data['total_pages']
@@ -265,21 +281,18 @@ def fetch_post_likes(post_url, node):
     return likes
 
 def process_post(posts_data, author_uuid, node):
-    print(posts_data)
-    print(author_uuid)
-    print(node)
+    print("All Post Data: ", posts_data)
+    print("Author of the Post", author_uuid)
+    print("Node Sending the Post: ", node)
     author = Authors.objects.filter(row_id=author_uuid).first()
     if not author:
         return
 
     post_id = posts_data.get('id', '')
-    print(post_id)
     post_id = post_id.split("posts/")[1]
-    print(post_id)
     post_id = post_id.removesuffix('/')
-    print(post_id)
     post_uuid = uuid.UUID(post_id)
-    print(post_uuid)
+    print("Post UUID: ", post_uuid)
 
     image_fetch= posts_data.get('image', "")
     image_url = None
@@ -308,6 +321,7 @@ def process_post(posts_data, author_uuid, node):
             'is_deleted': posts_data.get('isDeleted', False)
         }
     )
+    print("Post Created!")
 
 def process_likes(likes_data, post):
     for like in likes_data:
@@ -432,8 +446,7 @@ def get_node_data(node):
         # Sync users
         users = fetch_all_users(node)
         process_users(users, node)
-        print(users)
-        print("Users Synced")
+        print("Users Retrieved: ", users)
         # Sync posts for each user
         for user_data in users:
             author_url = user_data['id']
@@ -442,32 +455,32 @@ def get_node_data(node):
                 author_uuid = Authors.objects.get(id=author_url).row_id
             else:
                 author_uuid = extract_uuid_from_url(author_url)
-            print("Posts Synced")
+            print("Posts Retrieved: ", posts)
             for post_data in posts:
                 post = process_post(post_data, author_uuid, node)
 
                 print("Post Done, Moving onto Comments")
                 # Sync comments
                 comments = fetch_post_comments(post_data['id'], node)
-                print(comments)
+                print("Comments retrieved: ", comments)
                 process_comments(comments, post)
                 print("Comments Done, Moving onto Likes")
             
                 # Sync likes
                 likes = fetch_post_likes(post_data['id'], node)
-                print(likes)
+                print("Likes retrieved: ", likes)
                 process_likes(likes, post)
                 print("Likes Done!")
             
             # #ensure there's no trailing slash in author_url (bug fix)
 
             author_url_no_trailing_slash = author_url.rstrip('/')
-            print(f"Author URL: {author_url_no_trailing_slash}")
+            print(f"Author URL for fetching Follows: {author_url_no_trailing_slash}")
             
             # Sync followers & followees
             followers = fetch_followers(author_url_no_trailing_slash, node)
             process_followers(followers, author_uuid)
-            print("Followers Synced")
+            print("Followers Synced: ", followers)
 
         print("Sync with Node successful")
         
