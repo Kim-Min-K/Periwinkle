@@ -817,7 +817,6 @@ class InboxView(APIView):
             author, created = Authors.objects.get_or_create(
                 id=remote_author_id,
                 defaults={
-                    "row_id": UUID(remote_row_id),
                     "host": host,
                     "username": display_name,
                     "displayName": display_name,
@@ -919,11 +918,11 @@ class InboxView(APIView):
                 continue
             if other_author.id.startswith("http"):
                 inbox_url = f"{other_author.id.rstrip('/')}/inbox"
-                print(inbox_url)
+                print("Sending to Following Author: ",inbox_url)
                 node_url = host.removesuffix('api/')
                 try:
                     node = ExternalNode.objects.get(nodeURL=node_url)
-                    print("Node:", node)
+                    print("Sent to Node:", node)
                     response = requests.post(
                         inbox_url,
                         json=content,

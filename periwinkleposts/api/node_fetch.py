@@ -86,8 +86,10 @@ def process_users(users_data, node):
     for user in users_data:                                                                 # Loop through the list
         if node.username == 'banana':
             user_uuid = uuid.uuid4()
+        elif node.username == 'admin1':
+            user_uuid = uuid.uuid4()
         else:
-            user_uuid = extract_uuid_from_url(user['id'])                                       # Get the UUID of the user                             
+            user_uuid = extract_uuid_from_url(user['id'])                                   # Get the UUID of the user                             
         if not user_uuid:
             continue
         
