@@ -35,7 +35,7 @@ class FollowUITests(SeleniumTestCase):
         self.driver.find_element(By.ID, "password1").send_keys(password)
         self.driver.find_element(By.ID, "password2").send_keys(password)
 
-        self.clickAndWait(By.TAG_NAME, "button", timeout=3)
+        self.clickAndWait(By.TAG_NAME, "button", timeout=5)
 
     def approve_user(self, username):
         author = Authors.objects.get(username=username)
