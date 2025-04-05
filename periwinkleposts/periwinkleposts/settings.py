@@ -177,3 +177,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',  #require authentication/login
     ],
 }
+
+AUTH_USER_MODEL = "accounts.Authors" #force django to use the custom "authors" model for auth instead of user model default
