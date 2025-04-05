@@ -868,6 +868,22 @@ class AuthorViewSetTests(APITestCase):
                 host="http://testserver/api/",
                 avatar_url=f"http://example.com/avatar_{i}.jpg"
             )
+
+        #new stuff for API auth test
+        self.test_author_1 = Authors.objects.create_user(
+            username="test_author_1",
+            password="my_password1",
+            displayName="Test Author 1",
+            github_username="test_author_1"
+        )
+
+        self.test_author_2 = Authors.objects.create_user(
+            username="test_author_2",
+            password="my_password2",
+            displayName="Test Author 2",
+            github_username="test_author_2"
+        )
+
     def test_author_to_json_serializer(self):
         """
         Test to make sure AuthorObjectToJSONSerializer only has type, id, host, displayName, page, github, and profileImage following specifications closely.
@@ -886,6 +902,7 @@ class AuthorViewSetTests(APITestCase):
     # Retrieve single author tests
     def test_author(self):
         author = Authors.objects.first()
+        self.client.login(username="test_author_1", password="my_password1") #testing for api auth changes
         url = reverse('api:getAuthor', args=[author.row_id])
         response = self.client.get(url)
         
@@ -897,12 +914,14 @@ class AuthorViewSetTests(APITestCase):
 
     def test_404(self):
         invalid_uuid = uuid.uuid4()
+        self.client.login(username="test_author_1", password="my_password1") #testing for api auth changes
         url = reverse('api:getAuthor', args=[invalid_uuid])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
     # List authors tests
     def test_authors_dpag(self):
+        self.client.login(username="test_author_1", password="my_password1") #testing for api auth changes
         url = reverse('api:getAuthors')
         response = self.client.get(url)
         
@@ -916,6 +935,7 @@ class AuthorViewSetTests(APITestCase):
         )
 
     def test_authors_cpag(self):
+        self.client.login(username="test_author_1", password="my_password1") #testing for api auth changes
         url = reverse('api:getAuthors')
         response = self.client.get(url, {'page': 2, 'size': 5})
         self.assertEqual(response.status_code, 200)
@@ -929,6 +949,7 @@ class AuthorViewSetTests(APITestCase):
 
     def test_authors_ipag(self):
         """Test invalid pagination parameters"""
+        self.client.login(username="test_author_1", password="my_password1") #testing for api auth changes
         url = reverse('api:getAuthors')
         response = self.client.get(url, {'page': 'invalid', 'size': 'wrong'})
         
@@ -938,6 +959,7 @@ class AuthorViewSetTests(APITestCase):
 
     def test_authors_empty(self):
         """Test requesting non-existent page returns empty list"""
+        self.client.login(username="test_author_1", password="my_password1") #testing for api auth changes
         url = reverse('api:getAuthors')
         response = self.client.get(url, {'page': 3, 'size': 10})
         
