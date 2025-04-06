@@ -3,45 +3,69 @@
 
 {% block page_content %}
 <div class="max-w-6xl mx-auto p-8 bg-[#F8F8FF] font-[Baskervville] rounded-xl shadow-md">
-    <!-- Inbox text centered above buttons -->
     <div class="text-center mb-6">
         <h2 class="text-4xl font-semibold text-black">Inbox</h2> 
     </div>
 
-    <!-- Buttons centered with flexbox -->
-    <div class="flex justify-center space-x-8">
-        <button class="px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Comments</button>
-        <button class="px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Likes</button>
-        <button class="px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Posts</button>
-        <button class="px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Request</button>
+    <div class="flex justify-center space-x-4 mb-6">
+        <button onclick="filterInbox('comment')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Comments</button>
+        <button onclick="filterInbox('like')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Likes</button>
+        <button onclick="filterInbox('post')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Posts</button>
+        <button onclick="filterInbox('follow')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Follow Request</button>
+        <button onclick="filterInbox('all')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#CCCCFF] rounded-lg hover:bg-[#9999FF] transition-all duration-300 shadow-sm">All</button>
     </div>
 
     <div class="space-y-6">
-        {% for item in inbox_items %}
-            {% if item.type == "post" %}
-                <div class="p-4 border rounded-lg bg-white shadow">
-                    <h3 class="text-xl font-bold">{{ item.content.title }}</h3>
-                    <p class="text-sm text-gray-600">By {{ item.content.author.displayName }}</p>
-                    <p class="mt-2">{{ item.content.content }}</p>
+        {% for item in posts %}
+            <div class="inbox-item" data-type="post">
+                <div class="p-4 border rounded-lg shadow bg-white">
+                    <p>{{ item.display|safe }}</p>
                 </div>
-            {% elif item.type == "comment" %}
-                <div class="p-4 border rounded-lg bg-gray-100 shadow">
-                    <p class="text-sm text-gray-600">{{ item.content.author.displayName }} commented on a post</p>
-                    <p class="mt-2">{{ item.content.comment }}</p>
+            </div>
+        {% endfor %}
+
+        {% for item in comments %}
+            <div class="inbox-item" data-type="comment">
+                <div class="p-4 border rounded-lg shadow bg-gray-100">
+                    <p>{{ item.display|safe }}</p>
                 </div>
-            {% elif item.type == "like" %}
-                <div class="p-4 border rounded-lg bg-blue-100 shadow">
-                    <p>{{ item.content.author.displayName }} liked something</p>
+            </div>
+        {% endfor %}
+
+        {% for item in likes %}
+            <div class="inbox-item" data-type="like">
+                <div class="p-4 border rounded-lg shadow bg-blue-100">
+                    <p>{{ item.display|safe }}</p>
                 </div>
-            {% elif item.type == "follow" %}
-                <div class="p-4 border rounded-lg bg-green-100 shadow">
-                    <p>{{ item.content.actor.displayName }} wants to follow you</p>
+            </div>
+        {% endfor %}
+
+        {% for item in follows %}
+            <div class="inbox-item" data-type="follow">
+                <div class="p-4 border rounded-lg shadow bg-green-100">
+                    <p>{{ item.display|safe }}</p>
                 </div>
-            {% endif %}
-        {% empty %}
-            <p class="text-center text-gray-500">Your inbox is empty.</p>
+            </div>
         {% endfor %}
     </div>
-    
 </div>
+
+<script>
+function filterInbox(type) {
+    const items = document.querySelectorAll('.inbox-item');
+    items.forEach(item => {
+        const isMatch = item.dataset.type === type || type === 'all';
+        item.style.display = isMatch ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('.inbox-btn').forEach(btn => {
+        btn.classList.remove('bg-[#6666CC]');
+    });
+
+    const active = Array.from(document.querySelectorAll('.inbox-btn')).find(btn => btn.innerText.toLowerCase().includes(type));
+    if (active) {
+        active.classList.add('bg-[#6666CC]');
+    }
+}
+</script>
 {% endblock %}

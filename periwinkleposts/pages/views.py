@@ -137,15 +137,14 @@ def is_friend(user, author):
 def is_following(user, author):
     return Follow.objects.filter(follower=user, followee=author).exists()
 
-#Allows users to view inbox
-#also if "inbox.html -> it render accounts:inbox.html"
-def inboxView(request, row_id):
-    # Check if the logged-in user is the author
+
+def inbox_item_view(request, row_id):
     author = get_object_or_404(Authors, row_id=row_id)
     if request.user != author:
         return HttpResponseForbidden("You aren't allowed here.")
     raw_items = Inbox.objects.filter(author=author).order_by("-received")
-    inbox_items = []
+    posts, comments, likes, follows = [], [], [], []
+
     for item in raw_items:
         try:
             content = item.content if isinstance(item.content, dict) else json.loads(item.content)
@@ -153,11 +152,83 @@ def inboxView(request, row_id):
             print(f"Error decoding inbox content: {e}")
             content = {}
 
-        inbox_items.append({
-            "id": item.id,
-            "type": item.type,
-            "content": content,
-            "received": item.received
-        })
-    return render(request, "inbox.html", {"inbox_items": inbox_items})
+        display = ""
+        type = item.type
+        received = item.received
+        author_name = content.get("author", {}).get("displayName", "Someone")
+        published = content.get("published", "")[:10] if "published" in content else received.strftime("%Y-%m-%d")
 
+        if type == "post":
+            title = content.get("title", "a post")
+            body = content.get("content", "")
+            display = f"{author_name} made a new post:  '{title}'\
+            <br><span class='text-black text-lg'>{body}</span>\
+            <br><span class='text-sm'>On {published}</span>"
+
+        elif type == "comment":
+            post_url = content.get("post", "")
+            post_id = post_url.split("/")[-1] if post_url else None
+            comment_text = content.get("comment", "")
+            post_title = "your post"
+            if post_id:
+                try:
+                    from accounts.models import Post
+                    post_obj = Post.objects.get(id=post_id)
+                    post_title = post_obj.title
+                except Post.DoesNotExist:
+                    post_title = post_id  
+            display = f"{author_name} commented on your post '{post_title} :'"\
+                    f"<br><span class='text-black text-lg font-bold'>{comment_text}</span>"\
+                    f"<br><span class='text-sm'>On {published}</span>"
+
+
+        elif type == "like":
+            liked_object = content.get("object", "")
+            sentence = "something"
+            if "commented" in liked_object:
+                comment_id = liked_object.rstrip("/").split("/")[-1]
+                try:
+                    comment = Comment.objects.get(id=comment_id)
+                    comment_text = comment.comment
+                    sentence = f"your comment: '<span class=\"font-bold\">{comment_text}</span>'"
+                except Comment.DoesNotExist:
+                    sentence = "your comment"
+            else:
+                post_id = liked_object.rstrip("/").split("/")[-1]
+                try:
+                    post = Post.objects.get(id=post_id)
+                    post_title = post.title
+                    sentence = f"your post: '<span class=\"font-bold\">{post_title}</span>'"
+                except Post.DoesNotExist:
+                    sentence = "your post"
+            display = f"{author_name} liked {sentence}"
+
+        elif type == "follow":
+            actor = content.get("actor", {})
+            follower_name = actor.get("displayName", "Someone")
+            display = f"{follower_name} wants to follow you"
+
+        item_data = {
+            "id": item.id,
+            "type": type,
+            "content": content,
+            "received": received,
+            "display": display,
+        }
+
+        if type == "post":
+            posts.append(item_data)
+        elif type == "comment":
+            comments.append(item_data)
+        elif type == "like":
+            likes.append(item_data)
+        elif type == "follow":
+            follows.append(item_data)
+
+    context = {
+        "posts": posts,
+        "comments": comments,
+        "likes": likes,
+        "follows": follows,
+    }
+    return render(request, "inbox.html", context)
