@@ -161,7 +161,7 @@ def inbox_item_view(request, row_id):
         if type == "post":
             title = content.get("title", "a post")
             body = content.get("content", "")
-            display = f"{author_name} made a new post:  '{title}'\
+            display = f"{author_name} made a new post  '{title}' :\
             <br><span class='text-black text-lg'>{body}</span>\
             <br><span class='text-sm'>On {published}</span>"
 
@@ -177,9 +177,7 @@ def inbox_item_view(request, row_id):
                     post_title = post_obj.title
                 except Post.DoesNotExist:
                     post_title = post_id  
-            display = f"{author_name} commented on your post '{post_title} :'"\
-                    f"<br><span class='text-black text-lg font-bold'>{comment_text}</span>"\
-                    f"<br><span class='text-sm'>On {published}</span>"
+            display = f"{author_name} commented on your post '{post_title}' :{comment_text}<br><span class='text-sm'>On {published}</span>"
 
 
         elif type == "like":

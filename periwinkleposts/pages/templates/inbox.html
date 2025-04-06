@@ -18,7 +18,7 @@
     <div class="space-y-6">
         {% for item in posts %}
             <div class="inbox-item" data-type="post">
-                <div class="p-4 border rounded-lg shadow bg-white">
+                <div class="p-4 border rounded-lg shadow bg-purple-200">
                     <p>{{ item.display|safe }}</p>
                 </div>
             </div>
@@ -26,7 +26,7 @@
 
         {% for item in comments %}
             <div class="inbox-item" data-type="comment">
-                <div class="p-4 border rounded-lg shadow bg-gray-100">
+                <div class="p-4 border rounded-lg shadow bg-blue-100">
                     <p>{{ item.display|safe }}</p>
                 </div>
             </div>
@@ -34,7 +34,7 @@
 
         {% for item in likes %}
             <div class="inbox-item" data-type="like">
-                <div class="p-4 border rounded-lg shadow bg-blue-100">
+                <div class="p-4 border rounded-lg shadow bg-pink-100">
                     <p>{{ item.display|safe }}</p>
                 </div>
             </div>
