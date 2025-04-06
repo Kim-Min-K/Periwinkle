@@ -172,7 +172,6 @@ def inbox_item_view(request, row_id):
             post_title = "your post"
             if post_id:
                 try:
-                    from accounts.models import Post
                     post_obj = Post.objects.get(id=post_id)
                     post_title = post_obj.title
                 except Post.DoesNotExist:

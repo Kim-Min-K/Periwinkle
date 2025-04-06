@@ -27,6 +27,7 @@ from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 from requests.auth import HTTPBasicAuth
 from .models import ExternalNode
+from inbox.models import Inbox
 
 class FollowersViewSet(GenericViewSet):
     serializer_class=FollowersSerializer
@@ -213,6 +214,11 @@ class FollowRequestViewSet(GenericViewSet):
                 serializer = ActionSerializer(action_type="follow", actor=requester, object=requestee)
                 serializer.save()
                 print(5)
+                Inbox.objects.create(
+                    type="follow",
+                    author=requestee,
+                    content=request.data
+                )
                 return Response(serializer.to_representation(), 200)
 
         except ValueError as e:
