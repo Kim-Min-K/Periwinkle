@@ -13,7 +13,8 @@ from .forms import *
 #import api.node_fetch as node_fetch_utils
 from api import node_fetch
 from django.contrib import messages
-
+from inbox.models import Inbox
+import json
 User = get_user_model()
 
 # # This is how a Node is registered!
@@ -143,6 +144,20 @@ def inboxView(request, row_id):
     author = get_object_or_404(Authors, row_id=row_id)
     if request.user != author:
         return HttpResponseForbidden("You aren't allowed here.")
+    raw_items = Inbox.objects.filter(author=author).order_by("-received")
+    inbox_items = []
+    for item in raw_items:
+        try:
+            content = item.content if isinstance(item.content, dict) else json.loads(item.content)
+        except Exception as e:
+            print(f"Error decoding inbox content: {e}")
+            content = {}
 
-    return render(request, "inbox.html")
+        inbox_items.append({
+            "id": item.id,
+            "type": item.type,
+            "content": content,
+            "received": item.received
+        })
+    return render(request, "inbox.html", {"inbox_items": inbox_items})
 

@@ -15,5 +15,33 @@
         <button class="px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Posts</button>
         <button class="px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Request</button>
     </div>
+
+    <div class="space-y-6">
+        {% for item in inbox_items %}
+            {% if item.type == "post" %}
+                <div class="p-4 border rounded-lg bg-white shadow">
+                    <h3 class="text-xl font-bold">{{ item.content.title }}</h3>
+                    <p class="text-sm text-gray-600">By {{ item.content.author.displayName }}</p>
+                    <p class="mt-2">{{ item.content.content }}</p>
+                </div>
+            {% elif item.type == "comment" %}
+                <div class="p-4 border rounded-lg bg-gray-100 shadow">
+                    <p class="text-sm text-gray-600">{{ item.content.author.displayName }} commented on a post</p>
+                    <p class="mt-2">{{ item.content.comment }}</p>
+                </div>
+            {% elif item.type == "like" %}
+                <div class="p-4 border rounded-lg bg-blue-100 shadow">
+                    <p>{{ item.content.author.displayName }} liked something</p>
+                </div>
+            {% elif item.type == "follow" %}
+                <div class="p-4 border rounded-lg bg-green-100 shadow">
+                    <p>{{ item.content.actor.displayName }} wants to follow you</p>
+                </div>
+            {% endif %}
+        {% empty %}
+            <p class="text-center text-gray-500">Your inbox is empty.</p>
+        {% endfor %}
+    </div>
+    
 </div>
 {% endblock %}

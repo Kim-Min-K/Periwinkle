@@ -715,7 +715,9 @@ class InboxView(APIView):
         comment_obj = self.create_inbox_comment(request, remote_author, post)
         if not comment_obj:
             return Response({"error": "Comment creation failed"}, status=400)
+        inbox_author = post.author 
         serializer = CommentSerializer(comment_obj, context={'request': request})
+        self.save_remote_to_inbox(inbox_author.id,'comment',serializer.data,request)
         return Response(serializer.data, status=201)
 
     def create_inbox_comment(self, request, author, post):
@@ -753,6 +755,7 @@ class InboxView(APIView):
         if not new_post:
             return Response({"error": "Failed to create Post"}, status=400)
         serializer = PostSerializer(new_post, context={'request': request})
+        self.save_remote_to_inbox(local_author.id,'post',serializer.data,request)
         return Response(serializer.data, status=201)
 
     def create_inbox_post(self, request, author):
@@ -852,6 +855,8 @@ class InboxView(APIView):
         if not like_obj:
             return Response({"error": "Failed to create Like"}, status=400)
         serializer = LikeSerializer(like_obj, context={'request': request})
+        receiver = like_obj.post.author if like_obj.post else like_obj.comment.author
+        self.save_remote_to_inbox(receiver.id, 'like', serializer.data, request)
         return Response(serializer.data, status=201)
 
     def create_inbox_like(self, request, author):
@@ -907,11 +912,11 @@ class InboxView(APIView):
     def save_item(self, author_id, data_type, content,request):
         current_host = request.get_host()
         author = get_object_or_404(Authors, id=author_id)
-        Inbox.objects.create(
-                author=author, 
-                type=data_type,
-                content=content
-            )
+        # Inbox.objects.create(
+        #         author=author, 
+        #         type=data_type,
+        #         content=content
+        #     )
         for other_author in Authors.objects.all():
             host = other_author.host
             if current_host in host:
@@ -931,3 +936,13 @@ class InboxView(APIView):
                     )
                 except Exception as e:
                     print(f"Failed to send post to {inbox_url}: {e}")
+
+    def save_remote_to_inbox(self, author_id, data_type, content,request):
+        current_host = request.get_host()
+        author = get_object_or_404(Authors, id=author_id)
+        Inbox.objects.create(
+                author=author, 
+                type=data_type,
+                content=content
+            )
+        print('item successfully saved')
