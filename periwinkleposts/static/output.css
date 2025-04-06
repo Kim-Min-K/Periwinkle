@@ -531,6 +531,9 @@
   .fixed {
     position: fixed;
   }
+  .relative {
+    position: relative;
+  }
   .static {
     position: static;
   }
@@ -545,6 +548,9 @@
   }
   .bottom-6 {
     bottom: calc(var(--spacing) * 6);
+  }
+  .z-10 {
+    z-index: 10;
   }
   .container {
     width: 100%;
@@ -900,6 +906,9 @@
   .font-\[\'Inter\'\] {
     font-family: 'Inter';
   }
+  .font-\[Baskervsville\] {
+    font-family: Baskervsville;
+  }
   .font-\[Baskervville\] {
     font-family: Baskervville;
   }
@@ -1051,6 +1060,10 @@
   .duration-300 {
     --tw-duration: 300ms;
     transition-duration: 300ms;
+  }
+  .ease-in-out {
+    --tw-ease: var(--ease-in-out);
+    transition-timing-function: var(--ease-in-out);
   }
   .file\:mr-4 {
     &::file-selector-button {
@@ -1433,6 +1446,10 @@
   inherits: false;
 }
 @property --tw-duration {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ease {
   syntax: "*";
   inherits: false;
 }

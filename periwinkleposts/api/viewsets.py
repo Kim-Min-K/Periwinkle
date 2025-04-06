@@ -152,7 +152,7 @@ class FriendsViewSet(GenericViewSet):
         from rest_framework.test import APIRequestFactory
         factory = APIRequestFactory()
         fake_request = factory.get(f"/authors/{author_serial}/followers/")  # Simulate a request
-
+        
         # Get active followers (mutual followers)
         active_followers_fqid = {
             author["id"] for author in (FollowersViewSet.as_view({"get": "list"}))(fake_request, author_serial).data["followers"]

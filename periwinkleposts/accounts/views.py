@@ -338,6 +338,7 @@ def approval_pending(request):
 
 class CustomLogoutView(LogoutView):
     def get_next_page(self):
+        self.request.session.flush()
         if not self.request.user.is_approved:
             return reverse_lazy('accounts:login')
         return self.next_page or self.get_redirect_url() or reverse_lazy('accounts:login')

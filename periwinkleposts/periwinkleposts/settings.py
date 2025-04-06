@@ -61,6 +61,7 @@ MIDDLEWARE = [
     'accounts.middleware.DisableCSRF',  # Disable CSRF early if needed
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    'periwinkleposts.middleware.BasicAuthApiMiddleware',
     'periwinkleposts.middleware.AuthenticationMiddleware',  # Custom auth handling
     "accounts.middleware.ApprovalRequiredMiddleware",  # Approval check after auth
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -171,9 +172,12 @@ SPECTACULAR_SETTINGS = {
 
 # REST_FRAMEWORK = {
 #     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication.SessionAuthentication',
 #         'rest_framework.authentication.BasicAuthentication',  #django session based auth
 #     ],
 #     'DEFAULT_PERMISSION_CLASSES': [
 #         'rest_framework.permissions.IsAuthenticated',  #require authentication/login
 #     ],
 # }
+
+AUTH_USER_MODEL = "accounts.Authors" #force django to use the custom "authors" model for auth instead of user model default

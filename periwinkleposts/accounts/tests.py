@@ -17,6 +17,7 @@ from selenium.webdriver.common.by import By
 from django.contrib.auth.hashers import make_password
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from rest_framework.test import APIClient
 
 #Commented out as we will have to change this later on as the UI will be constantly changed
 class FollowUITests(SeleniumTestCase):
@@ -34,7 +35,7 @@ class FollowUITests(SeleniumTestCase):
         self.driver.find_element(By.ID, "password1").send_keys(password)
         self.driver.find_element(By.ID, "password2").send_keys(password)
 
-        self.clickAndWait(By.TAG_NAME, "button", timeout=1)
+        self.clickAndWait(By.TAG_NAME, "button", timeout=5)
 
     def approve_user(self, username):
         author = Authors.objects.get(username=username)
@@ -386,15 +387,18 @@ class FollowLiveServerTests(LiveServerTestCase):
 
 class AuthorsAPITests(APITestCase):
     def setUp(self):
-        self.author1 = Authors.objects.create(username="john_doe", host="http://testserver/api/", displayName="John Doe", github_username="johndoe")
-        self.author2 = Authors.objects.create(username="jane_doe", host="http://testserver/api/", displayName="Jane Doe", github_username="janedoe")
-        self.author3 = Authors.objects.create(username="jim_doe", host="http://testserver/api/", displayName="Jim Doe", github_username="jimdoe")
-        self.author4 = Authors.objects.create(username="jill_doe", host="http://testserver/api/", displayName="Jill Doe", github_username="jilldoe")
-        self.author5 = Authors.objects.create(username="jack_doe", host="http://testserver/api/", displayName="Jack Doe", github_username="jackdoe")
-        self.author6 = Authors.objects.create(username="jess_doe", host="http://testserver/api/", displayName="Jess Doe", github_username="jessdoe")
-        self.author7 = Authors.objects.create(username="josh_doe", host="http://testserver/api/", displayName="Josh Doe", github_username="joshdoe")
-        self.author8 = Authors.objects.create(username="jenny_doe", host="http://testserver/api/", displayName="Jenny Doe", github_username="jennydoe")
-        self.author9 = Authors.objects.create(username="joe_doe", host="http://testserver/api/", displayName="Joe Doe", github_username="joedoe")
+        self.author1 = Authors.objects.create(username="john_doe", password="john_pass", host="http://testserver/api/", displayName="John Doe", github_username="johndoe")
+        self.author2 = Authors.objects.create(username="jane_doe", password="jane_pass", host="http://testserver/api/", displayName="Jane Doe", github_username="janedoe")
+        self.author3 = Authors.objects.create(username="jim_doe", password="jim_pass" ,host="http://testserver/api/", displayName="Jim Doe", github_username="jimdoe")
+        self.author4 = Authors.objects.create(username="jill_doe", password="jill_pass",host="http://testserver/api/", displayName="Jill Doe", github_username="jilldoe")
+        self.author5 = Authors.objects.create(username="jack_doe", password="jack_pass",host="http://testserver/api/", displayName="Jack Doe", github_username="jackdoe")
+        self.author6 = Authors.objects.create(username="jess_doe", password="jess_pass",host="http://testserver/api/", displayName="Jess Doe", github_username="jessdoe")
+        self.author7 = Authors.objects.create(username="josh_doe", password="josh_pass",host="http://testserver/api/", displayName="Josh Doe", github_username="joshdoe")
+        self.author8 = Authors.objects.create(username="jenny_doe",password="jenny_pass",host="http://testserver/api/", displayName="Jenny Doe", github_username="jennydoe")
+        self.author9 = Authors.objects.create(username="joe_doe", password="joe_pass",host="http://testserver/api/", displayName="Joe Doe", github_username="joedoe")
+
+        self.test_author = Authors.objects.get(username="john_doe")
+        self.client.force_authenticate(user=self.test_author)
 
         self.base_url = reverse("api:getAuthors")
 
@@ -455,10 +459,15 @@ class FollowAPITests(APITestCase):
         """
         Tests authors/<str:author_serial>/inbox endpoint with body.type == "follow"
         """
+        self.client = APIClient() #auth
 
         # Create test authors
         test_author_1 = Authors.objects.create(username="test_author_1")
         test_author_2 = Authors.objects.create(username="test_author_2")
+
+        self.client.force_authenticate(user=test_author_1)
+        self.client.force_authenticate(user=test_author_2)
+
 
         # URL for sending the follow request
         url = reverse("api:followRequest", args=[test_author_1.row_id])
@@ -480,9 +489,15 @@ class FollowAPITests(APITestCase):
         self.assertTrue(follow.exists())
     
     def test_is_follower(self):
+        self.client = APIClient() #auth
+
         test_author_1 = Authors.objects.create(username="test_author_1")
         test_author_2 = Authors.objects.create(username="test_author_2", id="http://nodebbbb/api/authors/222")
         test_author_3 = Authors.objects.create(username="test_author_3", id="http://nodebbbb/api/authors/111")
+
+        self.client.force_authenticate(user=test_author_1)
+        self.client.force_authenticate(user=test_author_2)
+        self.client.force_authenticate(user=test_author_3)
 
         Follow.objects.create(followee=test_author_1, follower=test_author_2)
 
@@ -498,9 +513,15 @@ class FollowAPITests(APITestCase):
 
 class FollowRequestAPITests(APITestCase):
     def setUp(self):
+        self.client = APIClient() #auth
+
         # Create test authors
         self.test_author_1 = Authors.objects.create(username="test_author_1")
         self.test_author_2 = Authors.objects.create(username="test_author_2")
+
+        # Authenticate the test authors
+        self.client.force_authenticate(user=self.test_author_1)
+        self.client.force_authenticate(user=self.test_author_2)
 
         # URL for sending the follow request
         url = reverse("api:inbox", args=[self.test_author_1.row_id])
@@ -571,6 +592,8 @@ class FollowRequestAPITests(APITestCase):
 
 class CommentTest(APITestCase):
     def setUp(self):
+        self.client = APIClient() #auth 
+
         self.author = Authors.objects.create(username = 'test_author')
         self.post = Post.objects.create(author=self.author)
         self.post2 = Post.objects.create(author= self.author)
@@ -587,6 +610,9 @@ class CommentTest(APITestCase):
         Comment.objects.create(
             author=self.author, post=self.post2, comment="author Comment on post2", content_type="text/plain"
         )
+
+        self.test_author = Authors.objects.get(username="test_author")
+        self.client.force_authenticate(user=self.test_author)
         return super().setUp()
     #------------------Test for comments----------------
     # ://service/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}/comments GET
@@ -768,6 +794,8 @@ class InboxTest(APITestCase):
 
 class LikeTest(APITestCase):
     def setUp(self):
+        self.client = APIClient() #auth
+
         self.author1 = Authors.objects.create(username = 'test_author1')
         self.author2 = Authors.objects.create(username = 'test_author2')
         self.post1 = Post.objects.create(author=self.author1)
@@ -779,6 +807,9 @@ class LikeTest(APITestCase):
         self.like2 = Like.objects.create(author = self.author2, post=self.post1)
         self.like_comment1 = Like.objects.create(author = self.author1, comment = self.comment1)
         self.like_comment2 = Like.objects.create(author = self.author2, comment = self.comment1)
+
+        self.test_author = Authors.objects.get(username="test_author1")
+        self.client.force_authenticate(user=self.test_author)
     # ://service/api/posts/{POST_FQID}/likes GET
     def test_get_post_likes(self):
         url = reverse("api:get_post_likes", kwargs={"author_serial": str(self.author1.row_id), "post_serial": str(self.post1.id)})
@@ -860,14 +891,21 @@ class LikeTest(APITestCase):
         
 class AuthorViewSetTests(APITestCase):
     def setUp(self):
+        self.client = APIClient() #needed to do http auth
+
         for i in range(15):
             Authors.objects.create(
                 username=f"author_{i}",
+                password=f"password_{i}", #needed for auth
                 displayName=f"display_name_{i}",
                 github_username=f"github_{i}",
                 host="http://testserver/api/",
                 avatar_url=f"http://example.com/avatar_{i}.jpg"
             )
+
+            self.test_author = Authors.objects.get(username="author_0")
+            self.client.force_authenticate(user=self.test_author)
+
     def test_author_to_json_serializer(self):
         """
         Test to make sure AuthorObjectToJSONSerializer only has type, id, host, displayName, page, github, and profileImage following specifications closely.
@@ -886,6 +924,7 @@ class AuthorViewSetTests(APITestCase):
     # Retrieve single author tests
     def test_author(self):
         author = Authors.objects.first()
+        #self.client.force_authenticate(user=self.test_author_1) #testing for api auth changes
         url = reverse('api:getAuthor', args=[author.row_id])
         response = self.client.get(url)
         
@@ -897,12 +936,14 @@ class AuthorViewSetTests(APITestCase):
 
     def test_404(self):
         invalid_uuid = uuid.uuid4()
+        #self.client.force_authenticate(user=self.test_author_1)#testing for api auth changes
         url = reverse('api:getAuthor', args=[invalid_uuid])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
     # List authors tests
     def test_authors_dpag(self):
+        #self.client.force_authenticate(user=self.test_author_1)#testing for api auth changes
         url = reverse('api:getAuthors')
         response = self.client.get(url)
         
@@ -916,6 +957,7 @@ class AuthorViewSetTests(APITestCase):
         )
 
     def test_authors_cpag(self):
+        #self.client.force_authenticate(user=self.test_author_1) #testing for api auth changes
         url = reverse('api:getAuthors')
         response = self.client.get(url, {'page': 2, 'size': 5})
         self.assertEqual(response.status_code, 200)
@@ -929,6 +971,7 @@ class AuthorViewSetTests(APITestCase):
 
     def test_authors_ipag(self):
         """Test invalid pagination parameters"""
+        #self.client.force_authenticate(user=self.test_author_1)#testing for api auth changes
         url = reverse('api:getAuthors')
         response = self.client.get(url, {'page': 'invalid', 'size': 'wrong'})
         
@@ -938,6 +981,7 @@ class AuthorViewSetTests(APITestCase):
 
     def test_authors_empty(self):
         """Test requesting non-existent page returns empty list"""
+        #self.client.force_authenticate(user=self.test_author_1)#testing for api auth changes
         url = reverse('api:getAuthors')
         response = self.client.get(url, {'page': 3, 'size': 10})
         
