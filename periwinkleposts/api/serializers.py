@@ -54,8 +54,11 @@ class AuthorObjectToJSONSerializer(serializers.Serializer):
         return f"https://github.com/{obj.github_username}"
 
     def get_profileImage(self, obj):
+        print("Hey")
         if obj.avatar:
-            return self.context['request'].build_absolute_uri(obj.avatar.url)
+            print("Yo")
+            print(obj.host[:-5] + str(obj.avatar.url))
+            return obj.host[:-5] + str(obj.avatar.url)
         return obj.avatar_url
 
 

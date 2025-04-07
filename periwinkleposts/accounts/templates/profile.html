@@ -12,7 +12,7 @@
             <div class="bg-white p-6 rounded-lg">
                 <div class="flex items-center space-x-6">
                     <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-[#A2A2E6]">
-                        <img src="{% if user.avatar_display %}{{ user.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                        <img src="{% if author.avatar_display %}{{ author.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}" 
                             alt="Profile Picture" class="w-full h-full object-cover">
                     </div>
                     <div>
