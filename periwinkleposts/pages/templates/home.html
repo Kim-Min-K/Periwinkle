@@ -114,9 +114,7 @@
                     {% if post.image %}
                     <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 h-auto rounded-lg shadow"
                         style="max-width: 500px; max-height: 500px;">
-                    {% endif %}
-
-                    {% if post.image_url %}
+                    {% elif post.image_url %}
                     <img src="{{ post.image_url }}" alt="Post Image" class="mb-4 h-auto rounded-lg shadow"
                         style="max-width: 500px; max-height: 500px;">
                     {% endif %}
