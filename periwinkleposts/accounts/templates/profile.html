@@ -92,21 +92,25 @@
                             <span class="text-sm">{{ post.published|date:"M d, Y H:i" }}</span>
                         </div>
                     </div>
+
                     <!-- Image/Video -->
-                    <div class="media-container flex flex-col justify-center">
+                    <div class="media-container flex flex-col justify-center items-center"> 
                         {% if post.image %}
-                            <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 max-w-full h-auto rounded-lg shadow">
+                            <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 h-auto rounded-lg shadow" style="max-width: 500px; max-height: 500px;">
                         {% endif %}
                         {% if post.image_url %}
-                            <img src="{{ post.image_url }}" alt="Post Image" class="mb-4 max-w-full h-auto rounded-lg shadow">
+                            <img src="{{ post.image_url }}" alt="Post Image" class="mb-4 h-auto rounded-lg shadow" style="max-width: 500px; max-height: 500px;">
                         {% endif %}
                         
                         {% if post.video %}
-                        <video controls class="max-w-full h-auto rounded-lg shadow">
+                        <video controls class="w-full max-w-xl h-auto rounded-lg shadow">
                             <source src="{{ post.video.url }}" type="video/mp4">
                         </video>
                         {% endif %}
                     </div>
+
+
+                    
                     <!-- Content -->
                     <div class="text-base text-gray-500 mt-4">{{ post.content }}</div>
     
