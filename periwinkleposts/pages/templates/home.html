@@ -95,15 +95,15 @@
                 <div class="flex items-center gap-4 mb-4">
                     <!-- Title -->
                     <h2 class="text-xl font-bold">{{ post.title }}</h2>
-                    
+
                     <!-- The rest -->
                     <div class="flex items-center gap-2 text-gray-500">
                         <span>by</span>
-                            <a href="{% url 'accounts:profile' post.author.id %}" class="hover:underline">
-                                <img src="{% if post.author.avatar_display %}{{ post.author.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}"
-                                    alt="Profile Picture" class="w-6 h-6 rounded-full object-cover inline-block">
-                                {{ post.author.username }}
-                            </a>
+                        <a href="{% url 'accounts:profile' post.author.id %}" class="hover:underline">
+                            <img src="{% if post.author.avatar_display %}{{ post.author.avatar_display }}{% else %}{% static 'default.jpg' %}{% endif %}"
+                                alt="Profile Picture" class="w-6 h-6 rounded-full object-cover inline-block">
+                            {{ post.author.username }}
+                        </a>
                         <span>•</span>
                         <span class="text-sm">{{ post.published|date:"M d, Y H:i" }}</span>
                     </div>
@@ -112,13 +112,19 @@
                 <!-- Image/Video -->
                 <div class="media-container flex flex-col justify-center items-center">
                     {% if post.image %}
-                        <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 h-auto rounded-lg shadow" style="max-width: 500px; max-height: 500px;">
+                    <img src="{{ post.image.url }}" alt="Post Image" class="mb-4 h-auto rounded-lg shadow"
+                        style="max-width: 500px; max-height: 500px;">
+                    {% endif %}
+
+                    {% if post.image_url %}
+                    <img src="{{ post.image_url }}" alt="Post Image" class="mb-4 h-auto rounded-lg shadow"
+                        style="max-width: 500px; max-height: 500px;">
                     {% endif %}
 
                     {% if post.video %}
-                        <video controls class="w-full max-w-xl h-auto rounded-lg shadow">
-                            <source src="{{ post.video.url }}" type="video/mp4">
-                        </video>
+                    <video controls class="w-full max-w-xl h-auto rounded-lg shadow">
+                        <source src="{{ post.video.url }}" type="video/mp4">
+                    </video>
                     {% endif %}
                 </div>
 
@@ -138,39 +144,41 @@
                         </button>
                     </form>
 
-                    
+
 
                     <!-- Comments Toggle -->
                     <button onclick="toggleComments('{{ post.id }}')"
                         class="px-3 py-1 text-sm font-semibold text-[#CCCCFF] hover:text-[#8585e6] transition-colors duration-300">
                         Comments ({{ post.comments.count }})
                     </button>
-                    
+
                     <div class="flex gap-4 items-center">
                         <!-- Post Visibility -->
                         <div class="text-sm">
                             {% if post.visibility == "PUBLIC" %}
-                                🌍 Public
+                            🌍 Public
                             {% elif post.visibility == "UNLISTED" %}
-                                🔒 Unlisted
+                            🔒 Unlisted
                             {% elif post.visibility == "FRIENDS" %}
-                                👥 Friends-Only
+                            👥 Friends-Only
                             {% endif %}
                         </div>
                         {% if post.visibility == "PUBLIC" %}
-                            <!-- Share Button -->
-                            <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}/accounts/authors/{{ post.author.row_id }}/posts/{{ post.id }}/')"
-                                class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
-                                Share
-                            </button>
+                        <!-- Share Button -->
+                        <button
+                            onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}/accounts/authors/{{ post.author.row_id }}/posts/{{ post.id }}/')"
+                            class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                            Share
+                        </button>
                         {% elif post.visibility == "UNLISTED" %}
-                            {% if post.author == request.user %}
-                                <!-- Share Button -->
-                                <button onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}/accounts/authors/{{ post.author.row_id }}/posts/{{ post.id }}/')"
-                                    class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
-                                    Share
-                                </button>
-                            {% endif %}
+                        {% if post.author == request.user %}
+                        <!-- Share Button -->
+                        <button
+                            onclick="copyPostLink('{{ request.scheme }}://{{ request.get_host }}/accounts/authors/{{ post.author.row_id }}/posts/{{ post.id }}/')"
+                            class="px-3 py-1 text-sm font-semibold text-white bg-[#CCCCFF] rounded-lg hover:bg-[#8585e6] transition-colors duration-300">
+                            Share
+                        </button>
+                        {% endif %}
                         {% endif %}
                     </div>
 
@@ -253,7 +261,7 @@
             {% empty %}
             <p>No posts to show.</p>
             {% endfor %}
-            
+
         </div>
     </section>
 </main>
@@ -329,7 +337,7 @@
         document.execCommand("copy");
         document.body.removeChild(tempInput);
         alert("Link copied to clipboard!");
-    }   
+    }
 
 </script>
 {% endblock %}

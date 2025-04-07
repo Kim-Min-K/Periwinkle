@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}periwinkle.{% endblock %}
+
+{% block content %}
+
+<body class="bg-[#F5F5F5]">
+    <nav class="p-2 bg-[#A2A2E6]">
+        <div class="container mx-auto flex items-center">
+            <a href="{% url 'pages:home' %}"
+                class="text-white font-[Baskervville] text-4xl px-3 py-2 rounded">periwinkle.</a>
+            <div class="ml-auto flex space-x-4">
+                {% if user.is_authenticated and user.is_approved %}
+                <a href="{% url 'pages:inbox'  row_id=request.user.row_id %}" class="headerbtn">inbox</a>
+                <a href="{% url 'accounts:profile' row_id=request.user.row_id %}" class="headerbtn">profile</a>
+                <!-- <a href="#" class="headerbtn">settings</a> -->
+                {% endif %}
+                <form method="post" action="{% url 'accounts:logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="headerbtn">
+                        logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <div class="max-w-full container">
+        {% block page_content %}{% endblock %}
+    </div>
+</body>
+{% endblock %}

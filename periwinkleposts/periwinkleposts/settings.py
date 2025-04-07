@@ -30,7 +30,7 @@ STATICFILES_DIRS = [
 SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
-DEBUG = 1
+DEBUG = False
 # ALLOWED_HOSTS = ["*"]
 ALLOWED_HOSTS = ["*"]
 # Application definition
