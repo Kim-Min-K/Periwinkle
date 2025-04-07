@@ -8,12 +8,12 @@
     </div>
 
     <div class="flex justify-center space-x-4 mb-6">
-        <button onclick="filterInbox('comment')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Comments</button>
-        <button onclick="filterInbox('like')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Likes</button>
-        <button onclick="filterInbox('post')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Posts</button>
-        <button onclick="filterInbox('follow')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#9999FF] rounded-lg hover:bg-[#6666CC] transition-all duration-300 shadow-sm">Follow Request</button>
-        <button onclick="filterInbox('all')" class="inbox-btn px-4 py-2 text-sm text-white bg-[#CCCCFF] rounded-lg hover:bg-[#9999FF] transition-all duration-300 shadow-sm">All</button>
-    </div>
+        <button onclick="filterInbox('comment')" class="inbox-btn bg-[#9999FF] hover:bg-[#6666CC] text-white px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8a8ae6] focus:ring-opacity-50">Comments</button>
+        <button onclick="filterInbox('like')" class="inbox-btn bg-[#9999FF] hover:bg-[#6666CC] text-white px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8a8ae6] focus:ring-opacity-50">Likes</button>
+        <button onclick="filterInbox('post')" class="inbox-btn bg-[#9999FF] hover:bg-[#6666CC] text-white px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8a8ae6] focus:ring-opacity-50">Posts</button>
+        <button onclick="filterInbox('follow')" class="inbox-btn bg-[#9999FF] hover:bg-[#6666CC] text-white px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8a8ae6] focus:ring-opacity-50">Follow Requests</button>
+        <button onclick="filterInbox('all')" class="inbox-btn bg-[#CCCCFF] hover:bg-[#9999FF] text-white px-4 py-2 text-sm rounded-lg transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8a8ae6] focus:ring-opacity-50">All</button>
+    </div>    
 
     <div class="space-y-6">
         {% for item in posts %}
