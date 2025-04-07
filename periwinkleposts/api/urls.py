@@ -9,6 +9,7 @@ urlpatterns = [
     #----------Authors API ---------------------------------
     path('authors/', AuthorViewSet.as_view({'get': 'list'}), name='getAuthors'),
     path('authors/<uuid:row_id>', AuthorViewSet.as_view({'get': 'retrieve', 'put':'update'}), name='getAuthor'),
+    path('authors/<uuid:row_id>/', AuthorViewSet.as_view({'get': 'retrieve', 'put':'update'}), name='getAuthor'),
 
     #----------Comments API ---------------------------------
     # Get all comment objects,for testing purpose only
